@@ -1,17 +1,15 @@
 *.class
 *.log
+todo.txt
 
-# sbt specific
-.cache
-.history
-.lib/
-dist/*
-target/
-lib_managed/
-src_managed/
-project/boot/
-project/plugins/project/
+*.iml
+*.ipr
+*.iws
+.idea/
 
-# Scala-IDE specific
-.scala_dependencies
-.worksheet
+.gradle/
+vagrant/.vagrant
+
+build/
+hdfs-mesos-*.jar
+hdfs-mesos.json

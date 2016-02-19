@@ -11,7 +11,12 @@ import org.apache.mesos.SchedulerDriver;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import static org.apache.mesos.Protos.Filters;
+import static org.apache.mesos.Protos.TaskInfo;
 
 public class Scheduler implements org.apache.mesos.Scheduler {
     public static final Scheduler $ = new Scheduler();
@@ -38,7 +43,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     @Override
     public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
         logger.info("[resourceOffers]\n" + Str.offers(offers));
-        handleOffers(offers);
+        onOffers(offers);
     }
 
     @Override
@@ -77,9 +82,48 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         logger.info("[error] " + message);
     }
 
-    private void handleOffers(List<Protos.Offer> offers) {
-        for (Protos.Offer offer : offers)
-            driver.declineOffer(offer.getId());
+    private void onOffers(List<Protos.Offer> offers) {
+        for (Protos.Offer offer : offers) {
+            String reason = acceptOffer(offer);
+
+            if (reason != null) {
+                logger.info("Declined offer " + Str.offer(offer) + ":\n" + reason);
+                driver.declineOffer(offer.getId());
+            }
+        }
+
+        Nodes.save();
+    }
+
+    private String acceptOffer(Protos.Offer offer) {
+        List<Node> nodes = new ArrayList<>();
+        for (Node node : Nodes.getNodes())
+            if (node.state == Node.State.STARTING && node.runtime == null)
+                nodes.add(node);
+
+        if (nodes.isEmpty()) return "nothing to start";
+
+        List<String> reasons = new ArrayList<>();
+        for (Node node : nodes) {
+            String reason = node.matches(offer);
+            if (reason != null) reasons.add("node " + node.id + ": " + reason);
+            else {
+                launchTask(node, offer);
+                return null;
+            }
+        }
+
+        return Util.join(reasons, ", ");
+    }
+
+    private void launchTask(Node node, Protos.Offer offer) {
+        node.initRuntime(offer);
+        TaskInfo task = node.newTask();
+
+        driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task), Filters.newBuilder().setRefuseSeconds(1).build());
+        logger.info("Starting node " + node.id + " with task " + node.runtime.taskId + " for offer " + offer.getId().getValue());
+
+        node.state = Node.State.RUNNING;
     }
 
     public void run() {
@@ -126,7 +170,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         System.exit(status == Protos.Status.DRIVER_STOPPED ? 0 : 1);
     }
 
-    private void initLogging() {
+    void initLogging() {
         BasicConfigurator.resetConfiguration();
 
         Logger root = Logger.getRootLogger();

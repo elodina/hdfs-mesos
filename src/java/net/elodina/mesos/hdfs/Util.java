@@ -3,6 +3,7 @@ package net.elodina.mesos.hdfs;
 import org.apache.mesos.Protos;
 
 import java.io.*;
+import java.net.ServerSocket;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -14,6 +15,165 @@ public class Util {
         char[] chars = s.toCharArray();
         chars[0] = Character.toUpperCase(chars[0]);
         return new String(chars);
+    }
+
+    public static String join(Iterable<?> objects, String separator) {
+        String result = "";
+
+        for (Object object : objects)
+            result += object + separator;
+
+        if (result.length() > 0)
+            result = result.substring(0, result.length() - separator.length());
+
+        return result;
+    }
+
+    public static Map<String, String> parseMap(String s) { return parseMap(s, true); }
+    public static Map<String, String> parseMap(String s, boolean nullValues) { return parseMap(s, ',', '=', nullValues); }
+    public static Map<String, String> parseMap(String s, char entrySep, char valueSep, boolean nullValues) {
+        Map<String, String> result = new LinkedHashMap<>();
+        if (s == null) return result;
+
+        for (String entry : splitEscaped(s, entrySep, false)) {
+            if (entry.trim().isEmpty()) throw new IllegalArgumentException(s);
+
+            List<String> pair = splitEscaped(entry, valueSep, true);
+            String key = pair.get(0).trim();
+            String value = pair.size() > 1 ? pair.get(1).trim() : null;
+
+            if (value == null && !nullValues) throw new IllegalArgumentException(s);
+            result.put(key, value);
+        }
+
+        return result;
+    }
+
+    private static List<String> splitEscaped(String s, char sep, boolean unescape) {
+        List<String> parts = new ArrayList<>();
+
+        boolean escaped = false;
+        String part = "";
+        for (char c : s.toCharArray()) {
+            if (c == '\\' && !escaped) escaped = true;
+            else if (c == sep && !escaped) {
+                parts.add(part);
+                part = "";
+            } else {
+                if (escaped && !unescape) part += "\\";
+                part += c;
+                escaped = false;
+            }
+        }
+
+        if (escaped) throw new IllegalArgumentException("open escaping");
+        if (!part.equals("")) parts.add(part);
+
+        return parts;
+    }
+
+    public static String formatMap(Map<String, ?> map) { return formatMap(map, ',', '='); }
+    public static String formatMap(Map<String, ?> map, char entrySep, char valueSep) {
+        String s = "";
+
+        for (String k : map.keySet()) {
+            Object v = map.get(k);
+            if (!s.isEmpty()) s += entrySep;
+            s += escape(k, entrySep, valueSep);
+            if (v != null) s += valueSep + escape("" + v, entrySep, valueSep);
+        }
+
+        return s;
+    }
+
+    private static String escape(String s, char entrySep, char valueSep) {
+        String result = "";
+
+        for (char c : s.toCharArray()) {
+            if (c == entrySep || c == valueSep || c == '\\') result += "\\";
+            result += c;
+        }
+
+        return result;
+    }
+
+
+    public static int findAvailPort() {
+        try (ServerSocket s = new ServerSocket(0)) {
+            return s.getLocalPort();
+        } catch (IOException e) {
+            throw new IOError(e);
+        }
+    }
+
+    public static class Range {
+        private int start = -1;
+        private int end = -1;
+
+        public Range(int start) { this(start, start); }
+        public Range(int start, int end) {
+            this.start = start;
+            this.end = end;
+        }
+
+        public Range(String s) {
+            int idx = s.indexOf("..");
+
+            if (idx == -1) {
+                start = Integer.parseInt(s);
+                end = start;
+                return;
+            }
+
+            start = Integer.parseInt(s.substring(0, idx));
+            end = Integer.parseInt(s.substring(idx + 2));
+            if (start > end) throw new IllegalArgumentException("start > end");
+        }
+
+        public int start() { return start; }
+        public int end() { return end; }
+
+        @SuppressWarnings("SuspiciousNameCombination")
+        public Range overlap(Range r) {
+            Range x = this;
+            Range y = r;
+
+            if (x.start > y.start) {
+                Range t = x;
+                x = y;
+                y = t;
+            }
+            assert x.start <= y.start;
+
+            if (y.start > x.end) return null;
+            assert y.start <= x.end;
+
+            int start = y.start;
+            int end = Math.min(x.end, y.end);
+            return new Range(start, end);
+        }
+
+        public boolean contains(int p) { return start <= p && p <= end; }
+
+        public List<Range> split(int p) {
+            if (!contains(p)) throw new IllegalArgumentException("point not in range");
+
+            List<Range> result = new ArrayList<>();
+            if (start < p) result.add(new Range(start, p - 1));
+            if (p < end) result.add(new Range(p + 1, end));
+
+            return result;
+        }
+
+        public boolean equals(Object obj) {
+            if (!(obj instanceof Range)) return false;
+            Range range = (Range) obj;
+            return start == range.start && end == range.end;
+        }
+
+        public int hashCode() { return 31 * start + end; }
+
+        public String toString() { return start == end ? "" + start : start + ".." + end; }
     }
 
     public static class Period {

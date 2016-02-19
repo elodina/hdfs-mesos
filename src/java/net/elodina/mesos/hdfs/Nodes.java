@@ -64,11 +64,8 @@ public class Nodes {
         nodes.clear();
         if (json.containsKey("nodes")) {
             JSONArray nodesJson = (JSONArray) json.get("nodes");
-            for (JSONObject nodeJson : (List<JSONObject>)nodesJson) {
-                Node node = new Node();
-                node.fromJson(nodeJson);
-                nodes.add(node);
-            }
+            for (JSONObject nodeJson : (List<JSONObject>)nodesJson)
+                nodes.add(new Node(nodeJson));
         }
     }
 }

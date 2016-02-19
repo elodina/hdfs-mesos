@@ -63,11 +63,7 @@ public class NodeCli {
 
         @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>) json;
         List<Node> nodes = new ArrayList<>();
-        for (JSONObject nodeJson : nodesJson) {
-            Node node = new Node();
-            node.fromJson(nodeJson);
-            nodes.add(node);
-        }
+        for (JSONObject nodeJson : nodesJson) nodes.add(new Node(nodeJson));
 
         String title = nodes.isEmpty() ? "no nodes" : "node" + (nodes.size() > 1 ? "s" : "") + ":";
         printLine(title);
@@ -120,11 +116,7 @@ public class NodeCli {
 
         @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>) json;
         List<Node> nodes = new ArrayList<>();
-        for (JSONObject nodeJson : nodesJson) {
-            Node node = new Node();
-            node.fromJson(nodeJson);
-            nodes.add(node);
-        }
+        for (JSONObject nodeJson : nodesJson) nodes.add(new Node(nodeJson));
 
         String title = "node" + (nodes.size() > 1 ? "s" : "") + (cmd.equals("add") ? " added" : " updated") + ":";
         printLine(title);
@@ -178,11 +170,7 @@ public class NodeCli {
         @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>) json.get("nodes");
 
         List<Node> nodes = new ArrayList<>();
-        for (JSONObject nodeJson : nodesJson) {
-            Node node = new Node();
-            node.fromJson(nodeJson);
-            nodes.add(node);
-        }
+        for (JSONObject nodeJson : nodesJson) nodes.add(new Node(nodeJson));
 
         String title = nodes.size() > 1 ? "nodes " : "node ";
         switch (status) {

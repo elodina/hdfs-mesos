@@ -13,6 +13,7 @@ public abstract class Storage {
 
     public abstract void save();
     public abstract void load();
+    public abstract void clear();
 
     private static class FileStorage extends Storage {
         private File file;
@@ -34,6 +35,12 @@ public abstract class Storage {
             catch (ParseException | IOException e) { throw new IOError(e); }
 
             Nodes.fromJson(obj);
+        }
+
+        @Override
+        public void clear() {
+            if (!file.exists()) return;
+            if (!file.delete()) throw new IOError(new IOException("failed to delete " + file));
         }
     }
 

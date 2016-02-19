@@ -24,7 +24,8 @@ public class NodeCli {
 
         switch (cmd) {
             case "list": handleList(false); break;
-            case "add":case "update": handleAddUpdate(cmd, args, false); break;
+            case "add": case "update": handleAddUpdate(cmd, args, false); break;
+            case "start": case "stop": handleStartStop(cmd, args, false); break;
             default: throw new Error("unsupported command " + cmd);
         }
     }
@@ -43,7 +44,8 @@ public class NodeCli {
 
         switch (cmd) {
             case "list": handleList(true); break;
-            case "add":case "update": handleAddUpdate(cmd, args, true); break;
+            case "add": case "update": handleAddUpdate(cmd, args, true); break;
+            case "start": case "stop": handleStartStop(cmd, args, true); break;
             default: throw new Error("unsupported command " + cmd);
         }
     }
@@ -133,6 +135,71 @@ public class NodeCli {
         }
     }
 
+    private static void handleStartStop(String cmd, List<String> args, boolean help) {
+        OptionParser parser = new OptionParser();
+        parser.accepts("timeout", "timeout (30s, 1m, 1h). 0s - no timeout").withRequiredArg().ofType(String.class);
+        if (!cmd.equals("stop")) parser.accepts("force", "forcibly stop").withOptionalArg().ofType(String.class);
+
+        if (help) {
+            printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <id> [options]\n");
+            try { parser.printHelpOn(out); }
+            catch (IOException ignore) {}
+
+            printLine();
+            handleGenericOptions(args, true);
+            return;
+        }
+
+        if (args.isEmpty()) throw new Error("id required");
+        String id = args.remove(0);
+
+        OptionSet options;
+        try { options = parser.parse(args.toArray(new String[args.size()])); }
+        catch (OptionException e) {
+            try { parser.printHelpOn(out); }
+            catch (IOException ignore) {}
+
+            printLine();
+            throw new Error(e.getMessage());
+        }
+
+        String timeout = (String) options.valueOf("timeout");
+        Boolean force = (Boolean) options.valueOf("force");
+
+        HashMap<String, String> params = new HashMap<>();
+        params.put("node", id);
+        if (timeout != null) params.put("timeout", timeout);
+        if (force != null) params.put("force", "" + force);
+
+        JSONObject json;
+        try { json = (JSONObject) sendRequest("/node/" + cmd, params); }
+        catch (IOException e) { throw new Error("" + e); }
+
+        String status = "" + json.get("status");
+        @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>) json.get("nodes");
+
+        List<Node> nodes = new ArrayList<>();
+        for (JSONObject nodeJson : nodesJson) {
+            Node node = new Node();
+            node.fromJson(nodeJson);
+            nodes.add(node);
+        }
+
+        String title = nodes.size() > 1 ? "nodes " : "node ";
+        switch (status) {
+            case "started":case "stopped": title += status + ":"; break;
+            case "scheduled": title += status + "to " + cmd +  ":"; break;
+            case "timeout":  throw new Error(cmd + " timeout");
+            case "disconnected": throw new Error("scheduler disconnected");
+        }
+
+        printLine(title);
+        for (Node node : nodes) {
+            printNode(node, 1);
+            printLine();
+        }
+    }
+
     private static void printNode(Node node, int indent) {
         printLine("id: " + node.id, indent);
         printLine("state: " + node.state.name().toLowerCase(), indent);
@@ -144,6 +211,8 @@ public class NodeCli {
         printLine("list       - list nodes", 1);
         printLine("add        - add node", 1);
         printLine("update     - update node", 1);
+        printLine("start      - start node", 1);
+        printLine("stop       - stop node", 1);
     }
 
     private static String nodeResources(Node node) {

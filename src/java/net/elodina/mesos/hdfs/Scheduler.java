@@ -25,8 +25,8 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         logger.info("[registered] framework:" + Str.id(id.getValue()) + " master:" + Str.master(master));
         this.driver = driver;
 
-        Nodes.$.frameworkId = id.getValue();
-        Nodes.$.save();
+        Nodes.frameworkId = id.getValue();
+        Nodes.save();
     }
 
     @Override
@@ -85,14 +85,14 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     public void run() {
         initLogging();
         logger.info("Starting " + getClass().getSimpleName() + ":\n" + config);
-        Nodes.$.load();
+        Nodes.load();
 
         final HttpServer server = new HttpServer();
         try { server.start(); }
         catch (Exception e) { throw new RuntimeException(e); }
 
         Protos.FrameworkInfo.Builder frameworkBuilder = Protos.FrameworkInfo.newBuilder();
-        if (Nodes.$.frameworkId != null) frameworkBuilder.setId(Protos.FrameworkID.newBuilder().setValue(Nodes.$.frameworkId));
+        if (Nodes.frameworkId != null) frameworkBuilder.setId(Protos.FrameworkID.newBuilder().setValue(Nodes.frameworkId));
         frameworkBuilder.setUser(config.user != null ? config.user : "");
 
         frameworkBuilder.setName(config.frameworkName);

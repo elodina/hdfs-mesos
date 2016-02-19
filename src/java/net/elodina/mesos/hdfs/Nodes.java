@@ -9,45 +9,43 @@ import java.util.Collections;
 import java.util.List;
 
 public class Nodes {
-    public static Nodes $ = new Nodes();
+    public static Storage storage = Storage.file(new File("hdfs-mesos.json"));
 
-    public Storage storage = Storage.file(new File("hdfs-mesos.json"));
-
-    public String frameworkId;
-    private List<Node> nodes = new ArrayList<>();
+    public static String frameworkId;
+    private static List<Node> nodes = new ArrayList<>();
 
     private Nodes() {}
 
-    public List<Node> getNodes() { return Collections.unmodifiableList(nodes); }
+    public static List<Node> getNodes() { return Collections.unmodifiableList(nodes); }
 
-    public Node getNode(String id) {
+    public static Node getNode(String id) {
         for (Node node : nodes)
             if (node.id.equals(id)) return node;
 
         return null;
     }
 
-    public Node addNode(Node node) {
+    public static Node addNode(Node node) {
         if (getNode(node.id) != null) throw new IllegalArgumentException("duplicate node");
 
         nodes.add(node);
         return node;
     }
 
-    public void removeNode(Node node) {
+    public static void removeNode(Node node) {
         nodes.remove(node);
     }
 
-    public void reset() {
+    public static void reset() {
         frameworkId = null;
         nodes.clear();
     }
 
-    public void save() { storage.save(); }
-    public void load() { storage.load(); }
+    public static void save() { storage.save(); }
+    public static void load() { storage.load(); }
 
     @SuppressWarnings("unchecked")
-    public JSONObject toJson() {
+    public static JSONObject toJson() {
         JSONObject json = new JSONObject();
 
         if (frameworkId != null) json.put("frameworkId", frameworkId);
@@ -60,7 +58,7 @@ public class Nodes {
     }
 
     @SuppressWarnings({"RedundantCast", "unchecked"})
-    public void fromJson(JSONObject json) {
+    public static void fromJson(JSONObject json) {
         if (json.containsKey("frameworkId")) frameworkId = (String) json.get("frameworkId");
 
         nodes.clear();

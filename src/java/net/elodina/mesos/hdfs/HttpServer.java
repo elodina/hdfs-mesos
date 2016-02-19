@@ -109,7 +109,7 @@ public class HttpServer {
         }
 
         private void handleNodeList(HttpServletResponse response) throws IOException {
-            List<Node> nodes = Nodes.$.getNodes();
+            List<Node> nodes = Nodes.getNodes();
 
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = new JSONArray();
             for (Node node : nodes) nodesJson.add(node.toJson());
@@ -121,8 +121,8 @@ public class HttpServer {
             String id = request.getParameter("node");
             if (id == null || id.isEmpty()) throw new HttpError(400, "node required");
 
-            if (add && Nodes.$.getNode(id) != null) throw new HttpError(400, "duplicate node");
-            if (!add && Nodes.$.getNode(id) == null) throw new HttpError(400, "node not found");
+            if (add && Nodes.getNode(id) != null) throw new HttpError(400, "duplicate node");
+            if (!add && Nodes.getNode(id) == null) throw new HttpError(400, "node not found");
 
             Double cpus = null;
             if (request.getParameter("cpus") != null)
@@ -135,13 +135,13 @@ public class HttpServer {
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid mem"); }
 
             Node node;
-            if (add) node = Nodes.$.addNode(new Node(id));
-            else node = Nodes.$.getNode(id);
+            if (add) node = Nodes.addNode(new Node(id));
+            else node = Nodes.getNode(id);
 
             if (cpus != null) node.cpus = cpus;
             if (mem != null) node.mem = mem;
 
-            Nodes.$.save();
+            Nodes.save();
 
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = new JSONArray();
             nodesJson.add(node.toJson());
@@ -158,7 +158,7 @@ public class HttpServer {
                 try { timeout = new Util.Period(request.getParameter("timeout")); }
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid timeout"); }
 
-            Node node = Nodes.$.getNode(id);
+            Node node = Nodes.getNode(id);
             if (node == null) throw new HttpError(400, "node not found");
 
             node.state = start ? Node.State.STARTING : Node.State.STOPPING;
@@ -167,7 +167,7 @@ public class HttpServer {
             try { completed = node.waitFor(start ? Node.State.RUNNING : Node.State.IDLE, timeout); }
             catch (InterruptedException e) { throw new IllegalStateException(e); }
 
-            Nodes.$.save();
+            Nodes.save();
 
             String status = completed ? (start ? "started": "stopped"): "timeout";
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>)new JSONArray();

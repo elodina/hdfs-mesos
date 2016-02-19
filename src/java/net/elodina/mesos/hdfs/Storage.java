@@ -20,7 +20,7 @@ public abstract class Storage {
 
         @Override
         public void save() {
-            JSONObject json = Nodes.$.toJson();
+            JSONObject json = Nodes.toJson();
             try { Util.IO.writeFile(file, "" + json); }
             catch (IOException e) { throw new IOError(e); }
         }
@@ -33,7 +33,7 @@ public abstract class Storage {
             try { obj = (JSONObject) new JSONParser().parse(Util.IO.readFile(file)); }
             catch (ParseException | IOException e) { throw new IOError(e); }
 
-            Nodes.$.fromJson(obj);
+            Nodes.fromJson(obj);
         }
     }
 

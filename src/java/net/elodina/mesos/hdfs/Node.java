@@ -67,7 +67,7 @@ public class Node {
         runtime = new Runtime();
         runtime.taskId = "" + UUID.randomUUID();
         runtime.executorId = "" + UUID.randomUUID();
-        runtime.slaveId = "" + UUID.randomUUID();
+        runtime.slaveId = offer.getSlaveId().getValue();
     }
 
     public TaskInfo newTask() {

@@ -109,8 +109,6 @@ public class Cli {
     }
 
     private static void resolveApi(String api) {
-        if (Scheduler.$.config.api != null) return;
-
         if (api != null && !api.equals("")) {
             Scheduler.$.config.api = api;
             return;

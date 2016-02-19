@@ -204,7 +204,7 @@ public class NodeCli {
     private static String nodeResources(Node node) {
         String s = "";
 
-        s += "cpu:" + node.cpus;
+        s += "cpus:" + node.cpus;
         s += ", mem:" + node.mem;
 
         return s;

@@ -15,6 +15,18 @@ public class Node {
         this.id = id;
     }
 
+    public boolean waitFor(Node.State state, Util.Period timeout) throws InterruptedException {
+        long t = timeout.ms();
+
+        while (t > 0 && this.state != state) {
+            long delay = Math.min(100, t);
+            Thread.sleep(delay);
+            t -= delay;
+        }
+
+        return this.state == state;
+    }
+
     @SuppressWarnings("unchecked")
     public JSONObject toJson() {
         JSONObject json = new JSONObject();

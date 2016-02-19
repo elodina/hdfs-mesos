@@ -103,6 +103,7 @@ public class HttpServer {
             switch (uri) {
                 case "/list": handleNodeList(response); break;
                 case "/add": case "/update": handleNodeAddUpdate(request, response, uri.equals("/add")); break;
+                case "/start": case "/stop": handleStartStop(request, response, uri.equals("/start")); break;
                 default: throw new HttpError(404, "unsupported method " + uri);
             }
         }
@@ -145,6 +146,37 @@ public class HttpServer {
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = new JSONArray();
             nodesJson.add(node.toJson());
             response.getWriter().println("" + nodesJson);
+        }
+
+        @SuppressWarnings("unchecked")
+        private void handleStartStop(HttpServletRequest request, HttpServletResponse response, boolean start) throws IOException {
+            String id = request.getParameter("node");
+            if (id == null || id.isEmpty()) throw new HttpError(400, "node required");
+
+            Util.Period timeout = new Util.Period("2m");
+            if (request.getParameter("timeout") != null)
+                try { timeout = new Util.Period(request.getParameter("timeout")); }
+                catch (IllegalArgumentException e) { throw new HttpError(400, "invalid timeout"); }
+
+            Node node = Nodes.$.getNode(id);
+            if (node == null) throw new HttpError(400, "node not found");
+
+            node.state = start ? Node.State.STARTING : Node.State.STOPPING;
+
+            boolean completed;
+            try { completed = node.waitFor(start ? Node.State.RUNNING : Node.State.IDLE, timeout); }
+            catch (InterruptedException e) { throw new IllegalStateException(e); }
+
+            Nodes.$.save();
+
+            String status = completed ? (start ? "started": "stopped"): "timeout";
+            @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>)new JSONArray();
+            nodesJson.add(node.toJson());
+
+            JSONObject json = new JSONObject();
+            json.put("status", status);
+            json.put("nodes", nodesJson);
+            response.getWriter().write("" + json);
         }
 
         private void downloadFile(File file, HttpServletResponse response) throws IOException {

@@ -138,7 +138,6 @@ public class NodeCli {
     private static void handleStartStop(String cmd, List<String> args, boolean help) {
         OptionParser parser = new OptionParser();
         parser.accepts("timeout", "timeout (30s, 1m, 1h). 0s - no timeout").withRequiredArg().ofType(String.class);
-        if (!cmd.equals("stop")) parser.accepts("force", "forcibly stop").withOptionalArg().ofType(String.class);
 
         if (help) {
             printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <id> [options]\n");
@@ -190,7 +189,6 @@ public class NodeCli {
             case "started":case "stopped": title += status + ":"; break;
             case "scheduled": title += status + "to " + cmd +  ":"; break;
             case "timeout":  throw new Error(cmd + " timeout");
-            case "disconnected": throw new Error("scheduler disconnected");
         }
 
         printLine(title);

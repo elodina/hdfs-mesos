@@ -129,6 +129,8 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     public void run() {
         initLogging();
         logger.info("Starting " + getClass().getSimpleName() + ":\n" + config);
+
+        config.resolveDeps();
         Nodes.load();
 
         final HttpServer server = new HttpServer();
@@ -183,7 +185,8 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     public static class Config {
         public String api = "http://localhost:7000";
 
-        public File jar = new File("hdfs-mesos-0.0.1.0.jar");
+        public File jar;
+        public File hadoop;
 
         public int apiPort() {
             try {
@@ -202,5 +205,15 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         public String frameworkName = "hdfs";
         public String frameworkRole = "*";
         public Period frameworkTimeout = new Period("30d");
+
+        void resolveDeps() {
+            String hadoopMask = "hadoop-.*gz";
+            hadoop = Util.IO.findFile(new File("."), hadoopMask);
+            if (hadoop == null) throw new IllegalStateException(hadoopMask + " not found in current dir");
+
+            String jarMask = "hdfs-mesos-.*jar";
+            jar = Util.IO.findFile(new File("."), jarMask);
+            if (jar == null) throw new IllegalStateException(jarMask + " not found in current dir");
+        }
     }
 }

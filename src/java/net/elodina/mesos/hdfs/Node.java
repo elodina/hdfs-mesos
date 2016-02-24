@@ -94,6 +94,7 @@ public class Node {
 
         commandBuilder
             .addUris(CommandInfo.URI.newBuilder().setValue(config.api + "/jar/" + config.jar.getName()).setExtract(false))
+            .addUris(CommandInfo.URI.newBuilder().setValue(config.api + "/hadoop/" + config.hadoop.getName()))
             .setValue(cmd);
 
         return ExecutorInfo.newBuilder()

@@ -4,23 +4,26 @@ import org.apache.log4j.*;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 
 import static net.elodina.mesos.hdfs.Util.Str;
 import static org.apache.mesos.Protos.*;
 
 public class Executor implements org.apache.mesos.Executor {
     public static final Logger logger = Logger.getLogger(Executor.class);
+
     public static File hadoopDir;
     public static File dataDir;
+    public static File javaHome;
+    public static File hadoop() { return new File(hadoopDir, "bin/hadoop"); }
 
+    private String hostname;
     private NNProcess process;
 
     @Override
     public void registered(ExecutorDriver driver, ExecutorInfo executorInfo, FrameworkInfo framework, SlaveInfo slave) {
         logger.info("[registered] framework:" + Str.framework(framework) + " slave:" + Str.slave(slave));
+        hostname = slave.getHostname();
     }
 
     @Override
@@ -56,8 +59,8 @@ public class Executor implements org.apache.mesos.Executor {
         }.start();
     }
 
-    private void runHdfs(TaskInfo task, ExecutorDriver driver) throws InterruptedException {
-        process = new NNProcess();
+    private void runHdfs(TaskInfo task, ExecutorDriver driver) throws InterruptedException, IOException {
+        process = new NNProcess(hostname);
         process.start();
 
         driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_RUNNING).build());
@@ -100,8 +103,60 @@ public class Executor implements org.apache.mesos.Executor {
     }
 
     static void initDirs() {
-        hadoopDir = Util.IO.findDir(new File("."), "hadoop-.*");
+        String hadoopMask = "hadoop-.*";
+        hadoopDir = Util.IO.findDir(new File("."), hadoopMask);
+        if (hadoopDir == null) throw new IllegalStateException(hadoopMask + " not found in current dir");
+
         dataDir = new File(new File("."), "data");
+        javaHome = findJavaHome();
+
+        logger.info("Resolved dirs:\nhadoopDir=" + hadoopDir + "\ndataDir=" + dataDir + "\njavaHome=" + javaHome);
+    }
+
+    static File findJavaHome() {
+        File jreDir = Util.IO.findDir(new File("."), "jre.*");
+        if (jreDir != null) return jreDir;
+
+        if (System.getenv("JAVA_HOME") != null)
+            return new File(System.getenv("JAVA_HOME"));
+
+        if (System.getenv("PATH") != null)
+            for (String part : System.getenv("PATH").split(":")) {
+                part = part.trim();
+                if (part.startsWith("\"") && part.endsWith("\""))
+                    part = part.substring(1, part.length() - 1);
+
+                File java = new File(part, "java");
+                if (java.isFile() && java.canRead()) {
+                    File dir = javaHomeDir(java);
+                    if (dir != null) return dir;
+                }
+            }
+
+        throw new IllegalStateException("Can't resolve JAVA_HOME / find jre");
+    }
+
+    private static File javaHomeDir(File java) {
+        try {
+            File tmpFile = File.createTempFile("java_home", null);
+
+            Process process = new ProcessBuilder("readlink", "-f", java.getAbsolutePath())
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .redirectOutput(tmpFile).start();
+
+            int code = process.waitFor();
+            if (code != 0) throw new IOException("Process exited with code " + code);
+
+            File file = new File(Util.IO.readFile(tmpFile).trim()); // $JRE_PATH/bin/java
+            if (!tmpFile.delete()) throw new IOException("Failed to delete " + tmpFile);
+
+            file = file.getParentFile();
+            if (file != null) file = file.getParentFile();
+            return file;
+        } catch (IOException | InterruptedException e) {
+            logger.warn("", e);
+            return null;
+        }
     }
 
     static void initLogging() {

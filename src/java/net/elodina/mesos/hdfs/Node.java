@@ -138,7 +138,8 @@ public class Node {
         IDLE,
         STARTING,
         RUNNING,
-        STOPPING
+        STOPPING,
+        RECONCILING
     }
 
     public static class Runtime {

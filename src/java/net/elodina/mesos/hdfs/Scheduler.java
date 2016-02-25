@@ -15,9 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.apache.mesos.Protos.Filters;
-import static org.apache.mesos.Protos.TaskID;
-import static org.apache.mesos.Protos.TaskInfo;
+import static org.apache.mesos.Protos.*;
 
 public class Scheduler implements org.apache.mesos.Scheduler {
     public static final Scheduler $ = new Scheduler();
@@ -53,8 +51,9 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     }
 
     @Override
-    public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
+    public void statusUpdate(SchedulerDriver driver, TaskStatus status) {
         logger.info("[statusUpdate] " + Str.status(status));
+        onTaskStatus(status);
     }
 
     @Override
@@ -141,6 +140,56 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         logger.info("Starting node " + node.id + " with task " + node.runtime.taskId + " for offer " + offer.getId().getValue());
 
         node.state = Node.State.RUNNING;
+    }
+
+    void onTaskStatus(TaskStatus status) {
+        Node node = getNodeByTaskId(status.getTaskId().getValue());
+
+        switch (status.getState()) {
+            case TASK_RUNNING:
+                onTaskStarted(node, status);
+                break;
+            case TASK_FINISHED:
+            case TASK_FAILED:
+            case TASK_KILLED:
+            case TASK_LOST:
+            case TASK_ERROR:
+                onTaskStopped(node, status);
+        }
+    }
+
+    void onTaskStarted(Node node, TaskStatus status) {
+        boolean expectedState = node != null && Arrays.asList(Node.State.STARTING, Node.State.RUNNING, Node.State.RECONCILING).contains(node.state);
+        if (!expectedState) {
+            String id = node != null ? node.id : "<unknown>";
+            logger.info("Got " + status.getState() + " for node " + id + ", killing task");
+            driver.killTask(status.getTaskId());
+            return;
+        }
+
+        node.state = Node.State.RUNNING;
+    }
+
+    void onTaskStopped(Node node, TaskStatus status) {
+        boolean expectedState = node != null && node.state != Node.State.IDLE;
+        if (!expectedState) {
+            String id = node != null ? node.id : "<unknown>";
+            logger.info("Got " + status.getState() + " for node " + id + ", ignoring it");
+            return;
+        }
+
+        boolean stopping = node.state == Node.State.STOPPING;
+        node.state = stopping ? Node.State.IDLE : Node.State.STARTING;
+        node.runtime = null;
+        node.reservation = null;
+    }
+
+    private Node getNodeByTaskId(String taskId) {
+        for (Node node : Nodes.getNodes())
+            if (node.runtime != null && node.runtime.taskId.equals(taskId))
+                return node;
+
+        return null;
     }
 
     public void run() {

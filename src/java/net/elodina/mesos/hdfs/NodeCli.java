@@ -190,6 +190,16 @@ public class NodeCli {
         printLine("id: " + node.id, indent);
         printLine("state: " + node.state.name().toLowerCase(), indent);
         printLine("resources: " + nodeResources(node), indent);
+
+        if (node.reservation != null) printLine("reservation: " + nodeReservation(node.reservation), indent);
+        if (node.runtime != null) printNodeRuntime(node.runtime, indent);
+    }
+
+    private static void printNodeRuntime(Node.Runtime runtime, int indent) {
+        printLine("runtime:", indent);
+        printLine("task: " + runtime.taskId, indent + 1);
+        printLine("executor: " + runtime.executorId, indent + 1);
+        printLine("slave: " + runtime.slaveId, indent + 1);
     }
 
     private static void printCmds() {
@@ -206,6 +216,15 @@ public class NodeCli {
 
         s += "cpus:" + node.cpus;
         s += ", mem:" + node.mem;
+
+        return s;
+    }
+
+    private static String nodeReservation(Node.Reservation reservation) {
+        String s = "";
+
+        s += "cpus:" + reservation.cpus;
+        s += ", mem:" + reservation.mem;
 
         return s;
     }

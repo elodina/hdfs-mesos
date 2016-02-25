@@ -66,13 +66,13 @@ public class Executor implements org.apache.mesos.Executor {
         driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_RUNNING).build());
         int code = process.waitFor();
 
-        if (code == 0) driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_FINISHED).build());
+        if (code == 0 || code == 143) driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_FINISHED).build());
         else driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_FAILED).setMessage("process exited with " + code).build());
     }
 
     @Override
     public void killTask(ExecutorDriver driver, TaskID id) {
-        logger.info("[launchTask] " + Str.id(id.getValue()));
+        logger.info("[killTask] " + Str.id(id.getValue()));
         if (process != null) process.stop();
     }
 

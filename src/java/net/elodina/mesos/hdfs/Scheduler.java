@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.apache.mesos.Protos.Filters;
+import static org.apache.mesos.Protos.TaskID;
 import static org.apache.mesos.Protos.TaskInfo;
 
 public class Scheduler implements org.apache.mesos.Scheduler {
@@ -83,12 +84,28 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     }
 
     private void onOffers(List<Protos.Offer> offers) {
+        // start nodes
         for (Protos.Offer offer : offers) {
             String reason = acceptOffer(offer);
 
             if (reason != null) {
                 logger.info("Declined offer " + Str.offer(offer) + ":\n" + reason);
                 driver.declineOffer(offer.getId());
+            }
+        }
+
+        // stop nodes
+        for (Node node : Nodes.getNodes()) {
+            if (node.state != Node.State.STOPPING) continue;
+
+            if (node.runtime == null) {
+                node.state = Node.State.IDLE;
+                continue;
+            }
+
+            if (!node.runtime.killSent) {
+                driver.killTask(TaskID.newBuilder().setValue(node.runtime.taskId).build());
+                node.runtime.killSent = true;
             }
         }
 

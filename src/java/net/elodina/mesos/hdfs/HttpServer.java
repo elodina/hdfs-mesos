@@ -163,6 +163,7 @@ public class HttpServer {
             if (node == null) throw new HttpError(400, "node not found");
 
             node.state = start ? Node.State.STARTING : Node.State.STOPPING;
+            if (!start && node.runtime != null) node.runtime.killSent = false;
 
             boolean completed;
             try { completed = node.waitFor(start ? Node.State.RUNNING : Node.State.IDLE, timeout); }

@@ -146,6 +146,8 @@ public class Node {
         public String executorId = "" + UUID.randomUUID();
         public String slaveId = "" + UUID.randomUUID();
 
+        public boolean killSent;
+
         public Runtime() {}
         public Runtime(JSONObject json) { fromJson(json); }
 
@@ -157,6 +159,8 @@ public class Node {
             json.put("executorId", executorId);
             json.put("slaveId", slaveId);
 
+            json.put("killSent", killSent);
+
             return json;
         }
 
@@ -164,6 +168,8 @@ public class Node {
             taskId = (String) json.get("taskId");
             executorId = (String) json.get("executorId");
             slaveId = (String) json.get("slaveId");
+
+            killSent = (boolean) json.get("killSent");
         }
     }
 

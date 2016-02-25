@@ -39,6 +39,7 @@ public class MesosTestCase {
         Scheduler.Config config = Scheduler.$.config;
         config.api = "http://localhost:" + Util.findAvailPort();
         config.jar = new File("hdfs-mesos-0.1.jar");
+        config.hadoop = new File("hadoop-1.2.1.tar.gz");
     }
 
     @After

@@ -63,10 +63,7 @@ public class Node {
 
     public void initRuntime(Offer offer) {
         reservation = reserve(offer);
-
         runtime = new Runtime();
-        runtime.taskId = "" + UUID.randomUUID();
-        runtime.executorId = "" + UUID.randomUUID();
         runtime.slaveId = offer.getSlaveId().getValue();
     }
 
@@ -84,7 +81,7 @@ public class Node {
             .build();
     }
 
-    private ExecutorInfo newExecutor() {
+    ExecutorInfo newExecutor() {
         if (runtime == null) throw new IllegalStateException("runtime == null");
         CommandInfo.Builder commandBuilder = CommandInfo.newBuilder();
 
@@ -98,9 +95,9 @@ public class Node {
             .setValue(cmd);
 
         return ExecutorInfo.newBuilder()
+            .setName("hdfs-" + id)
             .setExecutorId(ExecutorID.newBuilder().setValue(runtime.executorId))
             .setCommand(commandBuilder)
-            .setName("hdfs-" + id)
             .build();
     }
 
@@ -145,9 +142,9 @@ public class Node {
     }
 
     public static class Runtime {
-        public String taskId;
-        public String executorId;
-        public String slaveId;
+        public String taskId = "" + UUID.randomUUID();
+        public String executorId = "" + UUID.randomUUID();
+        public String slaveId = "" + UUID.randomUUID();
 
         public Runtime() {}
         public Runtime(JSONObject json) { fromJson(json); }

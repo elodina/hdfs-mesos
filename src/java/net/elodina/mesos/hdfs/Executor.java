@@ -3,6 +3,9 @@ package net.elodina.mesos.hdfs;
 import org.apache.log4j.*;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.*;
 
@@ -18,7 +21,7 @@ public class Executor implements org.apache.mesos.Executor {
     public static File hadoop() { return new File(hadoopDir, "bin/hadoop"); }
 
     private String hostname;
-    private NNProcess process;
+    private HdfsProcess process;
 
     @Override
     public void registered(ExecutorDriver driver, ExecutorInfo executorInfo, FrameworkInfo framework, SlaveInfo slave) {
@@ -60,7 +63,12 @@ public class Executor implements org.apache.mesos.Executor {
     }
 
     private void runHdfs(TaskInfo task, ExecutorDriver driver) throws InterruptedException, IOException {
-        process = new NNProcess(hostname);
+        JSONObject json;
+        try { json = (JSONObject) new JSONParser().parse(task.getData().toStringUtf8()); }
+        catch (ParseException e) { throw new IllegalStateException(e); }
+        Node node = new Node(json);
+
+        process = new HdfsProcess(node, hostname);
         process.start();
 
         driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_RUNNING).build());

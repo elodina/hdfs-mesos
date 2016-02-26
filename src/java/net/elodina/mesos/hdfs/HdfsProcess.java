@@ -3,19 +3,21 @@ package net.elodina.mesos.hdfs;
 import java.io.File;
 import java.io.IOException;
 
-public class NNProcess {
+public class HdfsProcess {
+    private Node node;
     private String hostname;
 
     private Process process;
 
-    public NNProcess(String hostname) {
+    public HdfsProcess(Node node, String hostname) {
+        this.node = node;
         this.hostname = hostname;
     }
 
     public void start() throws IOException, InterruptedException {
         createCoreSiteXml();
-        formatFs();
-        process = startNN();
+        if (node.type == Node.Type.NAME_NODE) formatNameNode();
+        process = startProcess();
     }
 
     public int waitFor() throws InterruptedException {
@@ -46,7 +48,7 @@ public class NNProcess {
         Util.IO.writeFile(file, content);
     }
 
-    private void formatFs() throws IOException, InterruptedException {
+    private void formatNameNode() throws IOException, InterruptedException {
         ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), "namenode", "-format")
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -57,10 +59,17 @@ public class NNProcess {
         if (code != 0) throw new IllegalStateException("Failed to format FS: process exited with " + code);
     }
 
-    private Process startNN() throws IOException {
-        ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), "namenode")
-            .redirectOutput(new File("nn.out"))
-            .redirectError(new File("nn.err"));
+    private Process startProcess() throws IOException {
+        String cmd;
+        switch (node.type) {
+            case NAME_NODE: cmd = "namenode"; break;
+            case DATA_NODE: cmd = "datanode"; break;
+            default: throw new IllegalStateException("unsupported node type " + node.type);
+        }
+
+        ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), cmd)
+            .redirectOutput(new File(node.type.name().toLowerCase() + ".out"))
+            .redirectError(new File(node.type.name().toLowerCase() + ".err"));
 
         builder.environment().put("JAVA_HOME", "" + Executor.javaHome);
         return builder.start();

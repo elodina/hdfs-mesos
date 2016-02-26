@@ -5,13 +5,13 @@ import java.io.IOException;
 
 public class HdfsProcess {
     private Node node;
-    private String hostname;
+    private String fsUri;
 
     private Process process;
 
-    public HdfsProcess(Node node, String hostname) {
+    public HdfsProcess(Node node, String fsUri) {
         this.node = node;
-        this.hostname = hostname;
+        this.fsUri = fsUri;
     }
 
     public void start() throws IOException, InterruptedException {
@@ -40,7 +40,7 @@ public class HdfsProcess {
             "</property>\n\n" +
             "<property>\n" +
             "  <name>fs.default.name</name>\n" +
-            "  <value>hdfs://" + hostname + ":54310</value>\n" +
+            "  <value>" + fsUri + "</value>\n" +
             "</property>\n" +
             "</configuration>";
 

@@ -11,6 +11,7 @@ import static org.apache.mesos.Protos.*;
 
 public class Node {
     public String id;
+    public Type type = Type.DATA_NODE;
     public State state = State.IDLE;
 
     public double cpus = 0.5;
@@ -106,6 +107,7 @@ public class Node {
         JSONObject json = new JSONObject();
 
         json.put("id", id);
+        json.put("type", type.name().toLowerCase());
         json.put("state", "" + state.name().toLowerCase());
 
         json.put("cpus", cpus);
@@ -119,6 +121,7 @@ public class Node {
 
     public void fromJson(JSONObject json) {
         id = (String) json.get("id");
+        type = Type.valueOf(json.get("type").toString().toUpperCase());
         state = State.valueOf(json.get("state").toString().toUpperCase());
 
         cpus = ((Number) json.get("cpus")).doubleValue();
@@ -134,12 +137,17 @@ public class Node {
 
     public String toString() { return id; }
 
-    public static enum State {
+    public enum State {
         IDLE,
         STARTING,
         RUNNING,
         STOPPING,
         RECONCILING
+    }
+
+    public enum Type {
+        NAME_NODE,
+        DATA_NODE
     }
 
     public static class Runtime {

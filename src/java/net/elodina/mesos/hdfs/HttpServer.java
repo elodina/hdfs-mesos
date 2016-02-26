@@ -125,6 +125,11 @@ public class HttpServer {
             if (add && Nodes.getNode(id) != null) throw new HttpError(400, "duplicate node");
             if (!add && Nodes.getNode(id) == null) throw new HttpError(400, "node not found");
 
+            Node.Type type = null;
+            if (add)
+                try { type = Node.Type.valueOf(request.getParameter("type").toUpperCase()); }
+                catch (IllegalArgumentException e) { throw new HttpError(400, "invalid type"); }
+
             Double cpus = null;
             if (request.getParameter("cpus") != null)
                 try { cpus = Double.valueOf(request.getParameter("cpus")); }
@@ -139,6 +144,7 @@ public class HttpServer {
             if (add) node = Nodes.addNode(new Node(id));
             else node = Nodes.getNode(id);
 
+            if (type != null) node.type = type;
             if (cpus != null) node.cpus = cpus;
             if (mem != null) node.mem = mem;
 

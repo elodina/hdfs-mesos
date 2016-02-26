@@ -93,6 +93,9 @@ public class NodeTest extends MesosTestCase {
     @Test
     public void toJson_fromJson() {
         Node node = new Node("node");
+        node.type = Node.Type.NAME_NODE;
+        node.state = Node.State.RUNNING;
+
         node.cpus = 2;
         node.mem = 1024;
 
@@ -100,6 +103,10 @@ public class NodeTest extends MesosTestCase {
         node.reservation = new Node.Reservation();
 
         Node read = new Node(node.toJson());
+        assertEquals(node.id, read.id);
+        assertEquals(node.type, read.type);
+        assertEquals(node.state, read.state);
+
         assertEquals(node.cpus, read.cpus, 0.001);
         assertEquals(node.mem, read.mem);
 

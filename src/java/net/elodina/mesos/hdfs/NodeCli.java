@@ -76,6 +76,8 @@ public class NodeCli {
 
     private static void handleAddUpdate(String cmd, List<String> args, boolean help) {
         OptionParser parser = new OptionParser();
+        if (cmd.equals("add")) parser.accepts("type", "node type (name_node, data_node).").withRequiredArg().required().ofType(String.class);
+
         parser.accepts("cpus", "CPU amount (0.5, 1, 2).").withRequiredArg().ofType(Double.class);
         parser.accepts("mem", "Mem amount in Mb.").withRequiredArg().ofType(Long.class);
 
@@ -102,11 +104,14 @@ public class NodeCli {
             throw new Error(e.getMessage());
         }
 
+        String type = (String) options.valueOf("type");
         Double cpus = (Double) options.valueOf("cpus");
         Long mem = (Long) options.valueOf("mem");
 
         Map<String, String> params = new HashMap<>();
         params.put("node", id);
+
+        if (type != null) params.put("type", type);
         if (cpus != null) params.put("cpus", "" + cpus);
         if (mem != null) params.put("mem", "" + mem);
 
@@ -188,6 +193,7 @@ public class NodeCli {
 
     private static void printNode(Node node, int indent) {
         printLine("id: " + node.id, indent);
+        printLine("type: " + node.type.name().toLowerCase(), indent);
         printLine("state: " + node.state.name().toLowerCase(), indent);
         printLine("resources: " + nodeResources(node), indent);
 

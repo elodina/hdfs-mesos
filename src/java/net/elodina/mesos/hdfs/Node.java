@@ -31,6 +31,12 @@ public class Node {
         if (reservation.cpus < cpus) return "cpus < " + cpus;
         if (reservation.mem < mem) return "mem < " + mem;
 
+        if (type == Type.DATA_NODE) {
+            List<Node> nns = Nodes.getNodes(Node.Type.NAME_NODE);
+            boolean nnRunning = !nns.isEmpty() && nns.get(0).state == Node.State.RUNNING;
+            if (!nnRunning) return "no running name node";
+        }
+
         return null;
     }
 

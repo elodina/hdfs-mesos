@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
 public class NodeTest extends MesosTestCase {
     @Test
     public void matches() {
-        Node node = new Node("0");
+        Node node = new Node("0", Node.Type.NAME_NODE);
         node.cpus = 0.5;
         node.mem = 500;
 
@@ -16,6 +16,10 @@ public class NodeTest extends MesosTestCase {
         assertEquals("mem < 500", node.matches(offer("cpus:0.5; mem:400")));
 
         assertNull(node.matches(offer("cpus:0.5; mem:500; ports:0..4")));
+
+        // no running name node
+        node.type = Node.Type.DATA_NODE;
+        assertEquals("no running name node", node.matches(offer("cpus:0.5; mem:500; ports:0..4")));
     }
 
     @Test
@@ -44,6 +48,7 @@ public class NodeTest extends MesosTestCase {
         assertNotNull(node.runtime);
         assertNotNull(node.runtime.taskId);
         assertNotNull(node.runtime.executorId);
+        assertNotNull(node.runtime.fsUri);
         assertEquals(offer.getSlaveId().getValue(), node.runtime.slaveId);
 
         assertNotNull(node.reservation);

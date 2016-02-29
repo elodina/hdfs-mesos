@@ -94,9 +94,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         }
 
         // stop nodes
-        for (Node node : Nodes.getNodes()) {
-            if (node.state != Node.State.STOPPING) continue;
-
+        for (Node node : Nodes.getNodes(Node.State.STOPPING)) {
             if (node.runtime == null) {
                 node.state = Node.State.IDLE;
                 continue;
@@ -113,9 +111,8 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
     private String acceptOffer(Protos.Offer offer) {
         List<Node> nodes = new ArrayList<>();
-        for (Node node : Nodes.getNodes())
-            if (node.state == Node.State.STARTING && node.runtime == null)
-                nodes.add(node);
+        for (Node node : Nodes.getNodes(Node.State.STARTING))
+            if (node.runtime == null) nodes.add(node);
 
         if (nodes.isEmpty()) return "nothing to start";
 

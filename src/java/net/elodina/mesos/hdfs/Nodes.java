@@ -18,6 +18,18 @@ public class Nodes {
 
     public static List<Node> getNodes() { return Collections.unmodifiableList(nodes); }
 
+    public static List<Node> getNodes(Node.State state) {
+        List<Node> nodes = new ArrayList<>();
+        for (Node node : getNodes()) if (node.state == state) nodes.add(node);
+        return nodes;
+    }
+
+    public static List<Node> getNodes(Node.Type type) {
+        List<Node> nodes = new ArrayList<>();
+        for (Node node : getNodes()) if (node.type == type) nodes.add(node);
+        return nodes;
+    }
+
     public static Node getNode(String id) {
         for (Node node : nodes)
             if (node.id.equals(id)) return node;
@@ -27,6 +39,9 @@ public class Nodes {
 
     public static Node addNode(Node node) {
         if (getNode(node.id) != null) throw new IllegalArgumentException("duplicate node");
+
+        if (node.type == Node.Type.NAME_NODE && !getNodes(Node.Type.NAME_NODE).isEmpty())
+            throw new IllegalArgumentException("second name node is not supported");
 
         nodes.add(node);
         return node;

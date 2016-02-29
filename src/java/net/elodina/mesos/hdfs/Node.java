@@ -21,7 +21,8 @@ public class Node {
     public Reservation reservation;
 
     public Node() {}
-    public Node(String id) { this.id = id; }
+    public Node(String id) { this(id, Type.DATA_NODE); }
+    public Node(String id, Node.Type type) { this.id = id; this.type = type; }
     public Node(JSONObject json) { fromJson(json); }
 
     public String matches(Offer offer) {

@@ -126,9 +126,13 @@ public class HttpServer {
             if (!add && Nodes.getNode(id) == null) throw new HttpError(400, "node not found");
 
             Node.Type type = null;
-            if (add)
+            if (add) {
                 try { type = Node.Type.valueOf(request.getParameter("type").toUpperCase()); }
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid type"); }
+
+                if (type == Node.Type.NAME_NODE && !Nodes.getNodes(Node.Type.NAME_NODE).isEmpty())
+                    throw new HttpError(400, "second name node is not supported");
+            }
 
             Double cpus = null;
             if (request.getParameter("cpus") != null)

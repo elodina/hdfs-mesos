@@ -58,6 +58,18 @@ install_docker() {
     service mesos-slave restart
 }
 
+set_java_home() {
+    # JAVA_HOME
+    JAVA_BIN_DIR=$(dirname `readlink -f /etc/alternatives/java`)
+    JAVA_HOME=$(readlink -f $JAVA_BIN_DIR/../../)
+    echo "JAVA_HOME=$JAVA_HOME" >> /home/vagrant/.profile
+    echo 'PATH=$JAVA_HOME/bin:$PATH' >> /home/vagrant/.profile
+}
+
+install_hadoop() {
+    apt-get install -qy hadoop
+}
+
 if [[ $1 != "master" && $1 != "slave" ]]; then
     echo "Usage: $0 master|slave"
     exit 1
@@ -92,13 +104,18 @@ echo "deb http://repos.mesosphere.io/${DISTRO} ${CODENAME} main" | tee /etc/apt/
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
 echo "deb http://get.docker.com/ubuntu docker main" > /etc/apt/sources.list.d/docker.list
 
+# add hadoop repo
+add-apt-repository -y ppa:hadoop-ubuntu/stable
+
 apt-get -qy update
 
 # install deps
 apt-get install -qy vim zip mc curl wget openjdk-7-jre scala git
+set_java_home
 
 install_mesos $mode
 if [ $mode == "master" ]; then
+    install_hadoop
     install_marathon
 fi
 #install_docker

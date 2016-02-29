@@ -16,6 +16,7 @@ public class Node {
 
     public double cpus = 0.5;
     public long mem = 512;
+    public String executorJvmOpts;
 
     public Runtime runtime;
     public Reservation reservation;
@@ -94,6 +95,7 @@ public class Node {
 
         Scheduler.Config config = Scheduler.$.config;
         String cmd = "java -cp " + config.jar.getName();
+        if (executorJvmOpts != null) cmd += " " + executorJvmOpts;
         cmd += " net.elodina.mesos.hdfs.Executor";
 
         commandBuilder
@@ -118,6 +120,7 @@ public class Node {
 
         json.put("cpus", cpus);
         json.put("mem", mem);
+        if (executorJvmOpts != null) json.put("executorJvmOpts", executorJvmOpts);
 
         if (runtime != null) json.put("runtime", runtime.toJson());
         if (reservation != null) json.put("reservation", reservation.toJson());
@@ -132,6 +135,7 @@ public class Node {
 
         cpus = ((Number) json.get("cpus")).doubleValue();
         mem = ((Number) json.get("mem")).longValue();
+        if (json.containsKey("executorJvmOpts")) executorJvmOpts = (String) json.get("executorJvmOpts");
 
         if (json.containsKey("runtime")) runtime = new Runtime((JSONObject) json.get("runtime"));
         if (json.containsKey("reservation")) reservation = new Reservation((JSONObject) json.get("reservation"));

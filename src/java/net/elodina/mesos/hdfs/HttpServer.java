@@ -144,6 +144,8 @@ public class HttpServer {
                 try { mem = Long.valueOf(request.getParameter("mem")); }
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid mem"); }
 
+            String executorJvmOpts = request.getParameter("executorJvmOpts");
+
             Node node;
             if (add) node = Nodes.addNode(new Node(id));
             else node = Nodes.getNode(id);
@@ -152,6 +154,7 @@ public class HttpServer {
             if (cpus != null) node.cpus = cpus;
             if (mem != null) node.mem = mem;
 
+            if (executorJvmOpts != null) node.executorJvmOpts = executorJvmOpts.equals("") ? null : executorJvmOpts;
             Nodes.save();
 
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = new JSONArray();

@@ -93,6 +93,7 @@ public class NodeTest extends MesosTestCase {
     @Test
     public void newExecutor() {
         Node node = new Node("0");
+        node.executorJvmOpts = "-Xmx100m";
         node.initRuntime(offer());
 
         ExecutorInfo executor = node.newExecutor();
@@ -111,6 +112,7 @@ public class NodeTest extends MesosTestCase {
         // cmd
         String cmd = command.getValue();
         assertTrue(cmd, cmd.contains("java"));
+        assertTrue(cmd, cmd.contains(node.executorJvmOpts));
         assertTrue(cmd, cmd.contains(Executor.class.getName()));
     }
 
@@ -122,6 +124,8 @@ public class NodeTest extends MesosTestCase {
 
         node.cpus = 2;
         node.mem = 1024;
+        node.executorJvmOpts = "-Xmx100m";
+
         node.initRuntime(offer());
 
         Node read = new Node(node.toJson());
@@ -131,6 +135,7 @@ public class NodeTest extends MesosTestCase {
 
         assertEquals(node.cpus, read.cpus, 0.001);
         assertEquals(node.mem, read.mem);
+        assertEquals(node.executorJvmOpts, read.executorJvmOpts);
 
         assertNotNull(read.runtime);
         assertNotNull(read.reservation);

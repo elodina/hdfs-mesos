@@ -228,14 +228,19 @@ public class HttpServer {
         }
 
         private void handleNodeRemove(HttpServletRequest request) throws IOException {
-            String id = request.getParameter("node");
-            if (id == null || id.isEmpty()) throw new HttpError(400, "node required");
+            String expr = request.getParameter("node");
+            if (expr == null || expr.isEmpty()) throw new HttpError(400, "node required");
 
-            Node node = Nodes.getNode(id);
-            if (node == null) throw new HttpError(400, "node not found");
-            if (node.state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
+            List<String> ids = Nodes.expandExpr(expr);
+            for (String id : ids) {
+                Node node = Nodes.getNode(id);
+                if (node == null) throw new HttpError(400, "node not found");
+                if (node.state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
+            }
 
-            Nodes.removeNode(node);
+            for (Node node : Nodes.getNodes(ids))
+                Nodes.removeNode(node);
+
             Nodes.save();
         }
 

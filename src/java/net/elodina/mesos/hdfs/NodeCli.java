@@ -209,18 +209,18 @@ public class NodeCli {
 
     private static void handleRemove(List<String> args, boolean help) {
         if (help) {
-            printLine("Remove node\nUsage: node remove <id>\n");
+            printLine("Remove node\nUsage: node remove <ids>\n");
             handleGenericOptions(null, true);
             return;
         }
 
         if (args.isEmpty()) throw new Error("id required");
-        String id = args.remove(0);
+        String expr = args.remove(0);
 
-        try { sendRequest("/node/remove", Collections.singletonMap("node", id)); }
+        try { sendRequest("/node/remove", Collections.singletonMap("node", expr)); }
         catch (IOException e) { throw new Error("" + e); }
 
-        printLine("node removed");
+        printLine("node(s) removed");
     }
 
     private static void printNode(Node node, int indent) {

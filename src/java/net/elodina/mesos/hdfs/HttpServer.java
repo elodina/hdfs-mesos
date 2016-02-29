@@ -184,29 +184,42 @@ public class HttpServer {
 
         @SuppressWarnings("unchecked")
         private void handleNodeStartStop(HttpServletRequest request, HttpServletResponse response, boolean start) throws IOException {
-            String id = request.getParameter("node");
-            if (id == null || id.isEmpty()) throw new HttpError(400, "node required");
+            String expr = request.getParameter("node");
+            if (expr == null || expr.isEmpty()) throw new HttpError(400, "node required");
+
+            List<String> ids;
+            try { ids = Nodes.expandExpr(expr); }
+            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid nodes"); }
+
+            for (String id : ids) {
+                Node node = Nodes.getNode(id);
+                if (node == null) throw new HttpError(400, "node not found");
+                if (start && node.state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
+                if (!start && node.state == Node.State.IDLE) throw new HttpError(400, "node should not be idle");
+            }
 
             Util.Period timeout = new Util.Period("2m");
             if (request.getParameter("timeout") != null)
                 try { timeout = new Util.Period(request.getParameter("timeout")); }
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid timeout"); }
 
-            Node node = Nodes.getNode(id);
-            if (node == null) throw new HttpError(400, "node not found");
 
-            node.state = start ? Node.State.STARTING : Node.State.STOPPING;
-            if (!start && node.runtime != null) node.runtime.killSent = false;
+            boolean completed = true;
+            List<Node> nodes = Nodes.getNodes(ids);
 
-            boolean completed;
-            try { completed = node.waitFor(start ? Node.State.RUNNING : Node.State.IDLE, timeout); }
-            catch (InterruptedException e) { throw new IllegalStateException(e); }
+            for (Node node : nodes) {
+                node.state = start ? Node.State.STARTING : Node.State.STOPPING;
+                if (!start && node.runtime != null) node.runtime.killSent = false;
+                Nodes.save();
 
-            Nodes.save();
+                try { completed = node.waitFor(start ? Node.State.RUNNING : Node.State.IDLE, timeout); }
+                catch (InterruptedException e) { throw new IllegalStateException(e); }
+                if (!completed) break;
+            }
 
             String status = completed ? (start ? "started": "stopped"): "timeout";
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>)new JSONArray();
-            nodesJson.add(node.toJson());
+            for (Node node : nodes) nodesJson.add(node.toJson());
 
             JSONObject json = new JSONObject();
             json.put("status", status);

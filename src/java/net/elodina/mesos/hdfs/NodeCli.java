@@ -153,7 +153,7 @@ public class NodeCli {
         parser.accepts("timeout", "timeout (30s, 1m, 1h). 0s - no timeout").withRequiredArg().ofType(String.class);
 
         if (help) {
-            printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <id> [options]\n");
+            printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");
             try { parser.printHelpOn(out); }
             catch (IOException ignore) {}
 
@@ -163,7 +163,7 @@ public class NodeCli {
         }
 
         if (args.isEmpty()) throw new Error("id required");
-        String id = args.remove(0);
+        String expr = args.remove(0);
 
         OptionSet options;
         try { options = parser.parse(args.toArray(new String[args.size()])); }
@@ -179,7 +179,7 @@ public class NodeCli {
         Boolean force = (Boolean) options.valueOf("force");
 
         HashMap<String, String> params = new HashMap<>();
-        params.put("node", id);
+        params.put("node", expr);
         if (timeout != null) params.put("timeout", timeout);
         if (force != null) params.put("force", "" + force);
 

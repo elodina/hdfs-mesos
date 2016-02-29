@@ -23,7 +23,7 @@ public class NodeCli {
         String cmd = args.remove(0);
 
         switch (cmd) {
-            case "list": handleList(false); break;
+            case "list": handleList(args, false); break;
             case "add": case "update": handleAddUpdate(cmd, args, false); break;
             case "start": case "stop": handleStartStop(cmd, args, false); break;
             case "remove": handleRemove(args, false); break;
@@ -44,7 +44,7 @@ public class NodeCli {
         }
 
         switch (cmd) {
-            case "list": handleList(true); break;
+            case "list": handleList(args, true); break;
             case "add": case "update": handleAddUpdate(cmd, args, true); break;
             case "start": case "stop": handleStartStop(cmd, args, true); break;
             case "remove": handleRemove(args, true); break;
@@ -52,15 +52,20 @@ public class NodeCli {
         }
     }
 
-    private static void handleList(boolean help) {
+    private static void handleList(List<String> args, boolean help) {
         if (help) {
-            printLine("List nodes\nUsage: node list\n");
+            printLine("List nodes\nUsage: node list [<ids>]\n");
             handleGenericOptions(null, true);
             return;
         }
 
+        String expr = !args.isEmpty() ? args.remove(0) : null;
+
+        Map<String, String> params = new HashMap<>();
+        if (expr != null) params.put("node", expr);
+
         JSONAware json;
-        try { json = sendRequest("/node/list", Collections.<String, String>emptyMap()); }
+        try { json = sendRequest("/node/list", params); }
         catch (IOException e) { throw new Error("" + e); }
 
         @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>) json;
@@ -97,7 +102,7 @@ public class NodeCli {
         }
 
         if (args.isEmpty()) throw new Error("id required");
-        String id = args.remove(0);
+        String expr = args.remove(0);
 
         OptionSet options;
         try { options = parser.parse(args.toArray(new String[args.size()])); }
@@ -117,7 +122,7 @@ public class NodeCli {
         String hadoopJvmOpts = (String) options.valueOf("hadoop-jvm-opts");
 
         Map<String, String> params = new HashMap<>();
-        params.put("node", id);
+        params.put("node", expr);
 
         if (type != null) params.put("type", type);
         if (cpus != null) params.put("cpus", "" + cpus);

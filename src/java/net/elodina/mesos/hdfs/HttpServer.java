@@ -103,7 +103,7 @@ public class HttpServer {
             response.setContentType("application/json; charset=utf-8");
 
             switch (uri) {
-                case "/list": handleNodeList(response); break;
+                case "/list": handleNodeList(request, response); break;
                 case "/add": case "/update": handleNodeAddUpdate(request, response, uri.equals("/add")); break;
                 case "/start": case "/stop": handleNodeStartStop(request, response, uri.equals("/start")); break;
                 case "/remove": handleNodeRemove(request); break;
@@ -111,8 +111,12 @@ public class HttpServer {
             }
         }
 
-        private void handleNodeList(HttpServletResponse response) throws IOException {
-            List<Node> nodes = Nodes.getNodes();
+        private void handleNodeList(HttpServletRequest request, HttpServletResponse response) throws IOException {
+            String expr = "*";
+            if (request.getParameter("node") != null) expr = request.getParameter("node");
+
+            List<String> ids = Nodes.expandExpr(expr);
+            List<Node> nodes = Nodes.getNodes(ids);
 
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = new JSONArray();
             for (Node node : nodes) nodesJson.add(node.toJson());

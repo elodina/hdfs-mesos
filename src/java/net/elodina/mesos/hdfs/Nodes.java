@@ -30,6 +30,17 @@ public class Nodes {
         return nodes;
     }
 
+    public static List<Node> getNodes(List<String> ids) {
+        List<Node> nodes = new ArrayList<>();
+
+        for (String id : ids) {
+            Node node = getNode(id);
+            if (node != null) nodes.add(node);
+        }
+
+        return nodes;
+    }
+
     public static Node getNode(String id) {
         for (Node node : nodes)
             if (node.id.equals(id)) return node;

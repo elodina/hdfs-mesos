@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,12 +121,19 @@ public class HttpServer {
         }
 
         private void handleNodeAddUpdate(HttpServletRequest request, HttpServletResponse response, boolean add) throws IOException {
-            String id = request.getParameter("node");
-            if (id == null || id.isEmpty()) throw new HttpError(400, "node required");
+            String expr = request.getParameter("node");
+            if (expr == null || expr.isEmpty()) throw new HttpError(400, "node required");
 
-            if (add && Nodes.getNode(id) != null) throw new HttpError(400, "duplicate node");
-            if (!add && Nodes.getNode(id) == null) throw new HttpError(400, "node not found");
-            if (!add && Nodes.getNode(id).state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
+            List<String> ids;
+            try { ids = Nodes.expandExpr(expr); }
+            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid nodes"); }
+
+            for (String id : ids) {
+                Node node = Nodes.getNode(id);
+                if (add && node != null) throw new HttpError(400, "duplicate node");
+                if (!add && node == null) throw new HttpError(400, "node not found");
+                if (!add && node.state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
+            }
 
             Node.Type type = null;
             if (add) {
@@ -149,19 +157,24 @@ public class HttpServer {
             String executorJvmOpts = request.getParameter("executorJvmOpts");
             String hadoopJvmOpts = request.getParameter("hadoopJvmOpts");
 
-            Node node;
-            if (add) node = Nodes.addNode(new Node(id, type));
-            else node = Nodes.getNode(id);
+            List<Node> nodes = new ArrayList<>();
+            for (String id : ids) {
+                Node node;
+                if (add) node = Nodes.addNode(new Node(id, type));
+                else node = Nodes.getNode(id);
 
-            if (cpus != null) node.cpus = cpus;
-            if (mem != null) node.mem = mem;
+                nodes.add(node);
 
-            if (executorJvmOpts != null) node.executorJvmOpts = executorJvmOpts.equals("") ? null : executorJvmOpts;
-            if (hadoopJvmOpts != null) node.hadoopJvmOpts = hadoopJvmOpts.equals("") ? null : hadoopJvmOpts;
+                if (cpus != null) node.cpus = cpus;
+                if (mem != null) node.mem = mem;
+
+                if (executorJvmOpts != null) node.executorJvmOpts = executorJvmOpts.equals("") ? null : executorJvmOpts;
+                if (hadoopJvmOpts != null) node.hadoopJvmOpts = hadoopJvmOpts.equals("") ? null : hadoopJvmOpts;
+            }
             Nodes.save();
 
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = new JSONArray();
-            nodesJson.add(node.toJson());
+            for (Node node : nodes) nodesJson.add(node.toJson());
             response.getWriter().println("" + nodesJson);
         }
 

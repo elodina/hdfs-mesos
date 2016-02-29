@@ -37,6 +37,60 @@ public class Nodes {
         return null;
     }
 
+    /*
+        Expands expr. Examples:
+        - nn, dn0, dn3                  -> nn, dn0, dn3
+        - dn* (dn0, dn1, dn2 exists)    -> dn0, dn1, dn2
+        - 0..3                          -> 0, 1, 2, 3
+        - dn1..3                        -> dn1, dn2, dn3
+     */
+    public static List<String> expandExpr(String expr) {
+        List<String> ids = new ArrayList<>();
+
+        for (String part : expr.split(",")) {
+            part = part.trim();
+
+            if (part.endsWith("*")) ids.addAll(expandWildcard(expr));
+            else if (part.contains("..")) ids.addAll(expandRange(part));
+            else ids.add(part);
+        }
+
+        return ids;
+    }
+
+    private static List<String> expandWildcard(String expr) {
+        List<String> ids = new ArrayList<>();
+
+        String prefix = expr.substring(0, expr.length() - 1);
+        for (Node node : getNodes())
+            if (node.id.startsWith(prefix)) ids.add(node.id);
+
+        return ids;
+    }
+
+    private static List<String> expandRange(String expr) {
+        // dn0..5
+        int rangeIdx = expr.indexOf("..");
+
+        int startIdx = rangeIdx - 1;
+        //noinspection StatementWithEmptyBody
+        for (char[] chars = expr.toCharArray(); startIdx >= 0 && Character.isDigit(chars[startIdx]); startIdx--);
+        startIdx ++;
+
+        String prefix = expr.substring(0, startIdx);
+        int start, end;
+        try {
+            start = Integer.parseInt(expr.substring(startIdx, rangeIdx));
+            end = Integer.parseInt(expr.substring(rangeIdx + 2));
+        } catch (NumberFormatException e) { throw new IllegalArgumentException(expr); }
+
+        List<String> ids = new ArrayList<>();
+        for (int i = start; i <= end; i++)
+            ids.add(prefix + i);
+
+        return ids;
+    }
+
     public static Node addNode(Node node) {
         if (getNode(node.id) != null) throw new IllegalArgumentException("duplicate node");
 

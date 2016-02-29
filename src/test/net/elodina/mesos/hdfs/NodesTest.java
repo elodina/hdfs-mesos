@@ -53,6 +53,24 @@ public class NodesTest {
     }
 
     @Test
+    public void expandExpr() {
+        Nodes.addNode(new Node("nn", Node.Type.NAME_NODE));
+        Nodes.addNode(new Node("dn0", Node.Type.DATA_NODE));
+        Nodes.addNode(new Node("dn1", Node.Type.DATA_NODE));
+
+        // id list
+        assertEquals(Arrays.asList("nn", "dn2"), Nodes.expandExpr("nn,dn2"));
+
+        // wildcard
+        assertEquals(Arrays.asList("dn0", "dn1"), Nodes.expandExpr("dn*"));
+        assertEquals(Arrays.asList("nn", "dn0", "dn1"), Nodes.expandExpr("*"));
+
+        // range
+        assertEquals(Arrays.asList("1", "2", "3"), Nodes.expandExpr("1..3"));
+        assertEquals(Arrays.asList("dn1", "dn2", "dn3"), Nodes.expandExpr("dn1..3"));
+    }
+
+    @Test
     public void addNode() {
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAME_NODE));
         assertEquals(Arrays.asList(nn), Nodes.getNodes());

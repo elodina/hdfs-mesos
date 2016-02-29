@@ -87,7 +87,7 @@ public class NodeCli {
         parser.accepts("hadoop-jvm-opts", "Hadoop JVM options.").withRequiredArg().ofType(String.class);
 
         if (help) {
-            printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <id> [options]\n");
+            printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");
             try { parser.printHelpOn(out); }
             catch (IOException ignore) {}
 

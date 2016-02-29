@@ -62,8 +62,8 @@ set_java_home() {
     # JAVA_HOME
     JAVA_BIN_DIR=$(dirname `readlink -f /etc/alternatives/java`)
     JAVA_HOME=$(readlink -f $JAVA_BIN_DIR/../../)
-    echo "JAVA_HOME=$JAVA_HOME" >> /home/vagrant/.profile
-    echo 'PATH=$JAVA_HOME/bin:$PATH' >> /home/vagrant/.profile
+    echo "export JAVA_HOME=$JAVA_HOME" >> /home/vagrant/.profile
+    echo 'export PATH=$JAVA_HOME/bin:$PATH' >> /home/vagrant/.profile
 }
 
 install_hadoop() {

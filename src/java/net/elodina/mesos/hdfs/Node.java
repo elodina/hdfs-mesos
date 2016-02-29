@@ -11,7 +11,7 @@ import static org.apache.mesos.Protos.*;
 
 public class Node {
     public String id;
-    public Type type = Type.DATA_NODE;
+    public Type type = Type.NAME_NODE;
     public State state = State.IDLE;
 
     public double cpus = 0.5;
@@ -21,7 +21,7 @@ public class Node {
     public Reservation reservation;
 
     public Node() {}
-    public Node(String id) { this(id, Type.DATA_NODE); }
+    public Node(String id) { this.id = id; }
     public Node(String id, Node.Type type) { this.id = id; this.type = type; }
     public Node(JSONObject json) { fromJson(json); }
 
@@ -71,10 +71,7 @@ public class Node {
 
     public void initRuntime(Offer offer) {
         reservation = reserve(offer);
-
-        runtime = new Runtime();
-        runtime.slaveId = offer.getSlaveId().getValue();
-        runtime.fsUri = "hdfs://" + offer.getHostname() + ":54310";
+        runtime = new Runtime(offer);
     }
 
     public TaskInfo newTask() {
@@ -159,10 +156,12 @@ public class Node {
         DATA_NODE
     }
 
-    public static class Runtime {
+    public class Runtime {
         public String taskId = "" + UUID.randomUUID();
         public String executorId = "" + UUID.randomUUID();
-        public String slaveId = "" + UUID.randomUUID();
+
+        public String slaveId;
+        public String hostname;
 
         public String fsUri;
         public boolean killSent;
@@ -170,13 +169,36 @@ public class Node {
         public Runtime() {}
         public Runtime(JSONObject json) { fromJson(json); }
 
+        public Runtime(Offer offer) {
+            slaveId = offer.getSlaveId().getValue();
+            hostname = offer.getHostname();
+
+            fsUri = getFsUri();
+        }
+
+        private String getFsUri() {
+            int port = 54310;
+
+            List<Node> nns = Nodes.getNodes(Type.NAME_NODE);
+            Node nn = !nns.isEmpty() ? nns.get(0) : null;
+
+            String nnHost = type == Type.NAME_NODE ?
+                hostname :
+                nn != null && nn.runtime != null ? nn.runtime.hostname : null;
+
+            if (nnHost == null) throw new IllegalStateException("Can't resolve name node host");
+            return "hdfs://" + nnHost + ":" + port;
+        }
+
         @SuppressWarnings("unchecked")
         public JSONObject toJson() {
             JSONObject json = new JSONObject();
 
             json.put("taskId", taskId);
             json.put("executorId", executorId);
+
             json.put("slaveId", slaveId);
+            json.put("hostname", hostname);
 
             json.put("fsUri", fsUri);
             json.put("killSent", killSent);
@@ -187,7 +209,9 @@ public class Node {
         public void fromJson(JSONObject json) {
             taskId = (String) json.get("taskId");
             executorId = (String) json.get("executorId");
+
             slaveId = (String) json.get("slaveId");
+            hostname = (String) json.get("hostname");
 
             fsUri = (String) json.get("fsUri");
             killSent = (boolean) json.get("killSent");

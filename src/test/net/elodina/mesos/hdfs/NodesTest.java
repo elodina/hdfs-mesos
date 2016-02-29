@@ -16,9 +16,9 @@ public class NodesTest {
 
     @Test
     public void getNodes() {
-        Node n0 = Nodes.addNode(new Node("n0"));
-        Node n1 = Nodes.addNode(new Node("n1"));
-        Node n2 = Nodes.addNode(new Node("n2"));
+        Node n0 = Nodes.addNode(new Node("n0", Node.Type.NAME_NODE));
+        Node n1 = Nodes.addNode(new Node("n1", Node.Type.DATA_NODE));
+        Node n2 = Nodes.addNode(new Node("n2", Node.Type.DATA_NODE));
         assertEquals(Arrays.asList(n0, n1, n2), Nodes.getNodes());
     }
 
@@ -35,8 +35,8 @@ public class NodesTest {
     @Test
     public void getNodes_by_state() {
         Node n0 = Nodes.addNode(new Node("n0"));
-        Node n1 = Nodes.addNode(new Node("n1"));
-        Node n2 = Nodes.addNode(new Node("n2"));
+        Node n1 = Nodes.addNode(new Node("n1", Node.Type.DATA_NODE));
+        Node n2 = Nodes.addNode(new Node("n2", Node.Type.DATA_NODE));
 
         n1.state = Node.State.RUNNING;
         n2.state = Node.State.RUNNING;
@@ -68,9 +68,9 @@ public class NodesTest {
 
     @Test
     public void removeNode() {
-        Node n0 = Nodes.addNode(new Node("n0"));
-        Node n1 = Nodes.addNode(new Node("n1"));
-        Node n2 = Nodes.addNode(new Node("n2"));
+        Node n0 = Nodes.addNode(new Node("n0", Node.Type.NAME_NODE));
+        Node n1 = Nodes.addNode(new Node("n1", Node.Type.DATA_NODE));
+        Node n2 = Nodes.addNode(new Node("n2", Node.Type.DATA_NODE));
         assertEquals(Arrays.asList(n0, n1, n2), Nodes.getNodes());
 
         Nodes.removeNode(n1);
@@ -83,7 +83,7 @@ public class NodesTest {
     public void toJson_fromJson() {
         Nodes.frameworkId = "id";
         Node n0 = Nodes.addNode(new Node("n0"));
-        Node n1 = Nodes.addNode(new Node("n1"));
+        Node n1 = Nodes.addNode(new Node("n1", Node.Type.DATA_NODE));
 
         JSONObject json = Nodes.toJson();
         Nodes.fromJson(json);

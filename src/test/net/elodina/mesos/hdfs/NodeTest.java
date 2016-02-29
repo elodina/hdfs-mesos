@@ -57,6 +57,25 @@ public class NodeTest extends MesosTestCase {
     }
 
     @Test
+    public void initRuntime_fsUri() {
+        Node node = new Node("0", Node.Type.NAME_NODE);
+
+        // name node
+        node.initRuntime(offer());
+        assertTrue(node.runtime.fsUri, node.runtime.fsUri.contains(offer().getHostname()));
+
+        // data node, no name node
+        node.type = Node.Type.DATA_NODE;
+        try { node.initRuntime(offer()); fail(); }
+        catch (IllegalStateException e) { assertTrue(e.getMessage(), e.getMessage().contains("name node host")); }
+
+        // data node, running name node
+        Node nn = Nodes.addNode(new Node("1", Node.Type.NAME_NODE));
+        nn.initRuntime(offer());
+        assertTrue(node.runtime.fsUri, node.runtime.fsUri.contains(nn.runtime.hostname));
+    }
+
+    @Test
     public void newTask() {
         Node node = new Node("0");
         node.initRuntime(offer());
@@ -103,9 +122,7 @@ public class NodeTest extends MesosTestCase {
 
         node.cpus = 2;
         node.mem = 1024;
-
-        node.runtime = new Node.Runtime();
-        node.reservation = new Node.Reservation();
+        node.initRuntime(offer());
 
         Node read = new Node(node.toJson());
         assertEquals(node.id, read.id);
@@ -122,14 +139,20 @@ public class NodeTest extends MesosTestCase {
     // Runtime
     @Test
     public void Runtime_toJson_fromJson() {
-        Node.Runtime runtime = new Node.Runtime();
+        Node node = new Node("0");
+        Node.Runtime runtime = node.new Runtime();
+        runtime.slaveId = "slaveId";
+        runtime.hostname = "hostname";
+
         runtime.fsUri = "hdfs://localhost:31000";
         runtime.killSent = true;
 
-        Node.Runtime read = new Node.Runtime(runtime.toJson());
+        Node.Runtime read = node.new Runtime(runtime.toJson());
         assertEquals(runtime.taskId, read.taskId);
         assertEquals(runtime.executorId, read.executorId);
+
         assertEquals(runtime.slaveId, read.slaveId);
+        assertEquals(runtime.hostname, read.hostname);
 
         assertEquals(runtime.fsUri, read.fsUri);
         assertEquals(runtime.killSent, read.killSent);

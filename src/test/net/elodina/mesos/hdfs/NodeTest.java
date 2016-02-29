@@ -118,6 +118,7 @@ public class NodeTest extends MesosTestCase {
     @Test
     public void Runtime_toJson_fromJson() {
         Node.Runtime runtime = new Node.Runtime();
+        runtime.fsUri = "hdfs://localhost:31000";
         runtime.killSent = true;
 
         Node.Runtime read = new Node.Runtime(runtime.toJson());
@@ -125,6 +126,7 @@ public class NodeTest extends MesosTestCase {
         assertEquals(runtime.executorId, read.executorId);
         assertEquals(runtime.slaveId, read.slaveId);
 
+        assertEquals(runtime.fsUri, read.fsUri);
         assertEquals(runtime.killSent, read.killSent);
     }
 

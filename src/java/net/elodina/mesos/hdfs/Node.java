@@ -64,8 +64,10 @@ public class Node {
 
     public void initRuntime(Offer offer) {
         reservation = reserve(offer);
+
         runtime = new Runtime();
         runtime.slaveId = offer.getSlaveId().getValue();
+        runtime.fsUri = "hdfs://" + offer.getHostname() + ":54310";
     }
 
     public TaskInfo newTask() {
@@ -155,6 +157,7 @@ public class Node {
         public String executorId = "" + UUID.randomUUID();
         public String slaveId = "" + UUID.randomUUID();
 
+        public String fsUri;
         public boolean killSent;
 
         public Runtime() {}
@@ -168,6 +171,7 @@ public class Node {
             json.put("executorId", executorId);
             json.put("slaveId", slaveId);
 
+            json.put("fsUri", fsUri);
             json.put("killSent", killSent);
 
             return json;
@@ -178,6 +182,7 @@ public class Node {
             executorId = (String) json.get("executorId");
             slaveId = (String) json.get("slaveId");
 
+            fsUri = (String) json.get("fsUri");
             killSent = (boolean) json.get("killSent");
         }
     }

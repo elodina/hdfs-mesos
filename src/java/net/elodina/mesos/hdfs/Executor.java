@@ -68,7 +68,7 @@ public class Executor implements org.apache.mesos.Executor {
         catch (ParseException e) { throw new IllegalStateException(e); }
         Node node = new Node(json);
 
-        process = new HdfsProcess(node, "hdfs://" + hostname + ":54310");
+        process = new HdfsProcess(node);
         process.start();
 
         driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_RUNNING).build());

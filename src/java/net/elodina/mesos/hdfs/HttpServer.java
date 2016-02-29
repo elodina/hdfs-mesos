@@ -145,6 +145,7 @@ public class HttpServer {
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid mem"); }
 
             String executorJvmOpts = request.getParameter("executorJvmOpts");
+            String hadoopJvmOpts = request.getParameter("hadoopJvmOpts");
 
             Node node;
             if (add) node = Nodes.addNode(new Node(id));
@@ -155,6 +156,7 @@ public class HttpServer {
             if (mem != null) node.mem = mem;
 
             if (executorJvmOpts != null) node.executorJvmOpts = executorJvmOpts.equals("") ? null : executorJvmOpts;
+            if (hadoopJvmOpts != null) node.hadoopJvmOpts = hadoopJvmOpts.equals("") ? null : hadoopJvmOpts;
             Nodes.save();
 
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = new JSONArray();

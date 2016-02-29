@@ -2,6 +2,7 @@ package net.elodina.mesos.hdfs;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public class HdfsProcess {
     private Node node;
@@ -69,7 +70,10 @@ public class HdfsProcess {
             .redirectOutput(new File(node.type.name().toLowerCase() + ".out"))
             .redirectError(new File(node.type.name().toLowerCase() + ".err"));
 
-        builder.environment().put("JAVA_HOME", "" + Executor.javaHome);
+        Map<String, String> env = builder.environment();
+        env.put("JAVA_HOME", "" + Executor.javaHome);
+        if (node.hadoopJvmOpts != null) env.put("HADOOP_OPTS", node.hadoopJvmOpts);
+
         return builder.start();
     }
 }

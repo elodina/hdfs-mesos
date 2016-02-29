@@ -82,6 +82,7 @@ public class NodeCli {
         parser.accepts("mem", "Mem amount in Mb.").withRequiredArg().ofType(Long.class);
 
         parser.accepts("executor-jvm-opts", "Executor JVM options.").withRequiredArg().ofType(String.class);
+        parser.accepts("hadoop-jvm-opts", "Hadoop JVM options.").withRequiredArg().ofType(String.class);
 
         if (help) {
             printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <id> [options]\n");
@@ -111,6 +112,7 @@ public class NodeCli {
         Long mem = (Long) options.valueOf("mem");
 
         String executorJvmOpts = (String) options.valueOf("executor-jvm-opts");
+        String hadoopJvmOpts = (String) options.valueOf("hadoop-jvm-opts");
 
         Map<String, String> params = new HashMap<>();
         params.put("node", id);
@@ -120,6 +122,7 @@ public class NodeCli {
         if (mem != null) params.put("mem", "" + mem);
 
         if (executorJvmOpts != null) params.put("executorJvmOpts", executorJvmOpts);
+        if (hadoopJvmOpts != null) params.put("hadoopJvmOpts", hadoopJvmOpts);
 
         JSONAware json;
         try { json = sendRequest("/node/" + cmd, params); }
@@ -203,6 +206,7 @@ public class NodeCli {
         printLine("state: " + node.state.name().toLowerCase(), indent);
         printLine("resources: " + nodeResources(node), indent);
         if (node.executorJvmOpts != null) printLine("executor-jvm-opts: " + node.executorJvmOpts, indent);
+        if (node.hadoopJvmOpts != null) printLine("hadoop-jvm-opts: " + node.hadoopJvmOpts, indent);
 
         if (node.reservation != null) printLine("reservation: " + nodeReservation(node.reservation), indent);
         if (node.runtime != null) printNodeRuntime(node.runtime, indent);

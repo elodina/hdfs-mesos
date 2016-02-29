@@ -17,6 +17,7 @@ public class Node {
     public double cpus = 0.5;
     public long mem = 512;
     public String executorJvmOpts;
+    public String hadoopJvmOpts;
 
     public Runtime runtime;
     public Reservation reservation;
@@ -121,6 +122,7 @@ public class Node {
         json.put("cpus", cpus);
         json.put("mem", mem);
         if (executorJvmOpts != null) json.put("executorJvmOpts", executorJvmOpts);
+        if (hadoopJvmOpts != null) json.put("hadoopJvmOpts", hadoopJvmOpts);
 
         if (runtime != null) json.put("runtime", runtime.toJson());
         if (reservation != null) json.put("reservation", reservation.toJson());
@@ -136,6 +138,7 @@ public class Node {
         cpus = ((Number) json.get("cpus")).doubleValue();
         mem = ((Number) json.get("mem")).longValue();
         if (json.containsKey("executorJvmOpts")) executorJvmOpts = (String) json.get("executorJvmOpts");
+        if (json.containsKey("hadoopJvmOpts")) hadoopJvmOpts = (String) json.get("hadoopJvmOpts");
 
         if (json.containsKey("runtime")) runtime = new Runtime((JSONObject) json.get("runtime"));
         if (json.containsKey("reservation")) reservation = new Reservation((JSONObject) json.get("reservation"));

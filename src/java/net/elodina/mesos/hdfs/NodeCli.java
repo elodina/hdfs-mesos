@@ -26,6 +26,7 @@ public class NodeCli {
             case "list": handleList(false); break;
             case "add": case "update": handleAddUpdate(cmd, args, false); break;
             case "start": case "stop": handleStartStop(cmd, args, false); break;
+            case "remove": handleRemove(args, false); break;
             default: throw new Error("unsupported command " + cmd);
         }
     }
@@ -46,6 +47,7 @@ public class NodeCli {
             case "list": handleList(true); break;
             case "add": case "update": handleAddUpdate(cmd, args, true); break;
             case "start": case "stop": handleStartStop(cmd, args, true); break;
+            case "remove": handleRemove(args, true); break;
             default: throw new Error("unsupported command " + cmd);
         }
     }
@@ -200,6 +202,22 @@ public class NodeCli {
         }
     }
 
+    private static void handleRemove(List<String> args, boolean help) {
+        if (help) {
+            printLine("Remove node\nUsage: node remove <id>\n");
+            handleGenericOptions(null, true);
+            return;
+        }
+
+        if (args.isEmpty()) throw new Error("id required");
+        String id = args.remove(0);
+
+        try { sendRequest("/node/remove", Collections.singletonMap("node", id)); }
+        catch (IOException e) { throw new Error("" + e); }
+
+        printLine("node removed");
+    }
+
     private static void printNode(Node node, int indent) {
         printLine("id: " + node.id, indent);
         printLine("type: " + node.type.name().toLowerCase(), indent);
@@ -226,6 +244,7 @@ public class NodeCli {
         printLine("update     - update node", 1);
         printLine("start      - start node", 1);
         printLine("stop       - stop node", 1);
+        printLine("remove     - remove node", 1);
     }
 
     private static String nodeResources(Node node) {

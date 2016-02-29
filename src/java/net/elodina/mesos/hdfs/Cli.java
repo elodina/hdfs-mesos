@@ -149,6 +149,8 @@ public class Cli {
             connection.disconnect();
         }
 
+        if (response.trim().isEmpty()) return null;
+
         JSONAware json;
         try { json = (JSONAware) new JSONParser().parse(response); }
         catch (ParseException e) { throw new IOException(e); }

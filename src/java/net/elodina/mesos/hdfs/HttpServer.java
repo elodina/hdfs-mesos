@@ -104,7 +104,8 @@ public class HttpServer {
             switch (uri) {
                 case "/list": handleNodeList(response); break;
                 case "/add": case "/update": handleNodeAddUpdate(request, response, uri.equals("/add")); break;
-                case "/start": case "/stop": handleStartStop(request, response, uri.equals("/start")); break;
+                case "/start": case "/stop": handleNodeStartStop(request, response, uri.equals("/start")); break;
+                case "/remove": handleNodeRemove(request); break;
                 default: throw new HttpError(404, "unsupported method " + uri);
             }
         }
@@ -124,6 +125,7 @@ public class HttpServer {
 
             if (add && Nodes.getNode(id) != null) throw new HttpError(400, "duplicate node");
             if (!add && Nodes.getNode(id) == null) throw new HttpError(400, "node not found");
+            if (!add && Nodes.getNode(id).state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
 
             Node.Type type = null;
             if (add) {
@@ -148,10 +150,9 @@ public class HttpServer {
             String hadoopJvmOpts = request.getParameter("hadoopJvmOpts");
 
             Node node;
-            if (add) node = Nodes.addNode(new Node(id));
+            if (add) node = Nodes.addNode(new Node(id, type));
             else node = Nodes.getNode(id);
 
-            if (type != null) node.type = type;
             if (cpus != null) node.cpus = cpus;
             if (mem != null) node.mem = mem;
 
@@ -165,7 +166,7 @@ public class HttpServer {
         }
 
         @SuppressWarnings("unchecked")
-        private void handleStartStop(HttpServletRequest request, HttpServletResponse response, boolean start) throws IOException {
+        private void handleNodeStartStop(HttpServletRequest request, HttpServletResponse response, boolean start) throws IOException {
             String id = request.getParameter("node");
             if (id == null || id.isEmpty()) throw new HttpError(400, "node required");
 
@@ -194,6 +195,18 @@ public class HttpServer {
             json.put("status", status);
             json.put("nodes", nodesJson);
             response.getWriter().write("" + json);
+        }
+
+        private void handleNodeRemove(HttpServletRequest request) throws IOException {
+            String id = request.getParameter("node");
+            if (id == null || id.isEmpty()) throw new HttpError(400, "node required");
+
+            Node node = Nodes.getNode(id);
+            if (node == null) throw new HttpError(400, "node not found");
+            if (node.state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
+
+            Nodes.removeNode(node);
+            Nodes.save();
         }
 
         private void downloadFile(File file, HttpServletResponse response) throws IOException {

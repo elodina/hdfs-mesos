@@ -44,8 +44,7 @@ public class NodeTest extends MesosTestCase {
         reservation = node.reserve(offer("cpus:0.7;mem:1000;ports:0..10"));
         assertEquals(node.cpus, reservation.cpus, 0.001);
         assertEquals(node.mem, reservation.mem);
-        assertEquals(new Integer(0), reservation.ports.get(Node.Port.NAME_NODE));
-        assertEquals(new Integer(1), reservation.ports.get(Node.Port.DATA_NODE));
+        assertEquals(reservation.ports, Collections.singletonMap(Node.Port.NAME_NODE, 0));
     }
 
     @Test

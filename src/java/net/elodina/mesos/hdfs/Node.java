@@ -82,10 +82,8 @@ public class Node {
         });
 
         // reserve ports
-        for (String name : Node.Port.names()) {
-            int port = reservePort(null, availPorts);
-            if (port != -1) ports.put(name, port);
-        }
+        int port = reservePort(null, availPorts);
+        if (port != -1) ports.put(type == Type.NAME_NODE ? Port.NAME_NODE : Port.DATA_NODE, port);
 
         return ports;
     }

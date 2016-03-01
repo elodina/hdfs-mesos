@@ -267,6 +267,13 @@ public class NodeCli {
         s += "cpus:" + reservation.cpus;
         s += ", mem:" + reservation.mem;
 
+        String ports = "";
+        for (String name : Node.Port.names()) {
+            if (!ports.isEmpty()) ports += ",";
+            ports += name + "=" + reservation.ports.get(name);
+        }
+        s += ", ports:" + ports;
+
         return s;
     }
 }

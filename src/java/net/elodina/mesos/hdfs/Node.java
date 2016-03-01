@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 import java.util.*;
 
 import static net.elodina.mesos.hdfs.Util.Period;
+import static net.elodina.mesos.hdfs.Util.Range;
 import static org.apache.mesos.Protos.*;
 
 public class Node {
@@ -56,7 +57,56 @@ public class Node {
         Resource memResource = resources.get("mem");
         if (memResource != null) reservedMem = Math.min((long) memResource.getScalar().getValue(), mem);
 
-        return new Reservation(reservedCpus, reservedMem);
+        // ports
+        Map<String, Integer> reservedPorts = reservePorts(offer);
+
+        return new Reservation(reservedCpus, reservedMem, reservedPorts);
+    }
+
+    private Map<String, Integer> reservePorts(Offer offer) {
+        Map<String, Integer> ports = new HashMap<>();
+
+        // find resource
+        Resource portsResource = null;
+        for (Resource resource : offer.getResourcesList())
+            if (resource.getName().equals("ports")) { portsResource = resource; break; }
+        if (portsResource == null) return ports;
+
+        // collect & sort ranges
+        List<Range> availPorts = new ArrayList<>();
+        for (Value.Range r : portsResource.getRanges().getRangeList())
+            availPorts.add(new Range((int) r.getBegin(), (int) r.getEnd()));
+
+        Collections.sort(availPorts, new Comparator<Range>() {
+            public int compare(Range x, Range y) { return x.start() - y.start(); }
+        });
+
+        // reserve ports
+        for (String name : Node.Port.names()) {
+            int port = reservePort(null, availPorts);
+            if (port != -1) ports.put(name, port);
+        }
+
+        return ports;
+    }
+
+    int reservePort(Range range, List<Range> availPorts) {
+        Range r = null;
+        if (range == null)
+            r = !availPorts.isEmpty() ? availPorts.get(0) : null; // take first avail range
+        else
+            for (Range t : availPorts) // take first range overlapping with ports
+                if (range.overlap(t) != null) { r = t; break; }
+
+        if (r == null) return -1;
+        int port = range != null ? r.overlap(range).start() : r.start();
+
+        // remove allocated port
+        int idx = availPorts.indexOf(r);
+        availPorts.remove(r);
+        availPorts.addAll(idx, r.split(port));
+
+        return port;
     }
 
     public boolean waitFor(State state, Period timeout) throws InterruptedException {
@@ -163,6 +213,13 @@ public class Node {
         DATA_NODE
     }
 
+    public static class Port {
+        public static final String NAME_NODE = "name_node";
+        public static final String DATA_NODE = "data_node";
+
+        public static String[] names() { return new String[]{ NAME_NODE, DATA_NODE }; }
+    }
+
     public class Runtime {
         public String taskId = "" + UUID.randomUUID();
         public String executorId = "" + UUID.randomUUID();
@@ -228,12 +285,14 @@ public class Node {
     public static class Reservation {
         double cpus = 0;
         long mem = 0;
+        Map<String, Integer> ports = new HashMap<>();
 
         public Reservation() {}
 
-        public Reservation(double cpus, long mem) {
+        public Reservation(double cpus, long mem, Map<String, Integer> ports) {
             this.cpus = cpus;
             this.mem = mem;
+            this.ports = ports;
         }
 
         public Reservation(JSONObject json) { fromJson(json); }
@@ -275,12 +334,22 @@ public class Node {
             if (cpus > 0) resources.add(r.cpus(cpus));
             if (mem > 0) resources.add(r.mem(mem));
 
+            for (String name : ports.keySet())
+                resources.add(r.port(ports.get(name)));
+
             return resources;
         }
 
         public void fromJson(JSONObject json) {
             cpus = (double) json.get("cpus");
             mem = (long) json.get("mem");
+
+            ports.clear();
+            if (json.containsKey("ports")) {
+                JSONObject portsJson = (JSONObject) json.get("ports");
+                for (Object name : portsJson.keySet())
+                    ports.put("" + name, ((Long) portsJson.get(name)).intValue());
+            }
         }
 
         @SuppressWarnings("unchecked")
@@ -289,6 +358,8 @@ public class Node {
 
             json.put("cpus", cpus);
             json.put("mem", mem);
+
+            if (!ports.isEmpty()) json.put("ports", new JSONObject(ports));
 
             return json;
         }

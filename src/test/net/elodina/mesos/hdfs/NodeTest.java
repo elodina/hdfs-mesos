@@ -2,6 +2,12 @@ package net.elodina.mesos.hdfs;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static net.elodina.mesos.hdfs.Util.Range;
 import static org.apache.mesos.Protos.*;
 import static org.junit.Assert.*;
 
@@ -32,11 +38,33 @@ public class NodeTest extends MesosTestCase {
         Node.Reservation reservation = node.reserve(offer("cpus:0.3;mem:300"));
         assertEquals(0.3d, reservation.cpus, 0.001);
         assertEquals(300, reservation.mem);
+        assertTrue("" + reservation.ports, reservation.ports.isEmpty());
 
         // complete reservation
         reservation = node.reserve(offer("cpus:0.7;mem:1000;ports:0..10"));
         assertEquals(node.cpus, reservation.cpus, 0.001);
         assertEquals(node.mem, reservation.mem);
+        assertEquals(new Integer(0), reservation.ports.get(Node.Port.NAME_NODE));
+        assertEquals(new Integer(1), reservation.ports.get(Node.Port.DATA_NODE));
+    }
+
+    @Test
+    public void reservePort() {
+        Node node = new Node("0");
+        List<Range> ports = new ArrayList<>();
+        ports.add(new Range("0..100"));
+
+        assertEquals(10, node.reservePort(new Range("10..20"), ports));
+        assertEquals(Arrays.asList(new Range("0..9"), new Range("11..100")), ports);
+
+        assertEquals(0, node.reservePort(new Range("0..0"), ports));
+        assertEquals(Arrays.asList(new Range("1..9"), new Range("11..100")), ports);
+
+        assertEquals(100, node.reservePort(new Range("100..200"), ports));
+        assertEquals(Arrays.asList(new Range("1..9"), new Range("11..99")), ports);
+
+        assertEquals(50, node.reservePort(new Range("50..60"), ports));
+        assertEquals(Arrays.asList(new Range("1..9"), new Range("11..49"), new Range("51..99")), ports);
     }
 
     @Test
@@ -171,15 +199,18 @@ public class NodeTest extends MesosTestCase {
         Node.Reservation reservation = new Node.Reservation();
         reservation.cpus = 0.5;
         reservation.mem = 256;
+        reservation.ports.put(Node.Port.NAME_NODE, 10);
+        reservation.ports.put(Node.Port.DATA_NODE, 20);
 
         Node.Reservation read = new Node.Reservation(reservation.toJson());
         assertEquals(reservation.cpus, read.cpus, 0.001);
         assertEquals(reservation.mem, read.mem);
+        assertEquals(reservation.ports, read.ports);
     }
 
     @Test
     public void Reservation_toResources() {
         assertEquals(resources(""), new Node.Reservation().toResources());
-        assertEquals(resources("cpus:0.5;mem:500;"), new Node.Reservation(0.5, 500).toResources());
+        assertEquals(resources("cpus:0.5;mem:500;ports:1000..1000"), new Node.Reservation(0.5, 500, Collections.singletonMap("namenode", 1000)).toResources());
     }
 }

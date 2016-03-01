@@ -123,7 +123,26 @@ public class Node {
 
     public void initRuntime(Offer offer) {
         reservation = reserve(offer);
-        runtime = new Runtime(offer);
+
+        runtime = new Runtime();
+        runtime.slaveId = offer.getSlaveId().getValue();
+        runtime.hostname = offer.getHostname();
+
+        runtime.fsUri = getFsUri();
+    }
+
+    private String getFsUri() {
+        List<Node> nodes = Nodes.getNodes(Type.NAME_NODE);
+        Node node = !nodes.isEmpty() ? nodes.get(0) : null;
+
+        if (node == null) throw new IllegalStateException("no namenode");
+        if (node.runtime == null) throw new IllegalStateException("namenode not started");
+
+        String host = node.runtime.hostname;
+        Integer port = node.reservation.ports.get(Port.NN_IPC);
+        if (port == null) throw new IllegalStateException("no ipc port");
+
+        return "hdfs://" + host + ":" + port;
     }
 
     public TaskInfo newTask() {
@@ -215,6 +234,7 @@ public class Node {
 
     public static class Port {
         public static final String NN_HTTP = "nn_http";
+        public static final String NN_IPC = "nn_ipc";
 
         public static final String DN_HTTP = "dn_http";
         public static final String DN_DATA = "dn_data";
@@ -222,12 +242,12 @@ public class Node {
 
         public static String[] names(Type type) {
             return type == Type.NAME_NODE ?
-                new String[]{ NN_HTTP } :
+                new String[]{ NN_HTTP, NN_IPC } :
                 new String[]{ DN_HTTP, DN_DATA, DN_IPC };
         }
     }
 
-    public class Runtime {
+    public static class Runtime {
         public String taskId = "" + UUID.randomUUID();
         public String executorId = "" + UUID.randomUUID();
 
@@ -239,27 +259,6 @@ public class Node {
 
         public Runtime() {}
         public Runtime(JSONObject json) { fromJson(json); }
-
-        public Runtime(Offer offer) {
-            slaveId = offer.getSlaveId().getValue();
-            hostname = offer.getHostname();
-
-            fsUri = getFsUri();
-        }
-
-        private String getFsUri() {
-            int port = 54310;
-
-            List<Node> nns = Nodes.getNodes(Type.NAME_NODE);
-            Node nn = !nns.isEmpty() ? nns.get(0) : null;
-
-            String nnHost = type == Type.NAME_NODE ?
-                hostname :
-                nn != null && nn.runtime != null ? nn.runtime.hostname : null;
-
-            if (nnHost == null) throw new IllegalStateException("Can't resolve name node host");
-            return "hdfs://" + nnHost + ":" + port;
-        }
 
         @SuppressWarnings("unchecked")
         public JSONObject toJson() {

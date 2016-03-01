@@ -72,7 +72,7 @@ public class MesosTestCase {
             .build();
     }
 
-    public Offer offer() { return offer(null); }
+    public Offer offer() { return offer("cpus:1;mem:1024;ports:0..100"); }
     public Offer offer(String resources) { return offer("" + UUID.randomUUID(), "" + UUID.randomUUID(), "" + UUID.randomUUID(), "host", resources, null); }
     public Offer offer(String id, String frameworkId, String slaveId, String hostname, String resources, String attributes) {
         Offer.Builder builder = Offer.newBuilder()

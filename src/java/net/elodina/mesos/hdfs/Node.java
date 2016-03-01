@@ -83,7 +83,7 @@ public class Node {
 
         // reserve ports
         int port = reservePort(null, availPorts);
-        if (port != -1) ports.put(type == Type.NAME_NODE ? Port.NAME_NODE : Port.DATA_NODE, port);
+        if (port != -1) ports.put(type == Type.NAME_NODE ? Port.NAME_NODE_HTTP : Port.DATA_NODE_HTTP, port);
 
         return ports;
     }
@@ -212,10 +212,10 @@ public class Node {
     }
 
     public static class Port {
-        public static final String NAME_NODE = "name_node";
-        public static final String DATA_NODE = "data_node";
+        public static final String NAME_NODE_HTTP = "name_node";
+        public static final String DATA_NODE_HTTP = "data_node";
 
-        public static String[] names() { return new String[]{ NAME_NODE, DATA_NODE }; }
+        public static String[] names() { return new String[]{NAME_NODE_HTTP, DATA_NODE_HTTP}; }
     }
 
     public class Runtime {
@@ -346,7 +346,7 @@ public class Node {
             if (json.containsKey("ports")) {
                 JSONObject portsJson = (JSONObject) json.get("ports");
                 for (Object name : portsJson.keySet())
-                    ports.put("" + name, ((Long) portsJson.get(name)).intValue());
+                    ports.put("" + name, ((Number) portsJson.get(name)).intValue());
             }
         }
 

@@ -2,19 +2,23 @@ package net.elodina.mesos.hdfs;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class HdfsProcess {
     private Node node;
+    private String hostname;
 
     private Process process;
 
-    public HdfsProcess(Node node) {
+    public HdfsProcess(Node node, String hostname) {
         this.node = node;
+        this.hostname = hostname;
     }
 
     public void start() throws IOException, InterruptedException {
         createCoreSiteXml();
+        createHdfsSiteXml();
         if (node.type == Node.Type.NAME_NODE) formatNameNode();
         process = startProcess();
     }
@@ -44,6 +48,27 @@ public class HdfsProcess {
             "</configuration>";
 
         File file = new File(Executor.hadoopDir, "conf/core-site.xml");
+        Util.IO.writeFile(file, content);
+    }
+
+    private void createHdfsSiteXml() throws IOException {
+        Map<String, String> props = new HashMap<>();
+
+        if (node.type == Node.Type.NAME_NODE)
+            props.put("dfs.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.NAME_NODE_HTTP));
+        else
+            props.put("dfs.datanode.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.DATA_NODE_HTTP));
+
+        String content = "<configuration>\n";
+        for (String name : props.keySet()) {
+            content += "<property>\n" +
+                       "  <name>" + name + "</name>\n" +
+                       "  <value>" + props.get(name) + "</value>\n" +
+                       "</property>\n";
+        }
+        content += "</configuration>";
+
+        File file = new File(Executor.hadoopDir, "conf/hdfs-site.xml");
         Util.IO.writeFile(file, content);
     }
 

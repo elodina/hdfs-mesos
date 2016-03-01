@@ -55,9 +55,12 @@ public class HdfsProcess {
         Map<String, String> props = new HashMap<>();
 
         if (node.type == Node.Type.NAME_NODE)
-            props.put("dfs.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.NAME_NODE_HTTP));
-        else
-            props.put("dfs.datanode.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.DATA_NODE_HTTP));
+            props.put("dfs.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.NN_HTTP));
+        else {
+            props.put("dfs.datanode.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.DN_HTTP));
+            props.put("dfs.datanode.address", hostname + ":" + node.reservation.ports.get(Node.Port.DN_DATA));
+            props.put("dfs.datanode.ipc.address", hostname + ":" + node.reservation.ports.get(Node.Port.DN_IPC));
+        }
 
         String content = "<configuration>\n";
         for (String name : props.keySet()) {

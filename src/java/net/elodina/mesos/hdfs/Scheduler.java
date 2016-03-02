@@ -191,9 +191,9 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
     public void run() {
         initLogging();
-        logger.info("Starting " + getClass().getSimpleName() + ":\n" + config);
-
         config.resolveDeps();
+
+        logger.info("Starting " + getClass().getSimpleName() + ":\n" + config);
         Nodes.load();
 
         final HttpServer server = new HttpServer();
@@ -261,9 +261,9 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         }
 
         public String master;
+        public String user;
         public String principal;
         public String secret;
-        public String user;
 
         public String frameworkName = "hdfs";
         public String frameworkRole = "*";
@@ -277,6 +277,20 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             String jarMask = "hdfs-mesos-.*jar";
             jar = Util.IO.findFile(new File("."), jarMask);
             if (jar == null) throw new IllegalStateException(jarMask + " not found in current dir");
+        }
+
+        public String toString() {
+            String s = "";
+
+            s += "api: " + api;
+            s += "\nfiles: jar:" + jar + ", hadoop:" + hadoop;
+
+            s += "\nmesos: master:" + master + ", user:" + (user == null ? "<default>" : user);
+            s += ", principal:" + (principal == null ? "<none>" : principal) + ", secret:" + (secret == null ? "<none>" : "******");
+
+            s += "\nframework: name:" + frameworkName + ", role:" + frameworkRole + ", timeout:" + frameworkTimeout;
+
+            return s;
         }
     }
 }

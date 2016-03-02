@@ -239,7 +239,7 @@ public class NodeCli {
         printLine("runtime:", indent);
         printLine("task: " + runtime.taskId, indent + 1);
         printLine("executor: " + runtime.executorId, indent + 1);
-        printLine("slave: " + runtime.slaveId, indent + 1);
+        printLine("slave: " + runtime.slaveId + " (" + runtime.hostname + ")", indent + 1);
     }
 
     private static void printCmds() {

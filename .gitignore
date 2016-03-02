@@ -13,3 +13,4 @@ vagrant/.vagrant
 build/
 hdfs-mesos-*.jar
 hdfs-mesos.json
+hdfs-mesos.properties

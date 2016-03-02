@@ -7,17 +7,11 @@ import org.json.simple.JSONAware;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Cli {
     static String api = "http://localhost:7000";
@@ -37,7 +31,8 @@ public class Cli {
         if (args.isEmpty()) throw new Error("command required");
 
         String cmd = args.remove(0);
-        if (!cmd.equals("help")) args = handleGenericOptions(args, false);
+        if (!cmd.equals("help") && !cmd.equals("scheduler"))
+            args = handleGenericOptions(args, false);
 
         switch (cmd) {
             case "help": handleHelp(args); break;
@@ -78,7 +73,7 @@ public class Cli {
 
     static List<String> handleGenericOptions(List<String> args, boolean help) {
         OptionParser parser = new OptionParser();
-        parser.accepts("api", "Binding host:port for http/artifact server. Optional if HM_API env is set.")
+        parser.accepts("api", "REST api url (same as --api option for scheduler).")
             .withOptionalArg().ofType(String.class);
 
         parser.allowsUnrecognizedOptions();
@@ -110,16 +105,26 @@ public class Cli {
 
     private static void resolveApi(String api) {
         if (api != null && !api.equals("")) {
-            Scheduler.$.config.api = api;
+            Cli.api = api;
             return;
         }
 
         if (System.getenv("HM_API") != null) {
-            Scheduler.$.config.api = System.getenv("HM_API");
+            Cli.api = System.getenv("HM_API");
             return;
         }
 
-        throw new Error("Undefined API url. Please provide either a CLI --api option or HM_API env.");
+        File file = new File("hdfs-mesos.properties");
+        if (file.exists()) {
+            Properties props = new Properties();
+            try (InputStream stream = new FileInputStream(file)) { props.load(stream); }
+            catch (IOException e) { throw new IOError(e); }
+
+            Cli.api = props.getProperty("api");
+            if (Cli.api != null) return;
+        }
+
+        throw new Error("Undefined API url. Please provide one of following: CLI --api option, HM_API env var, api var in hdfs-mesos.properties.");
     }
 
     static JSONAware sendRequest(String uri, Map<String, String> params) throws IOException {

@@ -246,7 +246,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     }
 
     public static class Config {
-        public String api = "http://localhost:7000";
+        public String api;
 
         public File jar;
         public File hadoop;

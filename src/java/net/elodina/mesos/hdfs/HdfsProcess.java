@@ -87,8 +87,15 @@ public class HdfsProcess {
 
     private static String escapeXmlText(String s) { return s.replace("<", "&lt;").replace(">", "&gt;"); }
 
-    private File getNameNodeDir() { return new File(Executor.dataDir, "namenode"); }
-    private File getDataNodeDir() { return new File(Executor.dataDir, "datanode"); }
+    private File getNameNodeDir() {
+        if (node.hdfsSiteOpts.containsKey("dfs.name.dir")) return new File(node.hdfsSiteOpts.get("dfs.name.dir"));
+        return new File(Executor.dataDir, "namenode");
+    }
+
+    private File getDataNodeDir() {
+        if (node.hdfsSiteOpts.containsKey("dfs.data.dir")) return new File(node.hdfsSiteOpts.get("dfs.data.dir"));
+        return new File(Executor.dataDir, "datanode");
+    }
 
     private void formatNameNodeIfRequired() throws IOException, InterruptedException {
         boolean formatted = new File(getNameNodeDir(), "current").isDirectory();
@@ -99,7 +106,7 @@ public class HdfsProcess {
 
         logger.info("Formatting namenode");
 
-        ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), "namenode", "-format")
+        ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), "namenode", "-format", "-force")
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .redirectError(ProcessBuilder.Redirect.INHERIT);
 

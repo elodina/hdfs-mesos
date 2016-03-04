@@ -23,9 +23,7 @@ public class HdfsProcess {
     public void start() throws IOException, InterruptedException {
         createCoreSiteXml();
         createHdfsSiteXml();
-
-        if (node.type == Node.Type.NAMENODE && !isNameNodeFormatted())
-            formatNameNode();
+        if (node.type == Node.Type.NAMENODE) formatNameNodeIfRequired();
 
         process = startProcess();
     }
@@ -45,20 +43,13 @@ public class HdfsProcess {
     }
 
     private void createCoreSiteXml() throws IOException {
-        String content =
-            "<configuration>\n" +
-            "<property>\n" +
-            "  <name>hadoop.tmp.dir</name>\n" +
-            "  <value>" + new File(Executor.dataDir, "tmp") + "</value>\n" +
-            "</property>\n\n" +
-            "<property>\n" +
-            "  <name>fs.default.name</name>\n" +
-            "  <value>" + node.runtime.fsUri + "</value>\n" +
-            "</property>\n" +
-            "</configuration>";
+        Map<String, String> props = new HashMap<>();
+        props.put("hadoop.tmp.dir", "" + new File(Executor.dataDir, "tmp"));
+        props.put("fs.default.name", node.runtime.fsUri);
+        props.putAll(node.coreSiteOpts);
 
         File file = new File(Executor.hadoopDir, "conf/core-site.xml");
-        Util.IO.writeFile(file, content);
+        writePropsXml(file, props);
     }
 
     private void createHdfsSiteXml() throws IOException {
@@ -74,25 +65,38 @@ public class HdfsProcess {
             props.put("dfs.data.dir", "" + getDataNodeDir());
         }
 
-        String content = "<configuration>\n";
-        for (String name : props.keySet()) {
-            content += "<property>\n" +
-                       "  <name>" + name + "</name>\n" +
-                       "  <value>" + props.get(name) + "</value>\n" +
-                       "</property>\n";
-        }
-        content += "</configuration>";
+        props.putAll(node.hdfsSiteOpts);
 
         File file = new File(Executor.hadoopDir, "conf/hdfs-site.xml");
+        writePropsXml(file, props);
+    }
+
+    private void writePropsXml(File file, Map<String, String> props) throws IOException {
+        String content = "<configuration>\n";
+
+        for (String name : props.keySet()) {
+            content += "<property>\n" +
+                "  <name>" + escapeXmlText(name) + "</name>\n" +
+                "  <value>" + escapeXmlText(props.get(name)) + "</value>\n" +
+                "</property>\n";
+        }
+
+        content += "</configuration>";
         Util.IO.writeFile(file, content);
     }
 
-    private File getNameNodeDir() { return new File(Executor.dataDir, "namenode"); }
-    private boolean isNameNodeFormatted() { return new File(getNameNodeDir(), "current").isDirectory(); }
+    private static String escapeXmlText(String s) { return s.replace("<", "&lt;").replace(">", "&gt;"); }
 
+    private File getNameNodeDir() { return new File(Executor.dataDir, "namenode"); }
     private File getDataNodeDir() { return new File(Executor.dataDir, "datanode"); }
 
-    private void formatNameNode() throws IOException, InterruptedException {
+    private void formatNameNodeIfRequired() throws IOException, InterruptedException {
+        boolean formatted = new File(getNameNodeDir(), "current").isDirectory();
+        if (formatted) {
+            logger.info("Namenode is already formatted");
+            return;
+        }
+
         logger.info("Formatting namenode");
 
         ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), "namenode", "-format")

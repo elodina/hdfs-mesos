@@ -7,9 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 
-import static net.elodina.mesos.hdfs.Util.IO;
-import static net.elodina.mesos.hdfs.Util.Period;
-import static net.elodina.mesos.hdfs.Util.Range;
+import static net.elodina.mesos.hdfs.Util.*;
 import static org.junit.Assert.*;
 
 public class UtilTest {
@@ -238,6 +236,34 @@ public class UtilTest {
     public void Period_toString() {
         assertEquals("10ms", "" + new Period("10ms"));
         assertEquals("5h", "" + new Period("5h"));
+    }
+
+    // Version
+    @Test
+    public void Version_init() {
+        assertEquals(Arrays.<Integer>asList(), new Version().values());
+        assertEquals(Arrays.asList(1, 0), new Version(1, 0).values());
+        assertEquals(Arrays.asList(1, 2, 3, 4), new Version("1.2.3.4").values());
+
+        try { new Version(" "); fail(); }
+        catch (IllegalArgumentException e) {}
+
+        try { new Version("."); fail(); }
+        catch (IllegalArgumentException e) {}
+
+        try { new Version("a"); fail(); }
+        catch (IllegalArgumentException e) {}
+    }
+
+    @Test
+    public void Version_compareTo() {
+        assertEquals(0, new Version().compareTo(new Version()));
+        assertEquals(0, new Version(0).compareTo(new Version(0)));
+
+        assertTrue(new Version(0).compareTo(new Version(1)) < 0);
+        assertTrue(new Version(0).compareTo(new Version(0, 0)) < 0);
+
+        assertTrue(new Version(0, 9, 0, 0).compareTo(new Version(0, 8, 2, 0)) > 0);
     }
 
     // IO

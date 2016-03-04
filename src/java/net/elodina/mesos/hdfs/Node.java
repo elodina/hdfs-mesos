@@ -17,8 +17,11 @@ public class Node {
 
     public double cpus = 0.5;
     public long mem = 512;
+
     public String executorJvmOpts;
     public String hadoopJvmOpts;
+    public Map<String, String> coreSiteOpts = new HashMap<>();
+    public Map<String, String> hdfsSiteOpts = new HashMap<>();
 
     public Runtime runtime;
     public Reservation reservation;
@@ -190,8 +193,12 @@ public class Node {
 
         json.put("cpus", cpus);
         json.put("mem", mem);
+
         if (executorJvmOpts != null) json.put("executorJvmOpts", executorJvmOpts);
         if (hadoopJvmOpts != null) json.put("hadoopJvmOpts", hadoopJvmOpts);
+
+        if (!coreSiteOpts.isEmpty()) json.put("coreSiteOpts", new JSONObject(coreSiteOpts));
+        if (!hdfsSiteOpts.isEmpty()) json.put("hdfsSiteOpts", new JSONObject(hdfsSiteOpts));
 
         if (runtime != null) json.put("runtime", runtime.toJson());
         if (reservation != null) json.put("reservation", reservation.toJson());
@@ -206,8 +213,21 @@ public class Node {
 
         cpus = ((Number) json.get("cpus")).doubleValue();
         mem = ((Number) json.get("mem")).longValue();
+
         if (json.containsKey("executorJvmOpts")) executorJvmOpts = (String) json.get("executorJvmOpts");
         if (json.containsKey("hadoopJvmOpts")) hadoopJvmOpts = (String) json.get("hadoopJvmOpts");
+
+        coreSiteOpts.clear();
+        if (json.containsKey("coreSiteOpts")) {
+            JSONObject coreSiteOptsJson = (JSONObject) json.get("coreSiteOpts");
+            for (Object name : coreSiteOptsJson.keySet()) coreSiteOpts.put("" + name, "" + coreSiteOptsJson.get("" + name));
+        }
+
+        hdfsSiteOpts.clear();
+        if (json.containsKey("hdfsSiteOpts")) {
+            JSONObject hdfsSiteOptsJson = (JSONObject) json.get("hdfsSiteOpts");
+            for (Object name : hdfsSiteOptsJson.keySet()) hdfsSiteOpts.put("" + name, "" + hdfsSiteOptsJson.get("" + name));
+        }
 
         if (json.containsKey("runtime")) runtime = new Runtime((JSONObject) json.get("runtime"));
         if (json.containsKey("reservation")) reservation = new Reservation((JSONObject) json.get("reservation"));
@@ -240,7 +260,7 @@ public class Node {
         public static String[] names(Type type) {
             return type == Type.NAMENODE ?
                 new String[]{HTTP, IPC} :
-                new String[]{ HTTP, IPC, DATA };
+                new String[]{HTTP, IPC, DATA};
         }
     }
 

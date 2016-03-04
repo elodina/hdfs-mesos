@@ -91,6 +91,9 @@ public class NodeCli {
         parser.accepts("executor-jvm-opts", "Executor JVM options.").withRequiredArg().ofType(String.class);
         parser.accepts("hadoop-jvm-opts", "Hadoop JVM options.").withRequiredArg().ofType(String.class);
 
+        parser.accepts("core-site-opts", "Hadoop core-site.xml options.").withRequiredArg().ofType(String.class);
+        parser.accepts("hdfs-site-opts", "Hadoop hdfs-site.xml options.").withRequiredArg().ofType(String.class);
+
         if (help) {
             printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");
             try { parser.printHelpOn(out); }
@@ -121,6 +124,9 @@ public class NodeCli {
         String executorJvmOpts = (String) options.valueOf("executor-jvm-opts");
         String hadoopJvmOpts = (String) options.valueOf("hadoop-jvm-opts");
 
+        String coreSiteOpts = (String) options.valueOf("core-site-opts");
+        String hdfsSiteOpts = (String) options.valueOf("hdfs-site-opts");
+
         Map<String, String> params = new HashMap<>();
         params.put("node", expr);
 
@@ -130,6 +136,9 @@ public class NodeCli {
 
         if (executorJvmOpts != null) params.put("executorJvmOpts", executorJvmOpts);
         if (hadoopJvmOpts != null) params.put("hadoopJvmOpts", hadoopJvmOpts);
+
+        if (coreSiteOpts != null) params.put("coreSiteOpts", coreSiteOpts);
+        if (hdfsSiteOpts != null) params.put("hdfsSiteOpts", hdfsSiteOpts);
 
         JSONAware json;
         try { json = sendRequest("/node/" + cmd, params); }
@@ -228,8 +237,12 @@ public class NodeCli {
         printLine("type: " + node.type.name().toLowerCase(), indent);
         printLine("state: " + node.state.name().toLowerCase(), indent);
         printLine("resources: " + nodeResources(node), indent);
+
         if (node.executorJvmOpts != null) printLine("executor-jvm-opts: " + node.executorJvmOpts, indent);
         if (node.hadoopJvmOpts != null) printLine("hadoop-jvm-opts: " + node.hadoopJvmOpts, indent);
+
+        if (!node.coreSiteOpts.isEmpty()) printLine("core-site-opts: " + Util.formatMap(node.coreSiteOpts), indent);
+        if (!node.hdfsSiteOpts.isEmpty()) printLine("hdfs-site-opts: " + Util.formatMap(node.hdfsSiteOpts), indent);
 
         if (node.reservation != null) printLine("reservation: " + nodeReservation(node.reservation), indent);
         if (node.runtime != null) printNodeRuntime(node.runtime, indent);

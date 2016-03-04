@@ -161,6 +161,14 @@ public class HttpServer {
             String executorJvmOpts = request.getParameter("executorJvmOpts");
             String hadoopJvmOpts = request.getParameter("hadoopJvmOpts");
 
+            String coreSiteOpts = request.getParameter("coreSiteOpts");
+            try { Util.parseMap(coreSiteOpts, false); }
+            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid coreSiteOpts"); }
+
+            String hdfsSiteOpts = request.getParameter("hdfsSiteOpts");
+            try { Util.parseMap(hdfsSiteOpts, false); }
+            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid hdfsSiteOpts"); }
+
             List<Node> nodes = new ArrayList<>();
             for (String id : ids) {
                 Node node;
@@ -174,6 +182,9 @@ public class HttpServer {
 
                 if (executorJvmOpts != null) node.executorJvmOpts = executorJvmOpts.equals("") ? null : executorJvmOpts;
                 if (hadoopJvmOpts != null) node.hadoopJvmOpts = hadoopJvmOpts.equals("") ? null : hadoopJvmOpts;
+
+                if (coreSiteOpts != null) node.coreSiteOpts = Util.parseMap(coreSiteOpts);
+                if (hdfsSiteOpts != null) node.hdfsSiteOpts = Util.parseMap(hdfsSiteOpts);
             }
             Nodes.save();
 

@@ -157,8 +157,11 @@ public class NodeTest extends MesosTestCase {
 
         node.cpus = 2;
         node.mem = 1024;
+
         node.executorJvmOpts = "executor-opts";
         node.executorJvmOpts = "hadoop-opts";
+        node.coreSiteOpts.put("a", "1");
+        node.hdfsSiteOpts.put("b", "2");
 
         node.initRuntime(offer());
 
@@ -169,8 +172,11 @@ public class NodeTest extends MesosTestCase {
 
         assertEquals(node.cpus, read.cpus, 0.001);
         assertEquals(node.mem, read.mem);
+
         assertEquals(node.executorJvmOpts, read.executorJvmOpts);
         assertEquals(node.hadoopJvmOpts, read.hadoopJvmOpts);
+        assertEquals(node.coreSiteOpts, read.coreSiteOpts);
+        assertEquals(node.hdfsSiteOpts, read.hdfsSiteOpts);
 
         assertNotNull(read.runtime);
         assertNotNull(read.reservation);

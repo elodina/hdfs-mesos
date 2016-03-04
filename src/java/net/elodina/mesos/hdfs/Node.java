@@ -12,7 +12,7 @@ import static org.apache.mesos.Protos.*;
 
 public class Node {
     public String id;
-    public Type type = Type.NAME_NODE;
+    public Type type = Type.NAMENODE;
     public State state = State.IDLE;
 
     public double cpus = 0.5;
@@ -34,8 +34,8 @@ public class Node {
         if (reservation.cpus < cpus) return "cpus < " + cpus;
         if (reservation.mem < mem) return "mem < " + mem;
 
-        if (type == Type.DATA_NODE) {
-            List<Node> nns = Nodes.getNodes(Node.Type.NAME_NODE);
+        if (type == Type.DATANODE) {
+            List<Node> nns = Nodes.getNodes(Node.Type.NAMENODE);
             boolean nnRunning = !nns.isEmpty() && nns.get(0).state == Node.State.RUNNING;
             if (!nnRunning) return "no running name node";
         }
@@ -132,14 +132,14 @@ public class Node {
     }
 
     private String getFsUri() {
-        List<Node> nodes = Nodes.getNodes(Type.NAME_NODE);
+        List<Node> nodes = Nodes.getNodes(Type.NAMENODE);
         Node node = !nodes.isEmpty() ? nodes.get(0) : null;
 
         if (node == null) throw new IllegalStateException("no namenode");
         if (node.runtime == null) throw new IllegalStateException("namenode not started");
 
         String host = node.runtime.hostname;
-        Integer port = node.reservation.ports.get(Port.NN_IPC);
+        Integer port = node.reservation.ports.get(Port.IPC);
         if (port == null) throw new IllegalStateException("no ipc port");
 
         return "hdfs://" + host + ":" + port;
@@ -228,22 +228,19 @@ public class Node {
     }
 
     public enum Type {
-        NAME_NODE,
-        DATA_NODE
+        NAMENODE,
+        DATANODE
     }
 
     public static class Port {
-        public static final String NN_HTTP = "nn_http";
-        public static final String NN_IPC = "nn_ipc";
-
-        public static final String DN_HTTP = "dn_http";
-        public static final String DN_DATA = "dn_data";
-        public static final String DN_IPC = "dn_ipc";
+        public static final String HTTP = "http";
+        public static final String IPC = "ipc";
+        public static final String DATA = "data";
 
         public static String[] names(Type type) {
-            return type == Type.NAME_NODE ?
-                new String[]{ NN_HTTP, NN_IPC } :
-                new String[]{ DN_HTTP, DN_DATA, DN_IPC };
+            return type == Type.NAMENODE ?
+                new String[]{HTTP, IPC} :
+                new String[]{ HTTP, IPC, DATA };
         }
     }
 

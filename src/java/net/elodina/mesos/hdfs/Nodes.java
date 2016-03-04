@@ -105,7 +105,7 @@ public class Nodes {
     public static Node addNode(Node node) {
         if (getNode(node.id) != null) throw new IllegalArgumentException("duplicate node");
 
-        if (node.type == Node.Type.NAME_NODE && !getNodes(Node.Type.NAME_NODE).isEmpty())
+        if (node.type == Node.Type.NAMENODE && !getNodes(Node.Type.NAMENODE).isEmpty())
             throw new IllegalArgumentException("second name node is not supported");
 
         nodes.add(node);

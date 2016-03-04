@@ -144,7 +144,7 @@ public class HttpServer {
                 try { type = Node.Type.valueOf(request.getParameter("type").toUpperCase()); }
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid type"); }
 
-                if (type == Node.Type.NAME_NODE && !Nodes.getNodes(Node.Type.NAME_NODE).isEmpty())
+                if (type == Node.Type.NAMENODE && !Nodes.getNodes(Node.Type.NAMENODE).isEmpty())
                     throw new HttpError(400, "second name node is not supported");
             }
 

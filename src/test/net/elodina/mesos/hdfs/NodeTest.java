@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 public class NodeTest extends MesosTestCase {
     @Test
     public void matches() {
-        Node node = new Node("0", Node.Type.NAME_NODE);
+        Node node = new Node("0", Node.Type.NAMENODE);
         node.cpus = 0.5;
         node.mem = 500;
 
@@ -24,7 +24,7 @@ public class NodeTest extends MesosTestCase {
         assertNull(node.matches(offer("cpus:0.5; mem:500; ports:0..4")));
 
         // no running name node
-        node.type = Node.Type.DATA_NODE;
+        node.type = Node.Type.DATANODE;
         assertEquals("no running name node", node.matches(offer("cpus:0.5; mem:500; ports:0..4")));
     }
 
@@ -45,8 +45,8 @@ public class NodeTest extends MesosTestCase {
         assertEquals(node.cpus, reservation.cpus, 0.001);
         assertEquals(node.mem, reservation.mem);
         assertEquals(2, reservation.ports.size());
-        assertEquals(new Integer(0), reservation.ports.get(Node.Port.NN_HTTP));
-        assertEquals(new Integer(1), reservation.ports.get(Node.Port.NN_IPC));
+        assertEquals(new Integer(0), reservation.ports.get(Node.Port.HTTP));
+        assertEquals(new Integer(1), reservation.ports.get(Node.Port.IPC));
     }
 
     @Test
@@ -90,7 +90,7 @@ public class NodeTest extends MesosTestCase {
 
     @Test
     public void initRuntime_fsUri() {
-        Node node = Nodes.addNode(new Node("0", Node.Type.NAME_NODE));
+        Node node = Nodes.addNode(new Node("0", Node.Type.NAMENODE));
 
         // name node
         Offer offer = offer();
@@ -98,12 +98,12 @@ public class NodeTest extends MesosTestCase {
         assertTrue(node.runtime.fsUri, node.runtime.fsUri.contains(offer.getHostname()));
 
         // data node, no name node
-        node.type = Node.Type.DATA_NODE;
+        node.type = Node.Type.DATANODE;
         try { node.initRuntime(offer); fail(); }
         catch (IllegalStateException e) { assertTrue(e.getMessage(), e.getMessage().contains("no namenode")); }
 
         // data node, running name node
-        Node nn = Nodes.addNode(new Node("1", Node.Type.NAME_NODE));
+        Node nn = Nodes.addNode(new Node("1", Node.Type.NAMENODE));
         nn.initRuntime(offer);
         assertTrue(nn.runtime.fsUri, nn.runtime.fsUri.contains(nn.runtime.hostname));
     }
@@ -152,7 +152,7 @@ public class NodeTest extends MesosTestCase {
     @Test
     public void toJson_fromJson() {
         Node node = Nodes.addNode(new Node("node"));
-        node.type = Node.Type.NAME_NODE;
+        node.type = Node.Type.NAMENODE;
         node.state = Node.State.RUNNING;
 
         node.cpus = 2;
@@ -203,8 +203,8 @@ public class NodeTest extends MesosTestCase {
         Node.Reservation reservation = new Node.Reservation();
         reservation.cpus = 0.5;
         reservation.mem = 256;
-        reservation.ports.put(Node.Port.NN_HTTP, 10);
-        reservation.ports.put(Node.Port.DN_HTTP, 20);
+        reservation.ports.put(Node.Port.HTTP, 10);
+        reservation.ports.put(Node.Port.IPC, 20);
 
         Node.Reservation read = new Node.Reservation(reservation.toJson());
         assertEquals(reservation.cpus, read.cpus, 0.001);

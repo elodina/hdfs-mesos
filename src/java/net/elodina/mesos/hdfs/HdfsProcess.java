@@ -24,7 +24,7 @@ public class HdfsProcess {
         createCoreSiteXml();
         createHdfsSiteXml();
 
-        if (node.type == Node.Type.NAME_NODE && !isNameNodeFormatted())
+        if (node.type == Node.Type.NAMENODE && !isNameNodeFormatted())
             formatNameNode();
 
         process = startProcess();
@@ -64,13 +64,13 @@ public class HdfsProcess {
     private void createHdfsSiteXml() throws IOException {
         Map<String, String> props = new HashMap<>();
 
-        if (node.type == Node.Type.NAME_NODE) {
-            props.put("dfs.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.NN_HTTP));
+        if (node.type == Node.Type.NAMENODE) {
+            props.put("dfs.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.HTTP));
             props.put("dfs.name.dir", "" + getNameNodeDir());
         } else {
-            props.put("dfs.datanode.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.DN_HTTP));
-            props.put("dfs.datanode.address", hostname + ":" + node.reservation.ports.get(Node.Port.DN_DATA));
-            props.put("dfs.datanode.ipc.address", hostname + ":" + node.reservation.ports.get(Node.Port.DN_IPC));
+            props.put("dfs.datanode.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.HTTP));
+            props.put("dfs.datanode.address", hostname + ":" + node.reservation.ports.get(Node.Port.DATA));
+            props.put("dfs.datanode.ipc.address", hostname + ":" + node.reservation.ports.get(Node.Port.IPC));
             props.put("dfs.data.dir", "" + getDataNodeDir());
         }
 
@@ -108,8 +108,8 @@ public class HdfsProcess {
     private Process startProcess() throws IOException {
         String cmd;
         switch (node.type) {
-            case NAME_NODE: cmd = "namenode"; break;
-            case DATA_NODE: cmd = "datanode"; break;
+            case NAMENODE: cmd = "namenode"; break;
+            case DATANODE: cmd = "datanode"; break;
             default: throw new IllegalStateException("unsupported node type " + node.type);
         }
 

@@ -245,7 +245,7 @@ public class Util {
             return obj instanceof Version && values.equals(((Version) obj).values);
         }
 
-        public String toString() { return Util.join(Arrays.asList(values), "."); }
+        public String toString() { return Util.join(values, "."); }
     }
 
     public static class IO {

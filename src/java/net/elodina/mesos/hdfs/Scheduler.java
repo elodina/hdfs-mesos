@@ -273,10 +273,24 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             String hadoopMask = "hadoop-.*gz";
             hadoop = Util.IO.findFile(new File("."), hadoopMask);
             if (hadoop == null) throw new IllegalStateException(hadoopMask + " not found in current dir");
+            checkHadoopVersion();
 
             String jarMask = "hdfs-mesos-.*jar";
             jar = Util.IO.findFile(new File("."), jarMask);
             if (jar == null) throw new IllegalStateException(jarMask + " not found in current dir");
+        }
+
+        private void checkHadoopVersion() {
+            // hadoop-1.2.1.tar.gz
+            String name = hadoop.getName();
+            int hyphenIdx = name.indexOf("-");
+            int extIdx = name.indexOf(".tar.gz");
+
+            if (hyphenIdx == -1 || extIdx == -1) throw new IllegalStateException("Can't extract version from " + name);
+            Util.Version version = new Util.Version(name.substring(hyphenIdx + 1, extIdx));
+
+            if (version.compareTo(new Util.Version("1.2")) < 0 || version.compareTo(new Util.Version("1.3")) >= 0)
+                throw new IllegalStateException("Supported hadoop versions are 1.2.x, current is " + version);
         }
 
         public String toString() {

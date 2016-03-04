@@ -1,11 +1,15 @@
 package net.elodina.mesos.hdfs;
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class HdfsProcess {
+    private static Logger logger = Logger.getLogger(HdfsProcess.class);
+
     private Node node;
     private String hostname;
 
@@ -19,18 +23,24 @@ public class HdfsProcess {
     public void start() throws IOException, InterruptedException {
         createCoreSiteXml();
         createHdfsSiteXml();
-        if (node.type == Node.Type.NAME_NODE) formatNameNode();
+
+        if (node.type == Node.Type.NAME_NODE && !isNameNodeFormatted())
+            formatNameNode();
+
         process = startProcess();
     }
 
     public int waitFor() throws InterruptedException {
-        if (process != null)
-            return process.waitFor();
+        if (process == null) throw new IllegalStateException("!started");
 
-        throw new IllegalStateException("!started");
+        int code = process.waitFor();
+        logger.info("Process finished with code " + code);
+
+        return code;
     }
 
     public void stop() {
+        logger.info("Stopping process");
         process.destroy();
     }
 
@@ -54,12 +64,14 @@ public class HdfsProcess {
     private void createHdfsSiteXml() throws IOException {
         Map<String, String> props = new HashMap<>();
 
-        if (node.type == Node.Type.NAME_NODE)
+        if (node.type == Node.Type.NAME_NODE) {
             props.put("dfs.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.NN_HTTP));
-        else {
+            props.put("dfs.name.dir", "" + getNameNodeDir());
+        } else {
             props.put("dfs.datanode.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.DN_HTTP));
             props.put("dfs.datanode.address", hostname + ":" + node.reservation.ports.get(Node.Port.DN_DATA));
             props.put("dfs.datanode.ipc.address", hostname + ":" + node.reservation.ports.get(Node.Port.DN_IPC));
+            props.put("dfs.data.dir", "" + getDataNodeDir());
         }
 
         String content = "<configuration>\n";
@@ -75,7 +87,14 @@ public class HdfsProcess {
         Util.IO.writeFile(file, content);
     }
 
+    private File getNameNodeDir() { return new File(Executor.dataDir, "namenode"); }
+    private boolean isNameNodeFormatted() { return new File(getNameNodeDir(), "current").isDirectory(); }
+
+    private File getDataNodeDir() { return new File(Executor.dataDir, "datanode"); }
+
     private void formatNameNode() throws IOException, InterruptedException {
+        logger.info("Formatting namenode");
+
         ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), "namenode", "-format")
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -83,7 +102,7 @@ public class HdfsProcess {
         builder.environment().put("JAVA_HOME", "" + Executor.javaHome);
 
         int code = builder.start().waitFor();
-        if (code != 0) throw new IllegalStateException("Failed to format FS: process exited with " + code);
+        if (code != 0) throw new IllegalStateException("Failed to format namenode: process exited with " + code);
     }
 
     private Process startProcess() throws IOException {
@@ -102,6 +121,7 @@ public class HdfsProcess {
         env.put("JAVA_HOME", "" + Executor.javaHome);
         if (node.hadoopJvmOpts != null) env.put("HADOOP_OPTS", node.hadoopJvmOpts);
 
+        logger.info("Starting process '" + Util.join(builder.command(), " ") + "'");
         return builder.start();
     }
 }

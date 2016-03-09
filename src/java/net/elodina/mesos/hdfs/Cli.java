@@ -127,7 +127,7 @@ public class Cli {
         throw new Error("Undefined API url. Please provide one of following: CLI --api option, HM_API env var, api var in hdfs-mesos.properties.");
     }
 
-    static JSONAware sendRequest(String uri, Map<String, String> params) throws IOException {
+    static <T extends JSONAware> T sendRequest(String uri, Map<String, String> params) throws IOException {
         String qs = queryString(params);
         String url = api + (api.endsWith("/") ? "" : "/") + "api" + uri;
 
@@ -160,7 +160,8 @@ public class Cli {
         try { json = (JSONAware) new JSONParser().parse(response); }
         catch (ParseException e) { throw new IOException(e); }
 
-        return json;
+        @SuppressWarnings("unchecked") T result = (T) json;
+        return result;
     }
 
     private static String queryString(Map<String, String> params) {

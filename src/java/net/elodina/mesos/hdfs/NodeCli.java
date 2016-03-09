@@ -68,7 +68,7 @@ public class NodeCli {
         if (expr != null) params.put("node", expr);
 
         JSONArray json;
-        try { json = (JSONArray) sendRequest("/node/list", params); }
+        try { json = sendRequest("/node/list", params); }
         catch (IOException e) { throw new Error("" + e); }
 
         List<Node> nodes = Node.fromJsonArray(json);
@@ -141,7 +141,7 @@ public class NodeCli {
         if (hdfsSiteOpts != null) params.put("hdfsSiteOpts", hdfsSiteOpts);
 
         JSONArray json;
-        try { json = (JSONArray) sendRequest("/node/" + cmd, params); }
+        try { json = sendRequest("/node/" + cmd, params); }
         catch (IOException e) { throw new Error("" + e); }
 
         List<Node> nodes = Node.fromJsonArray(json);
@@ -190,7 +190,7 @@ public class NodeCli {
         if (force != null) params.put("force", "" + force);
 
         JSONObject json;
-        try { json = (JSONObject) sendRequest("/node/" + cmd, params); }
+        try { json = sendRequest("/node/" + cmd, params); }
         catch (IOException e) { throw new Error("" + e); }
 
         String status = "" + json.get("status");

@@ -115,7 +115,10 @@ public class HttpServer {
             String expr = "*";
             if (request.getParameter("node") != null) expr = request.getParameter("node");
 
-            List<String> ids = Nodes.expandExpr(expr);
+            List<String> ids;
+            try { ids = Nodes.expandExpr(expr); }
+            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid node"); }
+
             List<Node> nodes = Nodes.getNodes(ids);
 
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = new JSONArray();
@@ -131,7 +134,7 @@ public class HttpServer {
 
             List<String> ids;
             try { ids = Nodes.expandExpr(expr); }
-            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid nodes"); }
+            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid node"); }
 
             for (String id : ids) {
                 Node node = Nodes.getNode(id);
@@ -201,7 +204,7 @@ public class HttpServer {
 
             List<String> ids;
             try { ids = Nodes.expandExpr(expr); }
-            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid nodes"); }
+            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid node"); }
 
             for (String id : ids) {
                 Node node = Nodes.getNode(id);

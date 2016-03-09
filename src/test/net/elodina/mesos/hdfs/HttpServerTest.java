@@ -2,6 +2,7 @@ package net.elodina.mesos.hdfs;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
+import org.json.simple.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.fail;
 
 public class HttpServerTest extends MesosTestCase {
     private HttpServer server;
@@ -69,7 +71,7 @@ public class HttpServerTest extends MesosTestCase {
     @Test
     public void api_node_list() throws IOException {
         // no nodes
-        JSONArray json = (JSONArray) sendRequest("/node/list");
+        JSONArray json = sendRequest("/node/list");
         List<Node> nodes = Node.fromJsonArray(json);
         assertTrue(nodes.isEmpty());
 
@@ -77,20 +79,24 @@ public class HttpServerTest extends MesosTestCase {
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
         Node dn = Nodes.addNode(new Node("dn", Node.Type.DATANODE));
 
-        json = (JSONArray) sendRequest("/node/list");
+        json = sendRequest("/node/list");
         nodes = Node.fromJsonArray(json);
         assertEquals(Arrays.asList(nn, dn), nodes);
 
         // single node
-        json = (JSONArray) sendRequest("/node/list?node=nn");
+        json = sendRequest("/node/list?node=nn");
         nodes = Node.fromJsonArray(json);
         assertEquals(Arrays.asList(nn), nodes);
+
+        // invalid node
+        try { sendRequest("/node/list?node=0..a"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
     }
 
     @Test
     public void api_node_add_update() throws IOException {
         // add namenode
-        JSONArray json = (JSONArray) sendRequest("/node/add?node=nn&type=namenode");
+        JSONArray json = sendRequest("/node/add?node=nn&type=namenode");
         assertEquals(1, Nodes.getNodes().size());
 
         Node nn = Nodes.getNode("nn");
@@ -98,7 +104,7 @@ public class HttpServerTest extends MesosTestCase {
         assertEquals(Arrays.asList(nn), Node.fromJsonArray(json));
 
         // add datanode
-        json = (JSONArray) sendRequest("/node/add?node=dn&type=datanode");
+        json = sendRequest("/node/add?node=dn&type=datanode");
         assertEquals(2, Nodes.getNodes().size());
 
         Node dn = Nodes.getNode("dn");
@@ -106,14 +112,41 @@ public class HttpServerTest extends MesosTestCase {
         assertEquals(Arrays.asList(dn), Node.fromJsonArray(json));
 
         // update nodes
-        json = (JSONArray) sendRequest("/node/update?node=*&mem=2048");
+        json = sendRequest("/node/update?node=*&mem=2048");
         assertEquals(Arrays.asList(nn, dn), Node.fromJsonArray(json));
 
         assertEquals(2048, nn.mem);
         assertEquals(2048, dn.mem);
     }
 
-    public JSONAware sendRequest(String uri) throws IOException {
+    @Test
+    public void api_node_start_stop() throws IOException {
+        Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+
+        // schedule start
+        JSONObject json = sendRequest("/node/start?node=nn&timeout=0");
+        assertEquals("timeout", "" + json.get("status"));
+        assertEquals(Node.State.STARTING, nn.state);
+
+        // schedule stop
+        json = sendRequest("/node/stop?node=nn&timeout=0");
+        assertEquals("timeout", "" + json.get("status"));
+        assertEquals(Node.State.STOPPING, nn.state);
+    }
+
+    @Test
+    public void api_node_remove() throws IOException {
+        Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+        Nodes.addNode(new Node("dn", Node.Type.DATANODE));
+
+        sendRequest("/node/remove?node=dn");
+        assertEquals(1, Nodes.getNodes().size());
+
+        sendRequest("/node/remove?node=nn");
+        assertTrue(Nodes.getNodes().isEmpty());
+    }
+
+    public <T extends JSONAware> T sendRequest(String uri) throws IOException {
         return Cli.sendRequest(uri, Collections.<String, String>emptyMap());
     }
 

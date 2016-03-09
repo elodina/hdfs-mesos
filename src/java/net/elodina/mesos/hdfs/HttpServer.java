@@ -140,16 +140,18 @@ public class HttpServer {
                 Node node = Nodes.getNode(id);
                 if (add && node != null) throw new HttpError(400, "duplicate node");
                 if (!add && node == null) throw new HttpError(400, "node not found");
-                if (!add && node.state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
+                if (!add && node.state != Node.State.IDLE) throw new HttpError(400, "node not idle");
             }
 
             Node.Type type = null;
             if (add) {
+                if (request.getParameter("type") == null) throw new HttpError(400, "type required");
+
                 try { type = Node.Type.valueOf(request.getParameter("type").toUpperCase()); }
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid type"); }
 
                 if (type == Node.Type.NAMENODE && !Nodes.getNodes(Node.Type.NAMENODE).isEmpty())
-                    throw new HttpError(400, "second name node is not supported");
+                    throw new HttpError(400, "duplicate namenode");
             }
 
             Double cpus = null;
@@ -209,8 +211,8 @@ public class HttpServer {
             for (String id : ids) {
                 Node node = Nodes.getNode(id);
                 if (node == null) throw new HttpError(400, "node not found");
-                if (start && node.state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
-                if (!start && node.state == Node.State.IDLE) throw new HttpError(400, "node should not be idle");
+                if (start && node.state != Node.State.IDLE) throw new HttpError(400, "node not idle");
+                if (!start && node.state == Node.State.IDLE) throw new HttpError(400, "node idle");
             }
 
             Util.Period timeout = new Util.Period("2m");
@@ -250,7 +252,7 @@ public class HttpServer {
             for (String id : ids) {
                 Node node = Nodes.getNode(id);
                 if (node == null) throw new HttpError(400, "node not found");
-                if (node.state != Node.State.IDLE) throw new HttpError(400, "node should be idle");
+                if (node.state != Node.State.IDLE) throw new HttpError(400, "node not idle");
             }
 
             for (Node node : Nodes.getNodes(ids))

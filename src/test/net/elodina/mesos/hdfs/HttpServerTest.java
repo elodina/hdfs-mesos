@@ -69,7 +69,7 @@ public class HttpServerTest extends MesosTestCase {
     }
 
     @Test
-    public void api_node_list() throws IOException {
+    public void node_list() throws IOException {
         // no nodes
         JSONArray json = sendRequest("/node/list");
         List<Node> nodes = Node.fromJsonArray(json);
@@ -94,7 +94,7 @@ public class HttpServerTest extends MesosTestCase {
     }
 
     @Test
-    public void api_node_add_update() throws IOException {
+    public void node_add_update() throws IOException {
         // add namenode
         JSONArray json = sendRequest("/node/add?node=nn&type=namenode");
         assertEquals(1, Nodes.getNodes().size());
@@ -120,7 +120,69 @@ public class HttpServerTest extends MesosTestCase {
     }
 
     @Test
-    public void api_node_start_stop() throws IOException {
+    public void node_add_update_node_validation() {
+        // no node
+        try { sendRequest("/node/add"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node required")); }
+
+        // invalid node
+        try { sendRequest("/node/add?node=0..a"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
+
+        // duplicate node
+        Node dn = Nodes.addNode(new Node("dn", Node.Type.DATANODE));
+        try { sendRequest("/node/add?node=dn"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("duplicate node")); }
+
+        // node not found
+        try { sendRequest("/node/update?node=unknown"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not found")); }
+
+        // node not idle
+        dn.state = Node.State.STARTING;
+        try { sendRequest("/node/update?node=dn"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not idle")); }
+    }
+
+    @Test
+    public void node_add_update_type_validation() {
+        // no type
+        try { sendRequest("/node/add?node=a"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("type required")); }
+
+        // invalid type
+        try { sendRequest("/node/add?node=a&type=abc"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid type")); }
+
+        // duplicate namenode
+        Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+        try { sendRequest("/node/add?node=nn2&type=namenode"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("duplicate namenode")); }
+    }
+
+    @Test
+    public void node_add_update_other_validation() {
+        Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+
+        // cpus
+        try { sendRequest("/node/update?node=nn&cpus=invalid"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid cpus")); }
+
+        // mem
+        try { sendRequest("/node/update?node=nn&mem=invalid"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid mem")); }
+
+        // coreSiteOpts
+        try { sendRequest("/node/update?node=nn&coreSiteOpts=invalid"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid coreSiteOpts")); }
+
+        // hdfsSiteOpts
+        try { sendRequest("/node/update?node=nn&hdfsSiteOpts=invalid"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid hdfsSiteOpts")); }
+    }
+
+    @Test
+    public void node_start_stop() throws IOException {
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
 
         // schedule start
@@ -135,7 +197,38 @@ public class HttpServerTest extends MesosTestCase {
     }
 
     @Test
-    public void api_node_remove() throws IOException {
+    public void node_start_stop_validation() {
+        // node required
+        try { sendRequest("/node/start"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node required")); }
+
+        // node invalid
+        try { sendRequest("/node/start?node=0..a"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
+
+        // node not found
+        try { sendRequest("/node/start?node=a"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not found")); }
+
+        // node not idle
+        Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+        nn.state = Node.State.RUNNING;
+
+        try { sendRequest("/node/start?node=nn"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not idle")); }
+
+        // node idle
+        nn.state = Node.State.IDLE;
+        try { sendRequest("/node/stop?node=nn"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node idle")); }
+
+        // timeout
+        try { sendRequest("/node/start?node=nn&timeout=invalid"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid timeout")); }
+    }
+
+    @Test
+    public void node_remove() throws IOException {
         Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
         Nodes.addNode(new Node("dn", Node.Type.DATANODE));
 

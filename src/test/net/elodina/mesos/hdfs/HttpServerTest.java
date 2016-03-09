@@ -202,7 +202,7 @@ public class HttpServerTest extends MesosTestCase {
         try { sendRequest("/node/start"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node required")); }
 
-        // node invalid
+        // invalid node
         try { sendRequest("/node/start?node=0..a"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
 
@@ -237,6 +237,27 @@ public class HttpServerTest extends MesosTestCase {
 
         sendRequest("/node/remove?node=nn");
         assertTrue(Nodes.getNodes().isEmpty());
+    }
+
+    @Test
+    public void node_remove_validation() {
+        // node required
+        try { sendRequest("/node/remove"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node required")); }
+
+        // invalid node
+        try { sendRequest("/node/remove?node=0..a"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
+
+        // node not found
+        try { sendRequest("/node/remove?node=a"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not found")); }
+
+        // node not idle
+        Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+        nn.state = Node.State.RUNNING;
+        try { sendRequest("/node/remove?node=nn"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not idle")); }
     }
 
     public <T extends JSONAware> T sendRequest(String uri) throws IOException {

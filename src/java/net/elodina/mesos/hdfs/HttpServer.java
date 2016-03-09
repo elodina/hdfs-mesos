@@ -248,7 +248,10 @@ public class HttpServer {
             String expr = request.getParameter("node");
             if (expr == null || expr.isEmpty()) throw new HttpError(400, "node required");
 
-            List<String> ids = Nodes.expandExpr(expr);
+            List<String> ids;
+            try { ids = Nodes.expandExpr(expr); }
+            catch (IllegalArgumentException e) { throw new HttpError(400, "invalid node"); }
+
             for (String id : ids) {
                 Node node = Nodes.getNode(id);
                 if (node == null) throw new HttpError(400, "node not found");

@@ -3,11 +3,14 @@ package net.elodina.mesos.hdfs;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import org.json.simple.JSONAware;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static net.elodina.mesos.hdfs.Cli.Error;
 import static net.elodina.mesos.hdfs.Cli.*;
@@ -64,14 +67,11 @@ public class NodeCli {
         Map<String, String> params = new HashMap<>();
         if (expr != null) params.put("node", expr);
 
-        JSONAware json;
-        try { json = sendRequest("/node/list", params); }
+        JSONArray json;
+        try { json = (JSONArray) sendRequest("/node/list", params); }
         catch (IOException e) { throw new Error("" + e); }
 
-        @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>) json;
-        List<Node> nodes = new ArrayList<>();
-        for (JSONObject nodeJson : nodesJson) nodes.add(new Node(nodeJson));
-
+        List<Node> nodes = Node.fromJsonArray(json);
         String title = nodes.isEmpty() ? "no nodes" : "node" + (nodes.size() > 1 ? "s" : "") + ":";
         printLine(title);
 
@@ -140,14 +140,11 @@ public class NodeCli {
         if (coreSiteOpts != null) params.put("coreSiteOpts", coreSiteOpts);
         if (hdfsSiteOpts != null) params.put("hdfsSiteOpts", hdfsSiteOpts);
 
-        JSONAware json;
-        try { json = sendRequest("/node/" + cmd, params); }
+        JSONArray json;
+        try { json = (JSONArray) sendRequest("/node/" + cmd, params); }
         catch (IOException e) { throw new Error("" + e); }
 
-        @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>) json;
-        List<Node> nodes = new ArrayList<>();
-        for (JSONObject nodeJson : nodesJson) nodes.add(new Node(nodeJson));
-
+        List<Node> nodes = Node.fromJsonArray(json);
         String title = "node" + (nodes.size() > 1 ? "s" : "") + (cmd.equals("add") ? " added" : " updated") + ":";
         printLine(title);
 
@@ -197,10 +194,7 @@ public class NodeCli {
         catch (IOException e) { throw new Error("" + e); }
 
         String status = "" + json.get("status");
-        @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>) json.get("nodes");
-
-        List<Node> nodes = new ArrayList<>();
-        for (JSONObject nodeJson : nodesJson) nodes.add(new Node(nodeJson));
+        List<Node> nodes = Node.fromJsonArray((JSONArray) json.get("nodes"));
 
         String title = nodes.size() > 1 ? "nodes " : "node ";
         switch (status) {

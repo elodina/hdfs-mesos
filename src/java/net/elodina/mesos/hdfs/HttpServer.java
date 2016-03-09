@@ -124,6 +124,7 @@ public class HttpServer {
             response.getWriter().println("" + nodesJson);
         }
 
+        @SuppressWarnings("ConstantConditions")
         private void handleNodeAddUpdate(HttpServletRequest request, HttpServletResponse response, boolean add) throws IOException {
             String expr = request.getParameter("node");
             if (expr == null || expr.isEmpty()) throw new HttpError(400, "node required");

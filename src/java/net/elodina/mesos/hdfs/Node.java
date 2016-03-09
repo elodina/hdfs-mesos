@@ -2,6 +2,7 @@ package net.elodina.mesos.hdfs;
 
 import com.google.protobuf.ByteString;
 import org.apache.mesos.Protos;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.*;
@@ -231,6 +232,13 @@ public class Node {
 
         if (json.containsKey("runtime")) runtime = new Runtime((JSONObject) json.get("runtime"));
         if (json.containsKey("reservation")) reservation = new Reservation((JSONObject) json.get("reservation"));
+    }
+
+    @SuppressWarnings({"unchecked", "RedundantCast"})
+    public static List<Node> fromJsonArray(JSONArray nodesJson) {
+        List<Node> nodes = new ArrayList<>();
+        for (JSONObject nodeJson : (List<JSONObject>) nodesJson) nodes.add(new Node(nodeJson));
+        return nodes;
     }
 
     public int hashCode() { return id.hashCode(); }

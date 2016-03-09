@@ -9,7 +9,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -22,7 +21,7 @@ public class MesosTestCase {
     TestExecutorDriver executorDriver;
 
     @Before
-    public void before() throws IOException {
+    public void before() throws Exception {
         BasicConfigurator.configure();
         Scheduler.$.initLogging();
 
@@ -40,10 +39,12 @@ public class MesosTestCase {
         config.api = "http://localhost:" + Util.findAvailPort();
         config.jar = new File("hdfs-mesos-0.1.jar");
         config.hadoop = new File("hadoop-1.2.1.tar.gz");
+
+        Cli.api = config.api;
     }
 
     @After
-    public void after() {
+    public void after() throws Exception {
         Scheduler.$.disconnected(schedulerDriver);
         BasicConfigurator.resetConfiguration();
 

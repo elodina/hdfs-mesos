@@ -142,10 +142,7 @@ public class Nodes {
         if (json.containsKey("frameworkId")) frameworkId = (String) json.get("frameworkId");
 
         nodes.clear();
-        if (json.containsKey("nodes")) {
-            JSONArray nodesJson = (JSONArray) json.get("nodes");
-            for (JSONObject nodeJson : (List<JSONObject>)nodesJson)
-                nodes.add(new Node(nodeJson));
-        }
+        if (json.containsKey("nodes"))
+            nodes.addAll(Node.fromJsonArray((JSONArray) json.get(nodes)));
     }
 }

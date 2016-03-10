@@ -195,8 +195,8 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         Util.Version version = !master.getVersion().isEmpty() ? new Util.Version(master.getVersion()) : null;
 
         if (version == null || version.compareTo(minVersion) < 0) {
-            String versionStr = version == null ? "< \"0.23.0\"" : "\"" + version + "\"";
-            logger.fatal("Minimum supported Mesos version is " + minVersion + ", whereas current version is " + versionStr);
+            String versionStr = version == null ? "?(<0.23.0)" : "" + version;
+            logger.fatal("Unsupported Mesos version " + versionStr + ", expected version " + minVersion + "+");
             driver.stop();
         }
     }

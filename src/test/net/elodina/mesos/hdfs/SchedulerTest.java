@@ -65,4 +65,21 @@ public class SchedulerTest extends MesosTestCase {
             assertNull(node.reservation);
         }
     }
+
+    @Test
+    public void checkMesosVersion() {
+        // no version
+        Scheduler.$.checkMesosVersion(master("id", LOCALHOST_IP, 5000, "host", ""));
+        assertEquals(Protos.Status.DRIVER_STOPPED, schedulerDriver.status);
+
+        // unsupported version
+        schedulerDriver.start();
+        Scheduler.$.checkMesosVersion(master("id", LOCALHOST_IP, 5000, "host", "0.22.0"));
+        assertEquals(Protos.Status.DRIVER_STOPPED, schedulerDriver.status);
+
+        // supported version
+        schedulerDriver.start();
+        Scheduler.$.checkMesosVersion(master("id", LOCALHOST_IP, 5000, "host", "0.23.0"));
+        assertEquals(Protos.Status.DRIVER_RUNNING, schedulerDriver.status);
+    }
 }

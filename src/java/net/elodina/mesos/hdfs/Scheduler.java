@@ -28,6 +28,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     public void registered(SchedulerDriver driver, Protos.FrameworkID id, Protos.MasterInfo master) {
         logger.info("[registered] framework:" + Str.id(id.getValue()) + " master:" + Str.master(master));
         this.driver = driver;
+        checkMesosVersion(master);
 
         Nodes.frameworkId = id.getValue();
         Nodes.save();
@@ -187,6 +188,17 @@ public class Scheduler implements org.apache.mesos.Scheduler {
                 return node;
 
         return null;
+    }
+
+    void checkMesosVersion(MasterInfo master) {
+        Util.Version minVersion = new Util.Version("0.23.0");
+        Util.Version version = !master.getVersion().isEmpty() ? new Util.Version(master.getVersion()) : null;
+
+        if (version == null || version.compareTo(minVersion) < 0) {
+            String versionStr = version == null ? "< \"0.23.0\"" : "\"" + version + "\"";
+            logger.fatal("Minimum supported Mesos version is " + minVersion + ", whereas current version is " + versionStr);
+            driver.stop();
+        }
     }
 
     public void run() {

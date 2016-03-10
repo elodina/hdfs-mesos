@@ -143,6 +143,6 @@ public class Nodes {
 
         nodes.clear();
         if (json.containsKey("nodes"))
-            nodes.addAll(Node.fromJsonArray((JSONArray) json.get(nodes)));
+            nodes.addAll(Node.fromJsonArray((JSONArray) json.get("nodes")));
     }
 }

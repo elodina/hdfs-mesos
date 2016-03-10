@@ -61,15 +61,15 @@ public class MesosTestCase {
     public TaskID taskId() { return taskId("" + UUID.randomUUID()); }
     public TaskID taskId(String id) { return TaskID.newBuilder().setValue(id).build(); }
 
-    private static final int LOCALHOST_IP = 2130706433;
-    public MasterInfo master() { return master("" + UUID.randomUUID(), LOCALHOST_IP, 5050, "master"); }
-    public MasterInfo master(String id, int ip, int port, String hostname) {
+    static final int LOCALHOST_IP = 2130706433;
+    public MasterInfo master() { return master("" + UUID.randomUUID(), LOCALHOST_IP, 5050, "master", "0.23.0"); }
+    public MasterInfo master(String id, int ip, int port, String hostname, String version) {
         return MasterInfo.newBuilder()
             .setId(id)
             .setIp(ip)
             .setPort(port)
             .setHostname(hostname)
-            .setVersion("0.23.0")
+            .setVersion(version)
             .build();
     }
 
@@ -275,9 +275,9 @@ public class MesosTestCase {
             return status;
         }
 
-        public Status stop() { throw new UnsupportedOperationException(); }
+        public Status stop() { return status = Status.DRIVER_STOPPED; }
 
-        public Status stop(boolean failover) { throw new UnsupportedOperationException(); }
+        public Status stop(boolean failover) { return status = Status.DRIVER_STOPPED; }
 
         public Status killTask(TaskID id) {
             killedTasks.add(id.getValue());
@@ -297,11 +297,11 @@ public class MesosTestCase {
 
         public Status reviveOffers() { throw new UnsupportedOperationException(); }
 
-        public Status run() { throw new UnsupportedOperationException(); }
+        public Status run() { return status = Status.DRIVER_RUNNING; }
 
-        public Status abort() { throw new UnsupportedOperationException(); }
+        public Status abort() { return status = Status.DRIVER_ABORTED; }
 
-        public Status start() { throw new UnsupportedOperationException(); }
+        public Status start() { return status = Status.DRIVER_RUNNING; }
 
         public Status acceptOffers(Collection<OfferID> offerIds, Collection<Offer.Operation> operations, Filters filters) { throw new UnsupportedOperationException(); }
 

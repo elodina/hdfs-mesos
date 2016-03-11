@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ public class HdfsProcess {
     public void start() throws IOException, InterruptedException {
         createCoreSiteXml();
         createHdfsSiteXml();
+        configureLogs();
         if (node.type == Node.Type.NAMENODE) formatNameNodeIfRequired();
 
         process = startProcess();
@@ -109,6 +111,11 @@ public class HdfsProcess {
 
         content += "</configuration>";
         Util.IO.writeFile(file, content);
+    }
+
+    private void configureLogs() throws IOException {
+        File file = new File(Executor.hadoopDir, "conf/log4j.properties");
+        Util.IO.replaceInFile(file, Collections.singletonMap("log4j.appender.console.target=System.err", "log4j.appender.console.target=System.out"));
     }
 
     private static String escapeXmlText(String s) { return s.replace("<", "&lt;").replace(">", "&gt;"); }

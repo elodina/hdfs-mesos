@@ -175,7 +175,7 @@ public class Executor implements org.apache.mesos.Executor {
         Logger root = Logger.getRootLogger();
         root.setLevel(Level.INFO);
 
-        PatternLayout layout = new PatternLayout("%d [%t] %-5p %c %x - %m%n");
+        PatternLayout layout = new PatternLayout("[executor] %d [%t] %p %c{2} - %m%n");
         root.addAppender(new ConsoleAppender(layout));
     }
 }

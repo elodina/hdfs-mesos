@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -114,8 +113,12 @@ public class HdfsProcess {
     }
 
     private void configureLogs() throws IOException {
+        Map<String, String> map = new HashMap<>();
+        map.put("log4j.appender.console.layout.ConversionPattern=.*", "log4j.appender.console.layout.ConversionPattern=[" + node.type.name().toLowerCase() + "] %d [%t] %p %c{2} - %m%n");
+        map.put("log4j.appender.console.target=.*", "log4j.appender.console.target=System.out");
+
         File file = new File(Executor.hadoopDir, "conf/log4j.properties");
-        Util.IO.replaceInFile(file, Collections.singletonMap("log4j.appender.console.target=System.err", "log4j.appender.console.target=System.out"));
+        Util.IO.replaceInFile(file, map);
     }
 
     private static String escapeXmlText(String s) { return s.replace("<", "&lt;").replace(">", "&gt;"); }
@@ -158,8 +161,8 @@ public class HdfsProcess {
         }
 
         ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), cmd)
-            .redirectOutput(new File(node.type.name().toLowerCase() + ".out"))
-            .redirectError(new File(node.type.name().toLowerCase() + ".err"));
+            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+            .redirectError(ProcessBuilder.Redirect.INHERIT);
 
         Map<String, String> env = builder.environment();
         env.put("JAVA_HOME", "" + Executor.javaHome);

@@ -254,7 +254,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
         Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
 
-        PatternLayout layout = new PatternLayout("%d [%t] %-5p %c %x - %m%n");
+        PatternLayout layout = new PatternLayout("%d [%t] %p %c{2} - %m%n");
         root.addAppender(new ConsoleAppender(layout));
     }
 
@@ -278,7 +278,6 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
         public void warn(String s, Object... args) { logger.warn(format(s, args)); }
         public void warn(String msg, Throwable th) { logger.warn(msg, th); }
-        public void warn(String msg) { logger.warn(msg); }
         public void warn(Throwable t) { logger.warn("", t); }
 
         public void ignore(Throwable throwable) { logger.info("Ignored", throwable); }

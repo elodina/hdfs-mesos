@@ -130,14 +130,12 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         return Util.join(reasons, ", ");
     }
 
-    private void launchTask(Node node, Protos.Offer offer) {
+    void launchTask(Node node, Protos.Offer offer) {
         node.initRuntime(offer);
         TaskInfo task = node.newTask();
 
         driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task), Filters.newBuilder().setRefuseSeconds(1).build());
         logger.info("Starting node " + node.id + " with task " + node.runtime.taskId + " for offer " + offer.getId().getValue());
-
-        node.state = Node.State.RUNNING;
     }
 
     void onTaskStatus(TaskStatus status) {

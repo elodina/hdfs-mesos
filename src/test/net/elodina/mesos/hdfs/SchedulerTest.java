@@ -67,6 +67,19 @@ public class SchedulerTest extends MesosTestCase {
     }
 
     @Test
+    public void launchTask() {
+        Node node = Nodes.addNode(new Node("nn"));
+        node.state = Node.State.STARTING;
+
+        Scheduler.$.launchTask(node, offer());
+        assertEquals(1, schedulerDriver.launchedTasks.size());
+
+        assertEquals(Node.State.STARTING, node.state);
+        assertNotNull(node.runtime);
+        assertNotNull(node.reservation);
+    }
+
+    @Test
     public void checkMesosVersion() {
         // no version
         Scheduler.$.checkMesosVersion(master("id", LOCALHOST_IP, 5000, "host", ""));

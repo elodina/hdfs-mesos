@@ -4,6 +4,7 @@ import org.apache.mesos.Protos;
 
 import java.io.*;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -103,6 +104,15 @@ public class Util {
             return s.getLocalPort();
         } catch (IOException e) {
             throw new IOError(e);
+        }
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public static boolean isPortOpen(String host, int port) {
+        try (Socket socket = new Socket(host, port)) {
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 

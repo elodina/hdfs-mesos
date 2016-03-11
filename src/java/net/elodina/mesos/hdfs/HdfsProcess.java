@@ -37,9 +37,35 @@ public class HdfsProcess {
         return code;
     }
 
+    public boolean waitForOperable() {
+        if (process == null) throw new IllegalStateException("!started");
+
+        logger.info("Waiting for process IPC port ready ...");
+        while (!isProcessStopped()) {
+            if (Util.isPortOpen(hostname, node.reservation.ports.get(Node.Port.IPC))) {
+                logger.info("Process IPC port is ready");
+                return true;
+            }
+
+            Util.Period delay = new Util.Period("1s");
+            logger.info("Process IPC port is not ready. Sleeping " + delay);
+
+            try { Thread.sleep(delay.ms()); }
+            catch (InterruptedException e) { break; }
+        }
+
+        logger.info("Process IPC port is not ready: process stopped");
+        return false;
+    }
+
     public void stop() {
         logger.info("Stopping process");
         process.destroy();
+    }
+
+    private boolean isProcessStopped() {
+        try { process.exitValue(); return true; }
+        catch (IllegalThreadStateException e) { return false; }
     }
 
     private void createCoreSiteXml() throws IOException {

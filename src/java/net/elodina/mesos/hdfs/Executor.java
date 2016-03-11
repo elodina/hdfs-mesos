@@ -70,10 +70,12 @@ public class Executor implements org.apache.mesos.Executor {
 
         process = new HdfsProcess(node, hostname);
         process.start();
+        driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_STARTING).build());
 
-        driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_RUNNING).build());
+        if (process.waitForOperable())
+            driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_RUNNING).build());
+
         int code = process.waitFor();
-
         if (code == 0 || code == 143) driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_FINISHED).build());
         else driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_FAILED).setMessage("process exited with " + code).build());
     }

@@ -90,6 +90,24 @@ public class CliTest extends MesosTestCase {
         exec("node remove nn");
         assertOutContains("node nn removed");
         assertTrue(Nodes.getNodes().isEmpty());
+
+        // no nodes to remove
+        try { exec("node remove *"); fail(); }
+        catch (Cli.Error e) { assertTrue(e.getMessage(), e.getMessage().contains("node not found")); }
+    }
+
+    @Test
+    public void node_start_stop() {
+        // start node
+        Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+        try { exec("node start nn --timeout=0"); fail(); }
+        catch (Cli.Error e) { assertTrue(e.getMessage(), e.getMessage().contains("timeout")); }
+        assertEquals(Node.State.STARTING, nn.state);
+
+        // stop node
+        try { exec("node stop nn --timeout=0"); fail(); }
+        catch (Cli.Error e) { assertTrue(e.getMessage(), e.getMessage().contains("timeout")); }
+        assertEquals(Node.State.STOPPING, nn.state);
     }
 
     private void exec(String cmd) {

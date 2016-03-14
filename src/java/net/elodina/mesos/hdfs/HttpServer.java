@@ -106,7 +106,7 @@ public class HttpServer {
                 case "/list": handleNodeList(request, response); break;
                 case "/add": case "/update": handleNodeAddUpdate(request, response, uri.equals("/add")); break;
                 case "/start": case "/stop": handleNodeStartStop(request, response, uri.equals("/start")); break;
-                case "/remove": handleNodeRemove(request); break;
+                case "/remove": handleNodeRemove(request, response); break;
                 default: throw new HttpError(404, "unsupported method " + uri);
             }
         }
@@ -244,13 +244,15 @@ public class HttpServer {
             response.getWriter().write("" + json);
         }
 
-        private void handleNodeRemove(HttpServletRequest request) throws IOException {
+        private void handleNodeRemove(HttpServletRequest request, HttpServletResponse response) throws IOException {
             String expr = request.getParameter("node");
             if (expr == null || expr.isEmpty()) throw new HttpError(400, "node required");
 
             List<String> ids;
             try { ids = Nodes.expandExpr(expr); }
             catch (IllegalArgumentException e) { throw new HttpError(400, "invalid node"); }
+
+            if (ids.isEmpty()) throw new HttpError(400, "node not found");
 
             for (String id : ids) {
                 Node node = Nodes.getNode(id);
@@ -260,8 +262,11 @@ public class HttpServer {
 
             for (Node node : Nodes.getNodes(ids))
                 Nodes.removeNode(node);
-
             Nodes.save();
+
+            @SuppressWarnings("unchecked") List<String> json = new JSONArray();
+            json.addAll(ids);
+            response.getWriter().write("" + json);
         }
 
         private void downloadFile(File file, HttpServletResponse response) throws IOException {

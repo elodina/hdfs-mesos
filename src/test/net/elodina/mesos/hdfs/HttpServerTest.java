@@ -232,11 +232,13 @@ public class HttpServerTest extends MesosTestCase {
         Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
         Nodes.addNode(new Node("dn", Node.Type.DATANODE));
 
-        request("/node/remove?node=dn");
+        JSONArray json = request("/node/remove?node=dn");
         assertEquals(1, Nodes.getNodes().size());
+        assertEquals(Arrays.asList("dn"), json);
 
-        request("/node/remove?node=nn");
+        json = request("/node/remove?node=nn");
         assertTrue(Nodes.getNodes().isEmpty());
+        assertEquals(Arrays.asList("nn"), json);
     }
 
     @Test
@@ -251,6 +253,9 @@ public class HttpServerTest extends MesosTestCase {
 
         // node not found
         try { request("/node/remove?node=a"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not found")); }
+
+        try { request("/node/remove?node=a*"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not found")); }
 
         // node not idle

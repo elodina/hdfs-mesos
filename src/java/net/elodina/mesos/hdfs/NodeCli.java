@@ -220,10 +220,14 @@ public class NodeCli {
         if (args.isEmpty()) throw new Error("id required");
         String expr = args.remove(0);
 
-        try { sendRequest("/node/remove", Collections.singletonMap("node", expr)); }
+        JSONArray json;
+        try { json = sendRequest("/node/remove", Collections.singletonMap("node", expr)); }
         catch (IOException e) { throw new Error("" + e); }
 
-        printLine("node(s) removed");
+        String title = json.size() == 1 ? "node " + json.get(0) : "nodes " + Util.join(json, ", ");
+        title += " removed";
+
+        printLine(title);
     }
 
     private static void printNode(Node node, int indent) {

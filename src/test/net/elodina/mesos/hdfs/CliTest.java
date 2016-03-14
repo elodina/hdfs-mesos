@@ -9,8 +9,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class CliTest extends MesosTestCase {
     private ByteArrayOutputStream out;
@@ -57,6 +56,40 @@ public class CliTest extends MesosTestCase {
         // expr error
         try { exec("node list 0..a"); fail(); }
         catch (Cli.Error e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
+    }
+
+    @Test
+    public void node_add_update() {
+        // add node
+        exec("node add nn --type=namenode --cpus=2 --mem=1024");
+        assertOutContains("node added");
+
+        Node nn = Nodes.getNode("nn");
+        assertNotNull(nn);
+        assertEquals(2, nn.cpus, 0.001);
+        assertEquals(1024, nn.mem);
+
+        // update node
+        exec("node update nn --core-site-opts=a=1");
+        assertOutContains("node updated");
+        assertEquals(Util.parseMap("a=1"), nn.coreSiteOpts);
+    }
+
+    @Test
+    public void node_remove() {
+        Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+        Nodes.addNode(new Node("dn", Node.Type.DATANODE));
+
+        // remove dn
+        exec("node remove dn");
+        assertOutContains("node dn removed");
+        assertEquals(1, Nodes.getNodes().size());
+        assertNull(Nodes.getNode("dn"));
+
+        // remove nn
+        exec("node remove nn");
+        assertOutContains("node nn removed");
+        assertTrue(Nodes.getNodes().isEmpty());
     }
 
     private void exec(String cmd) {

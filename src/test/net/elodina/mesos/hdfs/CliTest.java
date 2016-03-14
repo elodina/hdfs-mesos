@@ -100,13 +100,15 @@ public class CliTest extends MesosTestCase {
     public void node_start_stop() {
         // start node
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
-        try { exec("node start nn --timeout=0"); fail(); }
-        catch (Cli.Error e) { assertTrue(e.getMessage(), e.getMessage().contains("timeout")); }
+        exec("node start nn --timeout=0");
+        assertOutContains("node scheduled to start:");
+        assertOutContains("id: nn");
         assertEquals(Node.State.STARTING, nn.state);
 
         // stop node
-        try { exec("node stop nn --timeout=0"); fail(); }
-        catch (Cli.Error e) { assertTrue(e.getMessage(), e.getMessage().contains("timeout")); }
+        exec("node stop nn --timeout=0");
+        assertOutContains("node scheduled to stop:");
+        assertOutContains("id: nn");
         assertEquals(Node.State.STOPPING, nn.state);
     }
 

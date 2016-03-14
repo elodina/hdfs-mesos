@@ -187,12 +187,12 @@ public class HttpServerTest extends MesosTestCase {
 
         // schedule start
         JSONObject json = request("/node/start?node=nn&timeout=0");
-        assertEquals("timeout", "" + json.get("status"));
+        assertEquals("scheduled", "" + json.get("status"));
         assertEquals(Node.State.STARTING, nn.state);
 
         // schedule stop
         json = request("/node/stop?node=nn&timeout=0");
-        assertEquals("timeout", "" + json.get("status"));
+        assertEquals("scheduled", "" + json.get("status"));
         assertEquals(Node.State.STOPPING, nn.state);
     }
 

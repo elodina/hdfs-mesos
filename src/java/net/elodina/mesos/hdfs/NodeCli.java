@@ -198,8 +198,8 @@ public class NodeCli {
 
         String title = nodes.size() > 1 ? "nodes " : "node ";
         switch (status) {
-            case "started":case "stopped": title += status + ":"; break;
-            case "scheduled": title += status + "to " + cmd +  ":"; break;
+            case "started": case "stopped": title += status + ":"; break;
+            case "scheduled": title += status + " to " + cmd +  ":"; break;
             case "timeout":  throw new Error(cmd + " timeout");
         }
 

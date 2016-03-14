@@ -222,19 +222,22 @@ public class HttpServer {
 
 
             boolean completed = true;
+            boolean wait = timeout.ms() > 0;
             List<Node> nodes = Nodes.getNodes(ids);
 
             for (Node node : nodes) {
                 node.state = start ? Node.State.STARTING : Node.State.STOPPING;
                 if (!start && node.runtime != null) node.runtime.killSent = false;
+
                 Nodes.save();
+                if (!wait) continue;
 
                 try { completed = node.waitFor(start ? Node.State.RUNNING : Node.State.IDLE, timeout); }
                 catch (InterruptedException e) { throw new IllegalStateException(e); }
                 if (!completed) break;
             }
 
-            String status = completed ? (start ? "started": "stopped"): "timeout";
+            String status = wait ? (completed ? (start ? "started": "stopped"): "timeout") : "scheduled";
             @SuppressWarnings("unchecked") List<JSONObject> nodesJson = (List<JSONObject>)new JSONArray();
             for (Node node : nodes) nodesJson.add(node.toJson());
 

@@ -71,7 +71,7 @@ public class HttpServerTest extends MesosTestCase {
     @Test
     public void node_list() throws IOException {
         // no nodes
-        JSONArray json = sendRequest("/node/list");
+        JSONArray json = request("/node/list");
         List<Node> nodes = Node.fromJsonArray(json);
         assertTrue(nodes.isEmpty());
 
@@ -79,24 +79,24 @@ public class HttpServerTest extends MesosTestCase {
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
         Node dn = Nodes.addNode(new Node("dn", Node.Type.DATANODE));
 
-        json = sendRequest("/node/list");
+        json = request("/node/list");
         nodes = Node.fromJsonArray(json);
         assertEquals(Arrays.asList(nn, dn), nodes);
 
         // single node
-        json = sendRequest("/node/list?node=nn");
+        json = request("/node/list?node=nn");
         nodes = Node.fromJsonArray(json);
         assertEquals(Arrays.asList(nn), nodes);
 
         // invalid node
-        try { sendRequest("/node/list?node=0..a"); fail(); }
+        try { request("/node/list?node=0..a"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
     }
 
     @Test
     public void node_add_update() throws IOException {
         // add namenode
-        JSONArray json = sendRequest("/node/add?node=nn&type=namenode");
+        JSONArray json = request("/node/add?node=nn&type=namenode");
         assertEquals(1, Nodes.getNodes().size());
 
         Node nn = Nodes.getNode("nn");
@@ -104,7 +104,7 @@ public class HttpServerTest extends MesosTestCase {
         assertEquals(Arrays.asList(nn), Node.fromJsonArray(json));
 
         // add datanode
-        json = sendRequest("/node/add?node=dn&type=datanode");
+        json = request("/node/add?node=dn&type=datanode");
         assertEquals(2, Nodes.getNodes().size());
 
         Node dn = Nodes.getNode("dn");
@@ -112,7 +112,7 @@ public class HttpServerTest extends MesosTestCase {
         assertEquals(Arrays.asList(dn), Node.fromJsonArray(json));
 
         // update nodes
-        json = sendRequest("/node/update?node=*&mem=2048");
+        json = request("/node/update?node=*&mem=2048");
         assertEquals(Arrays.asList(nn, dn), Node.fromJsonArray(json));
 
         assertEquals(2048, nn.mem);
@@ -122,41 +122,41 @@ public class HttpServerTest extends MesosTestCase {
     @Test
     public void node_add_update_node_validation() {
         // no node
-        try { sendRequest("/node/add"); fail(); }
+        try { request("/node/add"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node required")); }
 
         // invalid node
-        try { sendRequest("/node/add?node=0..a"); fail(); }
+        try { request("/node/add?node=0..a"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
 
         // duplicate node
         Node dn = Nodes.addNode(new Node("dn", Node.Type.DATANODE));
-        try { sendRequest("/node/add?node=dn"); fail(); }
+        try { request("/node/add?node=dn"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("duplicate node")); }
 
         // node not found
-        try { sendRequest("/node/update?node=unknown"); fail(); }
+        try { request("/node/update?node=unknown"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not found")); }
 
         // node not idle
         dn.state = Node.State.STARTING;
-        try { sendRequest("/node/update?node=dn"); fail(); }
+        try { request("/node/update?node=dn"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not idle")); }
     }
 
     @Test
     public void node_add_update_type_validation() {
         // no type
-        try { sendRequest("/node/add?node=a"); fail(); }
+        try { request("/node/add?node=a"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("type required")); }
 
         // invalid type
-        try { sendRequest("/node/add?node=a&type=abc"); fail(); }
+        try { request("/node/add?node=a&type=abc"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid type")); }
 
         // duplicate namenode
         Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
-        try { sendRequest("/node/add?node=nn2&type=namenode"); fail(); }
+        try { request("/node/add?node=nn2&type=namenode"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("duplicate namenode")); }
     }
 
@@ -165,19 +165,19 @@ public class HttpServerTest extends MesosTestCase {
         Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
 
         // cpus
-        try { sendRequest("/node/update?node=nn&cpus=invalid"); fail(); }
+        try { request("/node/update?node=nn&cpus=invalid"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid cpus")); }
 
         // mem
-        try { sendRequest("/node/update?node=nn&mem=invalid"); fail(); }
+        try { request("/node/update?node=nn&mem=invalid"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid mem")); }
 
         // coreSiteOpts
-        try { sendRequest("/node/update?node=nn&coreSiteOpts=invalid"); fail(); }
+        try { request("/node/update?node=nn&coreSiteOpts=invalid"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid coreSiteOpts")); }
 
         // hdfsSiteOpts
-        try { sendRequest("/node/update?node=nn&hdfsSiteOpts=invalid"); fail(); }
+        try { request("/node/update?node=nn&hdfsSiteOpts=invalid"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid hdfsSiteOpts")); }
     }
 
@@ -186,12 +186,12 @@ public class HttpServerTest extends MesosTestCase {
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
 
         // schedule start
-        JSONObject json = sendRequest("/node/start?node=nn&timeout=0");
+        JSONObject json = request("/node/start?node=nn&timeout=0");
         assertEquals("timeout", "" + json.get("status"));
         assertEquals(Node.State.STARTING, nn.state);
 
         // schedule stop
-        json = sendRequest("/node/stop?node=nn&timeout=0");
+        json = request("/node/stop?node=nn&timeout=0");
         assertEquals("timeout", "" + json.get("status"));
         assertEquals(Node.State.STOPPING, nn.state);
     }
@@ -199,31 +199,31 @@ public class HttpServerTest extends MesosTestCase {
     @Test
     public void node_start_stop_validation() {
         // node required
-        try { sendRequest("/node/start"); fail(); }
+        try { request("/node/start"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node required")); }
 
         // invalid node
-        try { sendRequest("/node/start?node=0..a"); fail(); }
+        try { request("/node/start?node=0..a"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
 
         // node not found
-        try { sendRequest("/node/start?node=a"); fail(); }
+        try { request("/node/start?node=a"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not found")); }
 
         // node not idle
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
         nn.state = Node.State.RUNNING;
 
-        try { sendRequest("/node/start?node=nn"); fail(); }
+        try { request("/node/start?node=nn"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not idle")); }
 
         // node idle
         nn.state = Node.State.IDLE;
-        try { sendRequest("/node/stop?node=nn"); fail(); }
+        try { request("/node/stop?node=nn"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node idle")); }
 
         // timeout
-        try { sendRequest("/node/start?node=nn&timeout=invalid"); fail(); }
+        try { request("/node/start?node=nn&timeout=invalid"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid timeout")); }
     }
 
@@ -232,35 +232,35 @@ public class HttpServerTest extends MesosTestCase {
         Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
         Nodes.addNode(new Node("dn", Node.Type.DATANODE));
 
-        sendRequest("/node/remove?node=dn");
+        request("/node/remove?node=dn");
         assertEquals(1, Nodes.getNodes().size());
 
-        sendRequest("/node/remove?node=nn");
+        request("/node/remove?node=nn");
         assertTrue(Nodes.getNodes().isEmpty());
     }
 
     @Test
     public void node_remove_validation() {
         // node required
-        try { sendRequest("/node/remove"); fail(); }
+        try { request("/node/remove"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node required")); }
 
         // invalid node
-        try { sendRequest("/node/remove?node=0..a"); fail(); }
+        try { request("/node/remove?node=0..a"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid node")); }
 
         // node not found
-        try { sendRequest("/node/remove?node=a"); fail(); }
+        try { request("/node/remove?node=a"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not found")); }
 
         // node not idle
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
         nn.state = Node.State.RUNNING;
-        try { sendRequest("/node/remove?node=nn"); fail(); }
+        try { request("/node/remove?node=nn"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not idle")); }
     }
 
-    public <T extends JSONAware> T sendRequest(String uri) throws IOException {
+    public <T extends JSONAware> T request(String uri) throws IOException {
         return Cli.sendRequest(uri, Collections.<String, String>emptyMap());
     }
 

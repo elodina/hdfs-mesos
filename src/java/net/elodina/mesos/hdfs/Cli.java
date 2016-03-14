@@ -14,7 +14,7 @@ import java.net.URLEncoder;
 import java.util.*;
 
 public class Cli {
-    static String api = "http://localhost:7000";
+    static String api;
     static PrintStream out = System.out;
     static PrintStream err = System.err;
 
@@ -104,6 +104,8 @@ public class Cli {
     }
 
     private static void resolveApi(String api) {
+        if (Cli.api != null) return;
+
         if (api != null && !api.equals("")) {
             Cli.api = api;
             return;

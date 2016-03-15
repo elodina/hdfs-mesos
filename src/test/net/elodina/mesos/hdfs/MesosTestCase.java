@@ -291,6 +291,7 @@ public class MesosTestCase {
         public Status join() { throw new UnsupportedOperationException(); }
 
         public Status reconcileTasks(Collection<TaskStatus> statuses) {
+            if (statuses.isEmpty()) reconciledTasks.add("");
             for (TaskStatus status : statuses) reconciledTasks.add(status.getTaskId().getValue());
             return status;
         }

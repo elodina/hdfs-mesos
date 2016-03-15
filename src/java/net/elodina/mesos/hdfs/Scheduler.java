@@ -11,9 +11,7 @@ import org.apache.mesos.SchedulerDriver;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.apache.mesos.Protos.*;
 
@@ -21,14 +19,18 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     public static final Scheduler $ = new Scheduler();
     private static final Logger logger = Logger.getLogger(Scheduler.class);
 
-    public final Config config = new Config();
+    public Config config = new Config();
+    private Reconciler reconciler = new Reconciler();
+
     private SchedulerDriver driver;
 
     @Override
     public void registered(SchedulerDriver driver, Protos.FrameworkID id, Protos.MasterInfo master) {
         logger.info("[registered] framework:" + Str.id(id.getValue()) + " master:" + Str.master(master));
         this.driver = driver;
+
         checkMesosVersion(master);
+        reconciler.start(driver, new Date());
 
         Nodes.frameworkId = id.getValue();
         Nodes.save();
@@ -37,7 +39,9 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     @Override
     public void reregistered(SchedulerDriver driver, Protos.MasterInfo master) {
         logger.info("[reregistered] " + Str.master(master));
+
         this.driver = driver;
+        reconciler.start(driver, new Date());
     }
 
     @Override
@@ -107,10 +111,13 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             }
         }
 
+        reconciler.proceed(driver, new Date());
         Nodes.save();
     }
 
-    private String acceptOffer(Protos.Offer offer) {
+    String acceptOffer(Protos.Offer offer) {
+        if (reconciler.isActive()) return "reconciling";
+
         List<Node> nodes = new ArrayList<>();
         for (Node node : Nodes.getNodes(Node.State.STARTING))
             if (node.runtime == null) nodes.add(node);
@@ -162,6 +169,9 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             driver.killTask(status.getTaskId());
             return;
         }
+
+        if (node.state == Node.State.RECONCILING)
+            logger.info("Finished reconciling of node " + node.id + ", task " + node.runtime.taskId);
 
         node.state = Node.State.RUNNING;
     }
@@ -360,6 +370,83 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             s += "\nframework: name:" + frameworkName + ", role:" + frameworkRole + ", timeout:" + frameworkTimeout;
 
             return s;
+        }
+    }
+
+    public static class Reconciler {
+        private Period delay;
+        private int maxTries;
+
+        private int tries;
+        private Date lastTry;
+
+        public Reconciler() { this(new Period("30s"), 3); }
+
+        public Reconciler(Period delay, int maxTries) {
+            this.delay = delay;
+            this.maxTries = maxTries;
+        }
+
+        public Period getDelay() { return delay; }
+        public int getMaxTries() { return maxTries; }
+
+        public int getTries() { return tries; }
+        public Date getLastTry() { return lastTry; }
+
+        public boolean isActive() { return Nodes.getNodes(Node.State.RECONCILING).size() > 0; }
+
+        public void start(SchedulerDriver driver, Date now) {
+            tries = 1;
+            lastTry = now;
+
+            for (Node node : Nodes.getNodes()) {
+                if (node.runtime == null) continue;
+
+                node.state = Node.State.RECONCILING;
+                logger.info("Reconciling " + tries + "/" + maxTries + " state of node " + node.id + ", task " + node.runtime.taskId);
+            }
+
+            driver.reconcileTasks(Collections.<TaskStatus>emptyList());
+        }
+
+        public void proceed(SchedulerDriver driver, Date now) {
+            if (lastTry == null) return;
+
+            if (now.getTime() - lastTry.getTime() < delay.ms())
+                return;
+
+            tries += 1;
+            lastTry = now;
+
+            if (tries > maxTries) {
+                for (Node node : Nodes.getNodes(Node.State.RECONCILING)) {
+                    if (node.runtime == null) continue;
+
+                    logger.info("Reconciling exceeded " + maxTries + " tries for node " + node.id + ", sending killTask for task " + node.runtime.taskId);
+                    driver.killTask(TaskID.newBuilder().setValue(node.runtime.taskId).build());
+                    node.runtime = null;
+                    node.state = Node.State.STARTING;
+                }
+
+                tries = 0;
+                lastTry = null;
+                return;
+            }
+
+            List<TaskStatus> statuses = new ArrayList<>();
+
+            for (Node node : Nodes.getNodes(Node.State.RECONCILING)) {
+                if (node.runtime == null) continue;
+
+                logger.info("Reconciling " + tries + "/" + maxTries + " state of node " + node.id + ", task " + node.runtime.taskId);
+                statuses.add(TaskStatus.newBuilder()
+                    .setTaskId(TaskID.newBuilder().setValue(node.runtime.taskId))
+                    .setState(TaskState.TASK_RUNNING)
+                    .build()
+                );
+            }
+
+            if (!statuses.isEmpty()) driver.reconcileTasks(statuses);
         }
     }
 }

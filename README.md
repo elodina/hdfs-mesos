@@ -6,8 +6,8 @@ Intro
 This project allows running HDFS on Mesos.
 
 You should be familiar with HDFS and Mesos basics:
-- [http://mesos.apache.org/documentation/latest/]
-- [https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html]
+- http://mesos.apache.org/documentation/latest/
+- https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html
 
 For issues see: [Having Issue]
 
@@ -36,9 +36,12 @@ Start vagrant env:
 # cd vagrant
 # vagrant up
 ```
-It creates mesos master and slave nodes. Please see [vagrant/README.md](vagrant/README.md) for more details.
-Please add node names to `/etc/hosts` as described [vagrant/README.md#host-names](vagrant/README.md#host-names)
 
+It creates mesos master and slave nodes.
+
+Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`.
+
+Please see [vagrant/README.md](vagrant/README.md) for more details.
 
 Having Issue
 ------------

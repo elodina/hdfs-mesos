@@ -46,7 +46,7 @@ Now scheduler should be running and you can proceed with starting HDFS nodes.
 
 Mesos in Vagrant
 ----------------
-Project includes vagrant environment, that allows to run Mesos cluster locally.
+Project includes [vagrant environment](/vagrant), that allows to run Mesos cluster locally.
 
 **1.** Start vagrant env:
 ```

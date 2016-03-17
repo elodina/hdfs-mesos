@@ -9,7 +9,7 @@ You should be familiar with HDFS and Mesos basics:
 - http://mesos.apache.org/documentation/latest/
 - https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html
 
-For issues see: [Having Issue]
+For issues see: [](#having-issue)
 
 Building
 --------
@@ -25,7 +25,7 @@ Running in Vagrant
 -------------------
 Project includes vagrant environment, that allows to run it locally.
 
-1\. Download hadoop tarball first:
+1\. Download hadoop tarball:
 ```
 # cd hdfs-mesos
 # wget https://archive.apache.org/dist/hadoop/core/hadoop-1.2.1/hadoop-1.2.1.tar.gz
@@ -45,9 +45,9 @@ It creates mesos master and slave nodes.
 # cd ..
 # ./hdfs-mesos.sh scheduler --api=http://$host_ip:7000 --master=zk://master:2181/mesos --user=vagrant
 ```
-where $host_ip is host ip address accessible from vagrant nodes.
+where `$host_ip` is host ip address accessible from vagrant nodes.
 
-Now scheduler should be running and you can proceed with starting hdfs nodes.
+Now scheduler should be running and you can proceed with starting HDFS nodes.
 
 Note: if Scheduler is not receiving offers it could be required to specify following:
 ```
@@ -62,7 +62,7 @@ Please read this README carefully, to make sure you problem is not already descr
 
 Also make sure that your issue is not duplicating any existing one.
 
-DO NOT post general question like "I am having problem with mesos"
+**DO NOT** post general question like "I am having problem with mesos"
 to the issue list. Please use generic QA sites like http://stackoverflow.com
 for that.
 

@@ -14,7 +14,7 @@ For issues see: [Having Issue](#having-issue)
 Building
 --------
 Clone and build the project
-```
+```bash
 # git clone https://github.com/elodina/hdfs-mesos.git
 # cd hdfs-mesos
 # ./gradlew jar
@@ -49,7 +49,8 @@ where `$host_ip` is host ip address accessible from vagrant nodes.
 
 Now scheduler should be running and you can proceed with starting HDFS nodes.
 
-----
+-------------
+
 Note: if Scheduler is not receiving offers it could be required to specify following:
 ```
 # export LIBPROCESS_IP=$host_ip

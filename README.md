@@ -36,8 +36,8 @@ Start vagrant env:
 # cd vagrant
 # vagrant up
 ```
-It creates mesos master and slave nodes. Please see [vagrant/README.md] for more details.
-Please add node names to `/etc/hosts` as described [vagrant/README.md#host-names]
+It creates mesos master and slave nodes. Please see [vagrant/README.md](vagrant/README.md) for more details.
+Please add node names to `/etc/hosts` as described [vagrant/README.md#host-names](vagrant/README.md#host-names)
 
 
 Having Issue

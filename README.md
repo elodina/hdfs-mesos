@@ -13,8 +13,6 @@ For issues see: [Having Issue](#having-issue)
 
 Running Scheduler
 -----------------
-Project includes vagrant environment, that allows to run it locally.
-
 **1.** Download `hdfs-mesos\*.jar` or clone & build project:
 
 Download jar:
@@ -38,16 +36,7 @@ Clone & build:
 # wget https://archive.apache.org/dist/hadoop/core/hadoop-1.2.1/hadoop-1.2.1.tar.gz
 ```
 
-**3.** Start vagrant env:
-```
-# cd vagrant
-# vagrant up
-```
-It creates mesos master and slave nodes.
-
-**4.** Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
-
-**5.** Start scheduler:
+**3.** Start scheduler:
 ```
 # cd ..
 # ./hdfs-mesos.sh scheduler --api=http://$host_ip:7000 --master=zk://master:2181/mesos --user=vagrant
@@ -56,18 +45,27 @@ where `$host_ip` is host ip address accessible from vagrant nodes.
 
 Now scheduler should be running and you can proceed with starting HDFS nodes.
 
--------------
 
-Note: if Scheduler is not receiving offers it could be required to specify following:
+Using Vagrant
+-------------
+Project includes vagrant environment, that allows to run Mesos cluster locally.
+
+Start vagrant env:
+```
+# cd hdfs-mesos/vagrant
+# vagrant up
+```
+It creates mesos master and slave nodes.
+
+Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
+
+-------------
+Note: For more details please read [vagrant/README.md](vagrant/README.md)
+
+Note: if running Scheduler is not receiving offers it could be required to specify LIBPROCESS_IP:
 ```
 # export LIBPROCESS_IP=$host_ip
 ```
-
-Note: For more details please read [vagrant/README.md](vagrant/README.md)
-
-
-Running Standalone
-------------------
 
 Having Issue
 ------------

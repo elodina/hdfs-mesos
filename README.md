@@ -3,7 +3,7 @@ HDFS Mesos
 * [Intro](#intro)
 * [Mesos in Vagrant](#mesos-in-vagrant)
 * [Running Scheduler](#running-scheduler)
-* [Creating HDFS cluster](#creating-hdfs-cluster)
+* [Running HDFS cluster](#creating-hdfs-cluster)
 * [Having Issue](#having-issue)
 
 

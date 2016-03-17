@@ -3,6 +3,7 @@ HDFS Mesos
 * [Intro](#intro)
 * [Mesos in Vagrant](#mesos-in-vagrant)
 * [Running Scheduler](#running-scheduler)
+* [Creating HDFS cluster](#creating-hdfs-cluster)
 * [Having Issue](#having-issue)
 
 
@@ -79,6 +80,67 @@ where:
 - `$master` master address accessible from scheduler node;
 
 Now scheduler should be running and you can proceed with starting HDFS nodes.
+
+
+Running HDFS Cluster
+---------------------
+Project provides CLI & REST API for managing HDFS nodes. We will focus first on CLI.
+
+**1.** Add namenode & datanode:
+```
+# ./hdfs-mesos.sh node add nn --type=namenode
+node added:
+  id: nn
+  type: namenode
+  state: idle
+  resources: cpus:0.5, mem:512
+
+# ./hdfs-mesos.sh node add dn0 --type=datanode
+node added:
+  id: dn0
+  type: datanode
+  state: idle
+  resources: cpus:0.5, mem:512
+```
+
+**2.** Start nodes:
+```
+# ./hdfs-mesos.sh node start \*
+nodes started:
+  id: nn
+  type: namenode
+  state: running
+  resources: cpus:0.5, mem:512
+  reservation: cpus:0.5, mem:512, ports:http=5000,ipc=5001
+  runtime:
+    task: 383aaab9-982b-400e-aa35-463e66cdcb3b
+    executor: 19065e07-a006-49a4-8f2b-636d8b1f2ad6
+    slave: 241be3a2-39bc-417c-a967-82b4018a0762-S0 (master)
+
+  id: dn0
+  type: datanode
+  state: running
+  resources: cpus:0.5, mem:512
+  reservation: cpus:0.5, mem:512, ports:http=5002,ipc=5003,data=5004
+  runtime:
+    task: 37f3bcbb-10a5-4323-96d2-aef8846aa281
+    executor: 088463c9-5f2e-4d1d-8195-56427168b86f
+    slave: 241be3a2-39bc-417c-a967-82b4018a0762-S0 (master)
+```
+
+Nodes are up & running now.
+
+Note: starting may take some time. You can view the progress via Mesos UI.
+
+**3.** Do some FS operations:
+```
+# hadoop fs -mkdir hdfs://master:5001/dir
+# hadoop fs -ls hdfs://master:5001/
+Found 1 items
+drwxr-xr-x   - vagrant supergroup          0 2016-03-17 12:46 /dir
+```
+Note: namenode host and ipc port is used in fs url.
+
 
 Having Issue
 ------------

@@ -25,7 +25,7 @@ Running in Vagrant
 -------------------
 Project includes vagrant environment, that allows to run it locally.
 
-\1. Download hadoop tarball first:
+1\. Download hadoop tarball first:
 ```
 # cd hdfs-mesos
 # wget https://archive.apache.org/dist/hadoop/core/hadoop-1.2.1/hadoop-1.2.1.tar.gz
@@ -38,9 +38,9 @@ Project includes vagrant environment, that allows to run it locally.
 ```
 It creates mesos master and slave nodes.
 
-\3. Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
+3\. Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
 
-\4. Start scheduler:
+4\. Start scheduler:
 ```
 # cd ..
 # ./hdfs-mesos.sh scheduler --api=http://$host_ip:7000 --master=zk://master:2181/mesos --user=vagrant

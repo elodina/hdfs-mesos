@@ -13,6 +13,34 @@ You should be familiar with HDFS and Mesos basics:
 For issues see: [Having Issue](#having-issue)
 
 
+Mesos in Vagrant
+----------------
+Project includes [vagrant environment](/vagrant), that allows to run Mesos cluster locally.
+
+If you are going to use external Mesos cluster, you can skip this section.
+
+In order to start Mesos in vagrant please follow next steps:
+
+**1.** Start vagrant env:
+```
+# cd hdfs-mesos/vagrant
+# vagrant up
+```
+It creates mesos master and slave nodes.
+
+**2.**  Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
+
+Now Mesos in vagrant should be running. You can proceed with starting scheduler.
+
+------------
+
+Note: if running Scheduler is not receiving offers it could be required to specify LIBPROCESS_IP:
+```
+# export LIBPROCESS_IP=$host_ip
+```
+For more details please read [vagrant/README.md](vagrant/README.md)
+
+
 Running Scheduler
 -----------------
 **1.** Download `hdfs-mesos\*.jar` OR clone & build the project:
@@ -46,31 +74,6 @@ where:
 - `$master` master address accessible from scheduler node;
 
 Now scheduler should be running and you can proceed with starting HDFS nodes.
-
-
-Mesos in Vagrant
-----------------
-Project includes [vagrant environment](/vagrant), that allows to run Mesos cluster locally.
-
-**1.** Start vagrant env:
-```
-# cd hdfs-mesos/vagrant
-# vagrant up
-```
-It creates mesos master and slave nodes.
-
-**2.**  Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
-
-Now Mesos in vagrant should be running. You can proceed with starting scheduler.
-
-------------
-
-Note: if running Scheduler is not receiving offers it could be required to specify LIBPROCESS_IP:
-```
-# export LIBPROCESS_IP=$host_ip
-```
-For more details please read [vagrant/README.md](vagrant/README.md)
-
 
 Having Issue
 ------------

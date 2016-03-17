@@ -19,7 +19,7 @@ So internode `ssh` should work without password.
 For general mesos overview please refer to
 http://mesos.apache.org/documentation/latest/mesos-architecture/
 
-## Node Names
+## Host Names
 During first run `Vagrantfile` creates `hosts` file which
 contains host names for cluster nodes. It is recommended
 to append its content to `/etc/hosts` (or other OS-specific

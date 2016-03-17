@@ -15,16 +15,16 @@ Running Scheduler
 -----------------
 Project includes vagrant environment, that allows to run it locally.
 
-**1.** Download `hdfs-mesos\*.jar`
+**1.** Download `hdfs-mesos\*.jar` or clone & build project:
 
+Download jar:
 ```
 # mkdir hdfs-mesos
 # cd hdfs-mesos
 # wget https://github.com/elodina/hdfs-mesos/releases/download/0.0.1.0/hdfs-mesos-0.0.1.0.jar
 ```
 
-*OR* clone & build project
-
+Clone & build:
 ```
 # git clone https://github.com/elodina/hdfs-mesos.git
 # cd hdfs-mesos

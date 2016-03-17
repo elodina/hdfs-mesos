@@ -25,27 +25,29 @@ Running in Vagrant
 -------------------
 Project includes vagrant environment, that allows to run it locally.
 
-** Download hadoop tarball first: **
+* Download hadoop tarball first:
 ```
 # cd hdfs-mesos
 # wget https://archive.apache.org/dist/hadoop/core/hadoop-1.2.1/hadoop-1.2.1.tar.gz
 ```
 
-** Start vagrant env: **
+* Start vagrant env:
 ```
 # cd vagrant
 # vagrant up
 ```
 It creates mesos master and slave nodes.
 
-** Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts` **
+* Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
 
-** Start scheduler: **
+* Start scheduler:
 ```
 # cd ..
 # ./hdfs-mesos.sh scheduler --api=http://$host_ip:7000 --master=zk://master:2181/mesos --user=vagrant
 ```
 where $host_ip is host ip address accessible from vagrant nodes.
+
+Now scheduler should be running and you can proceed with starting hdfs nodes.
 
 Note: if Scheduler is not receiving offers it could be required to specify following:
 ```

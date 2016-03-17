@@ -14,7 +14,10 @@ You should be familiar with HDFS and Mesos basics:
 - http://mesos.apache.org/documentation/latest/
 - https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html
 
-Project support Hadoop 1.2.x and Mesos 0.23.0+.
+Project requires:
+- Mesos 0.23.0+
+- JDK 1.7.x
+- Hadoop 1.2.x
 
 
 Mesos in Vagrant

@@ -1,6 +1,7 @@
 HDFS Mesos
 ==========
 
+
 Intro
 -----
 This project allows running HDFS on Mesos.
@@ -10,6 +11,7 @@ You should be familiar with HDFS and Mesos basics:
 - https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html
 
 For issues see: [Having Issue](#having-issue)
+
 
 Running Scheduler
 -----------------
@@ -55,7 +57,9 @@ Project includes [vagrant environment](/vagrant), that allows to run Mesos clust
 ```
 It creates mesos master and slave nodes.
 
-**1.**  Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
+**2.**  Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
+
+Now vagrant environment should be running Mesos. You can proceed with starting scheduler.
 
 ------------
 

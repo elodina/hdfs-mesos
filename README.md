@@ -9,7 +9,7 @@ You should be familiar with HDFS and Mesos basics:
 - http://mesos.apache.org/documentation/latest/
 - https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html
 
-For issues see: [](#having-issue)
+For issues see: [Having Issue](#having-issue)
 
 Building
 --------

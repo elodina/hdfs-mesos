@@ -59,7 +59,7 @@ It creates mesos master and slave nodes.
 
 **2.**  Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
 
-Now vagrant environment should be running Mesos. You can proceed with starting scheduler.
+Now Mesos in vagrant should be running. You can proceed with starting scheduler.
 
 ------------
 

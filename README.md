@@ -11,21 +11,11 @@ You should be familiar with HDFS and Mesos basics:
 
 For issues see: [Having Issue](#having-issue)
 
-Building
---------
-Clone and build the project
-```
-# git clone https://github.com/elodina/hdfs-mesos.git
-# cd hdfs-mesos
-# ./gradlew jar
-# wget https://archive.apache.org/dist/kafka/0.8.2.2/kafka_2.10-0.8.2.2.tgz
-```
-
 Running Scheduler
 -----------------
 Project includes vagrant environment, that allows to run it locally.
 
-**1.** Download `hdfs-mesos\*.jar` or clone & build project:
+**1.** Download `hdfs-mesos\*.jar`
 
 ```
 # mkdir hdfs-mesos
@@ -33,7 +23,7 @@ Project includes vagrant environment, that allows to run it locally.
 # wget https://github.com/elodina/hdfs-mesos/releases/download/0.0.1.0/hdfs-mesos-0.0.1.0.jar
 ```
 
-*OR*
+*OR* clone & build project
 
 ```
 # git clone https://github.com/elodina/hdfs-mesos.git

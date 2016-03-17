@@ -19,7 +19,7 @@ Project includes [vagrant environment](/vagrant), that allows to run Mesos clust
 
 If you are going to use external Mesos cluster, you can skip this section.
 
-**1.** Start vagrant env:
+**1.** Start vagrant nodes:
 ```
 # cd hdfs-mesos/vagrant
 # vagrant up
@@ -36,7 +36,7 @@ Note: if running Scheduler is not receiving offers it could be required to speci
 ```
 # export LIBPROCESS_IP=$host_ip
 ```
-For more details please read [vagrant/README.md](vagrant/README.md)
+For more details about vagrant environment please read [vagrant/README.md](vagrant/README.md)
 
 
 Running Scheduler

@@ -19,8 +19,6 @@ Project includes [vagrant environment](/vagrant), that allows to run Mesos clust
 
 If you are going to use external Mesos cluster, you can skip this section.
 
-In order to start Mesos in vagrant please follow next steps:
-
 **1.** Start vagrant env:
 ```
 # cd hdfs-mesos/vagrant

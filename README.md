@@ -14,7 +14,7 @@ For issues see: [Having Issue](#having-issue)
 Building
 --------
 Clone and build the project
-```bash
+```
 # git clone https://github.com/elodina/hdfs-mesos.git
 # cd hdfs-mesos
 # ./gradlew jar

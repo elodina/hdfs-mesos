@@ -25,22 +25,22 @@ Running in Vagrant
 -------------------
 Project includes vagrant environment, that allows to run it locally.
 
-1\. Download hadoop tarball:
+**1.** Download hadoop tarball:
 ```
 # cd hdfs-mesos
 # wget https://archive.apache.org/dist/hadoop/core/hadoop-1.2.1/hadoop-1.2.1.tar.gz
 ```
 
-2\. Start vagrant env:
+**2.** Start vagrant env:
 ```
 # cd vagrant
 # vagrant up
 ```
 It creates mesos master and slave nodes.
 
-3\. Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
+**3.** Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
 
-4\. Start scheduler:
+**4.** Start scheduler:
 ```
 # cd ..
 # ./hdfs-mesos.sh scheduler --api=http://$host_ip:7000 --master=zk://master:2181/mesos --user=vagrant
@@ -49,12 +49,13 @@ where `$host_ip` is host ip address accessible from vagrant nodes.
 
 Now scheduler should be running and you can proceed with starting HDFS nodes.
 
+----
 Note: if Scheduler is not receiving offers it could be required to specify following:
 ```
 # export LIBPROCESS_IP=$host_ip
 ```
 
-Please see [vagrant/README.md](vagrant/README.md) for more details.
+Note: For more details please read [vagrant/README.md](vagrant/README.md)
 
 Having Issue
 ------------

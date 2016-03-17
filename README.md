@@ -7,9 +7,9 @@ You should be familiar with HDFS and Mesos basics:
 - http://mesos.apache.org/documentation/latest/
 - https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html
 
-[Mesos in Vagrant](#mesos-in-vagrant)
-[Running Scheduler](#running-scheduler)
-[Having Issue](#having-issue)
+* [Mesos in Vagrant](#mesos-in-vagrant)
+* [Running Scheduler](#running-scheduler)
+* [Having Issue](#having-issue)
 
 
 Mesos in Vagrant

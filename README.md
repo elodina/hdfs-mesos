@@ -13,7 +13,7 @@ For issues see: [Having Issue](#having-issue)
 
 Running Scheduler
 -----------------
-**1.** Download `hdfs-mesos\*.jar` or clone & build project:
+**1.** Download `hdfs-mesos\*.jar` OR clone & build project:
 
 Download jar:
 ```
@@ -22,7 +22,7 @@ Download jar:
 # wget https://github.com/elodina/hdfs-mesos/releases/download/0.0.1.0/hdfs-mesos-0.0.1.0.jar
 ```
 
-Clone & build:
+*OR* clone & build:
 ```
 # git clone https://github.com/elodina/hdfs-mesos.git
 # cd hdfs-mesos

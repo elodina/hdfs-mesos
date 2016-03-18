@@ -10,7 +10,7 @@ Mesos in Vagrant
 
 Intro
 -----
-This project provides Vagrant environment for running Mesos.
+This project provides Vagrant environment for running Mesos cluster.
 
 You should be familiar with:
 - Vagrant - https://www.vagrantup.com/docs/getting-started/

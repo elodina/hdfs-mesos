@@ -146,7 +146,7 @@ Note: namenode host and ipc port is used in fs url.
 
 Using CLI
 ---------
-Project provides cli with following structure:
+Project provides CLI with following structure:
 ```
 # ./hdfs-mesos.sh help
 Usage: <cmd> ...

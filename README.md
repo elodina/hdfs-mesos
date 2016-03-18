@@ -40,12 +40,6 @@ It creates mesos master and slave nodes.
 
 Now Mesos in vagrant should be running. You can proceed with starting scheduler.
 
-------------
-
-Note: if running Scheduler is not receiving offers it could be required to specify LIBPROCESS_IP:
-```
-# export LIBPROCESS_IP=$scheduler_ip
-```
 For more details about vagrant environment please read [vagrant/README.md](vagrant/README.md)
 
 
@@ -82,6 +76,12 @@ where:
 - `$master` master address accessible from scheduler node;
 
 Now scheduler should be running and you can proceed with starting HDFS nodes.
+
+------------
+Note: if running Scheduler is not receiving offers it could be required to specify LIBPROCESS_IP:
+```
+# export LIBPROCESS_IP=$scheduler_ip
+```
 
 
 Running HDFS Cluster

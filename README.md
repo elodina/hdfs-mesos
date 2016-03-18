@@ -235,7 +235,11 @@ Id expression examples:
 
 Using REST
 ----------
-Most CLI commands map to REST api call. Examples:
+Scheduler uses embedded HTTP server. Server serves two functions:
+- distributing binaries for Hadoop, JRE and executor;
+- serving REST API, invoked by CLI;
+
+Most CLI commands map to REST API call. Examples:
 
 | CLI                                        | REST                                        |
 |--------------------------------------------|---------------------------------------------|

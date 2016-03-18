@@ -236,7 +236,7 @@ Id expression examples:
 Using REST
 ----------
 Scheduler uses embedded HTTP server. Server serves two functions:
-- distributing binaries for Hadoop, JRE and executor;
+- distributing binaries of Hadoop, JRE and executor;
 - serving REST API, invoked by CLI;
 
 Most CLI commands map to REST API call. Examples:
@@ -287,10 +287,10 @@ while REST params use camel-case. Example of mappings:
 
 | CLI param                                  | REST param                                  |
 |--------------------------------------------|---------------------------------------------|
-|`<id>` (node add|update|...)                |`node`                                       |
-|`timeout` (node start|stop)                 |`timeout`                                    |
-|`core-site-opts` (node add|update)          |`coreSiteOpts`                               |
-|`executor-jvm-opts` (node add|update)       |`executorJvmOpts`                            |
+|`<id>` (node add\|update\|...)              |`node`                                       |
+|`timeout` (node start\|stop)                |`timeout`                                    |
+|`core-site-opts` (node add\|update)         |`coreSiteOpts`                               |
+|`executor-jvm-opts` (node add\|update)      |`executorJvmOpts`                            |
 
 REST API call could return error in some cases.
 Errors are marked with status code other than 200. Error response is JSON. Example:

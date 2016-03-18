@@ -241,7 +241,7 @@ Scheduler uses embedded HTTP server. Server serves two functions:
 
 Most CLI commands map to REST API call. Examples:
 
-| CLI                                        | REST                                        |
+| CLI command                                | REST call                                   |
 |--------------------------------------------|---------------------------------------------|
 |`node add nn --type=namenode --cpus=2`      |`/api/node/add?node=nn&type=namenode&cpus=2` |
 |`node start dn* --timeout=3m-`              |`/api/node/start?node=dn*&timeout=3m`        |
@@ -293,7 +293,9 @@ while REST params use camel-case. Example of mappings:
 |`executor-jvm-opts` (node add\|update)      |`executorJvmOpts`                            |
 
 REST API call could return error in some cases.
-Errors are marked with status code other than 200. Error response is JSON. Example:
+Errors are marked with status code other than 200. Error response is returned in JSON format.
+
+Example:
 ```
 # curl -v http://192.168.3.1:7000/api/node/start?node=unknown
 ...
@@ -315,7 +317,7 @@ Also make sure that your issue is not duplicating any existing one.
 to the issue list. Please use generic QA sites like http://stackoverflow.com
 for that.
 
-General rules to posting issues are:
+General rules for posting issues are:
 - be precise: provide a minimalistic reproduce-scenario;
 - provide details: provide all required log snippets (stdout/err from scheduler or stdout/err from executor's sandbox, mesos logs if required);
 - be helpful: provide PR for the bug-fix if possible;

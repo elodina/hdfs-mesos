@@ -70,7 +70,6 @@ Download jar:
 **3.** Start scheduler:
 ```
 # ./hdfs-mesos.sh scheduler --api=http://$scheduler:7000 --master=zk://$master:2181/mesos --user=vagrant
-
 2016-03-18 15:04:48,785 [main] INFO hdfs.Scheduler - Starting Scheduler:
 api: http://$scheduler:7000
 files: jar:./hdfs-mesos-0.0.1.0.jar, hadoop:./hadoop-1.2.1.tar.gz

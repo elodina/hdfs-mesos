@@ -247,6 +247,64 @@ Most CLI commands map to REST API call. Examples:
 |`node start dn* --timeout=3m-`              |`/api/node/start?node=dn*&timeout=3m`        |
 |`node remove dn5`                           |`/api/node/remove?node=dn5`                  |
 
+REST calls accepts plain HTTP params and return JSON responses.
+Examples:
+```
+# curl http://$scheduler:7000/api/node/list
+[
+    {
+        "id": "nn",
+        "type": "namenode",
+        ...
+    },
+    {
+        "id": "dn0",
+        "type": "datanode",
+        ...
+    }
+]
+
+# curl http://$scheduler:7000/api/node/start?node=nn,dn0
+{
+    "status": "started",
+    "nodes": [
+        {
+            "id": "nn",
+            "state": "running",
+            ...
+        },
+        {
+            "id": "dn0",
+            "state": "running",
+            ...
+        }
+    ]
+}
+```
+
+CLI params maps one-to-one to REST params. CLI params use dashed style
+while REST params use camel-case. Example of mappings:
+
+| CLI param                                  | REST param                                  |
+|--------------------------------------------|---------------------------------------------|
+|`<id>` (node add|update|...)                |`node`                                       |
+|`timeout` (node start|stop)                 |`timeout`                                    |
+|`core-site-opts` (node add|update)          |`coreSiteOpts`                               |
+|`executor-jvm-opts` (node add|update)       |`executorJvmOpts`                            |
+
+REST API call could return error in some cases.
+Errors are marked with status code other than 200. Error response is JSON. Example:
+```
+# curl -v http://192.168.3.1:7000/api/node/start?node=unknown
+...
+HTTP/1.1 400 node not found
+...
+{"error":"node not found","code":400}
+```
+
+For more detail on REST API please refer to sources.
+
+
 Having Issue
 ------------
 Please read this README carefully, to make sure you problem is not already described.

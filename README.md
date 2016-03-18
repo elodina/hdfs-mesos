@@ -70,18 +70,35 @@ Download jar:
 **3.** Start scheduler:
 ```
 # ./hdfs-mesos.sh scheduler --api=http://$scheduler:7000 --master=zk://$master:2181/mesos --user=vagrant
+
+2016-03-18 15:04:48,785 [main] INFO hdfs.Scheduler - Starting Scheduler:
+api: http://$scheduler:7000
+files: jar:./hdfs-mesos-0.0.1.0.jar, hadoop:./hadoop-1.2.1.tar.gz
+mesos: master:master:5050, user:vagrant, principal:<none>, secret:<none>
+framework: name:hdfs, role:*, timeout:30d
+2016-03-18 15:04:48,916 [main] INFO hdfs.HttpServer - started on port 7000
+I0318 15:04:49.008314 19123 sched.cpp:164] Version: 0.25.0
+I0318 15:04:49.017160 19155 sched.cpp:262] New master detected at master@192.168.3.5:5050
+I0318 15:04:49.019287 19155 sched.cpp:272] No credentials provided. Attempting to register without authentication
+I0318 15:04:49.029218 19155 sched.cpp:641] Framework registered with 20160310-141004-84125888-5050-10895-0006
+2016-03-18 15:04:49,044 [Thread-17] INFO hdfs.Scheduler - [registered] framework:#-0006 master:#326bb pid:master@192.168.3.5:5050 hostname:master
+2016-03-18 15:04:49,078 [Thread-18] INFO hdfs.Scheduler - [resourceOffers]
+slave0#-O761 cpus:1.00; mem:2500.00; disk:35164.00; ports:[5000..32000]
+master#-O762 cpus:1.00; mem:2500.00; disk:35164.00; ports:[5000..32000]
+...
+2016-03-18 15:04:49,078 [Thread-18] INFO hdfs.Scheduler - [resourceOffers]
 ```
 where:
 - `$scheduler` is scheduler address accessible from slave nodes;
 - `$master` master address accessible from scheduler node;
 
-Now scheduler should be running and you can proceed with starting HDFS nodes.
-
-------------
-Note: if running Scheduler is not receiving offers it could be required to specify LIBPROCESS_IP:
+Scheduler should register itself and start receiving resource offers.
+If scheduler is not receiving offers it could be required to specify LIBPROCESS_IP:
 ```
 # export LIBPROCESS_IP=$scheduler_ip
 ```
+
+Now scheduler should be running and you can proceed with starting HDFS nodes.
 
 
 Running HDFS Cluster

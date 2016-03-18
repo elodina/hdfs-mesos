@@ -315,4 +315,9 @@ Also make sure that your issue is not duplicating any existing one.
 to the issue list. Please use generic QA sites like http://stackoverflow.com
 for that.
 
+General rules to posting issues are:
+- be precise: provide a minimalistic reproduce-scenario;
+- provide details: provide all required log snippets (stdout from scheduler or stdout from executor's sandbox);
+- be helpful: provide PR for the bug-fix if possible
+
 Issues list: https://github.com/elodina/hdfs-mesos/issues

@@ -36,7 +36,7 @@ If you are going to use external Mesos cluster, you can skip this section.
 ```
 It creates mesos master and slave nodes.
 
-**2.**  Add vagrant node names ([vagrant/README.md#host-names](vagrant/README.md#host-names)) to `/etc/hosts`
+**2.**  Add [vagrant node names](vagrant/README.md#host-names) to `/etc/hosts`
 
 Now Mesos in vagrant should be running. You can proceed with starting scheduler.
 

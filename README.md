@@ -4,6 +4,7 @@ HDFS Mesos
 * [Mesos in Vagrant](#mesos-in-vagrant)
 * [Running Scheduler](#running-scheduler)
 * [Running HDFS cluster](#running-hdfs-cluster)
+* [Using CLI](#using-cli)
 * [Having Issue](#having-issue)
 
 
@@ -140,6 +141,95 @@ Found 1 items
 drwxr-xr-x   - vagrant supergroup          0 2016-03-17 12:46 /dir
 ```
 Note: namenode host and ipc port is used in fs url.
+
+
+Using CLI
+---------
+Project provides cli with following structure:
+```
+# ./hdfs-mesos.sh help
+Usage: <cmd> ...
+
+Commands:
+  help [cmd [cmd]] - print general or command-specific help
+  scheduler        - start scheduler
+  node             - node management
+```
+
+Help is provided for each command and sub-command:
+```
+# ./hdfs-mesos.sh help node
+Node management commands
+Usage: node <cmd>
+
+Commands:
+  list       - list nodes
+  add        - add node
+  update     - update node
+  start      - start node
+  stop       - stop node
+  remove     - remove node
+
+Run `help node <cmd>` to see details of specific command
+
+# ./hdfs-mesos.sh help node add
+Add node
+Usage: node add <ids> [options]
+
+Option (* = required)  Description
+---------------------  -----------
+--core-site-opts       Hadoop core-site.xml options.
+--cpus <Double>        CPU amount (0.5, 1, 2).
+--executor-jvm-opts    Executor JVM options.
+--hadoop-jvm-opts      Hadoop JVM options.
+--hdfs-site-opts       Hadoop hdfs-site.xml options.
+--mem <Long>           Mem amount in Mb.
+* --type               node type (name_node, data_node).
+
+Generic Options
+Option  Description
+------  -----------
+--api   REST api url (same as --api option for
+          scheduler).
+```
+
+All node-related commands support bulk operations using node-id-expressions.
+Examples:
+```
+# ./hdfs-mesos.sh node add dn0..1 --type=datanode
+nodes added:
+  id: dn0
+  type: datanode
+  ...
+
+  id: dn1
+  type: datanode
+  ...
+
+# ./hdfs-mesos.sh node update dn* --cpus=1
+nodes updated:
+  id: dn0
+  ...
+  resources: cpus:1.0, mem:512
+
+  id: dn1
+  ...
+  resources: cpus:1.0, mem:512
+
+# ./hdfs-mesos.sh node start dn0,dn1
+nodes started:
+  id: dn0
+  ...
+
+  id: dn0
+  ...
+```
+
+Id expression examples:
+- nn     - matches node with id nn
+- *      - matches any node (should be slash-escaped in shell)
+- dn*    - matches node with id starting with dn
+- dn0..2 - matches nodes dn0, dn1, dn2
 
 
 Having Issue

@@ -317,7 +317,7 @@ for that.
 
 General rules to posting issues are:
 - be precise: provide a minimalistic reproduce-scenario;
-- provide details: provide all required log snippets (stdout from scheduler or stdout from executor's sandbox);
-- be helpful: provide PR for the bug-fix if possible
+- provide details: provide all required log snippets (stdout/err from scheduler or stdout/err from executor's sandbox, mesos logs if required);
+- be helpful: provide PR for the bug-fix if possible;
 
 Issues list: https://github.com/elodina/hdfs-mesos/issues

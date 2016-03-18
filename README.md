@@ -240,6 +240,8 @@ Most CLI commands map to REST api call. Examples:
 | CLI                                        | REST                                        |
 |--------------------------------------------|---------------------------------------------|
 |`node add nn --type=namenode --cpus=2`      |`/api/node/add?node=nn&type=namenode&cpus=2` |
+|`node start dn* --timeout=3m-`              |`/api/node/start?node=dn*&timeout=3m`        |
+|`node remove dn5`                           |`/api/node/remove?node=dn5`                  |
 
 Having Issue
 ------------

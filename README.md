@@ -226,10 +226,10 @@ nodes started:
 ```
 
 Id expression examples:
-- nn     - matches node with id nn
-- *      - matches any node (should be slash-escaped in shell)
-- dn*    - matches node with id starting with dn
-- dn0..2 - matches nodes dn0, dn1, dn2
+- `nn`     - matches node with id nn
+- `*`      - matches any node (should be slash-escaped in shell)
+- `dn*`    - matches node with id starting with dn
+- `dn0..2` - matches nodes dn0, dn1, dn2
 
 
 Having Issue

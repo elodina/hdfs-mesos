@@ -42,8 +42,8 @@ Host Names
 ----------
 During first run `Vagrantfile` creates `hosts` file which
 contains host names for cluster nodes. It is recommended
-to append its content to `/etc/hosts` (or other OS-specific
-location) of the running (hosting) OS to be able to refer
+to append the content of its "cluster nodes" section to `/etc/hosts`
+(or other OS-specific location) of the running (hosting) OS to be able to refer
 master and slaves by names.
 
 Startup

@@ -5,6 +5,7 @@ HDFS Mesos
 * [Running Scheduler](#running-scheduler)
 * [Running HDFS cluster](#running-hdfs-cluster)
 * [Using CLI](#using-cli)
+* [Using REST](#using-rest)
 * [Having Issue](#having-issue)
 
 
@@ -231,6 +232,15 @@ Id expression examples:
 - `dn*`    - matches node with id starting with dn
 - `dn0..2` - matches nodes dn0, dn1, dn2
 
+
+Using REST
+----------
+Most CLI commands map to REST api call. Examples:
+--------------------------------------------------------------------------------------------
+| CLI                                        | REST                                        |
+--------------------------------------------------------------------------------------------
+|`node add nn --type=namenode --cpus=2`      |`/api/node/add?node=nn&type=namenode&cpus=2` |
+--------------------------------------------------------------------------------------------
 
 Having Issue
 ------------

@@ -2,6 +2,7 @@ Mesos in Vagrant
 ================
 
 - [Intro](#intro)
+- [General Info](#general-info)
 - [Host Names](#host-names)
 - [Startup](#startup)
 - [Configuration](#configuration)
@@ -9,12 +10,20 @@ Mesos in Vagrant
 
 Intro
 -----
-Vagrantfile creates mesos cluster with following nodes:
+This project provides Vagrant environment for running Mesos.
+
+You should be familiar with:
+- Vagrant - https://www.vagrantup.com/docs/getting-started/
+- Mesos   - http://mesos.apache.org/documentation/latest/
+
+General Info
+------------
+Vagrantfile creates Mesos cluster with following nodes:
 - master;
 - slave0..slave(N-1) (N is specified in Vagrantfile);
 
 Master node provides WEB UI listening on http://master:5050
-Both master and slave nodes runs mesos slave daemons.
+Both master and slave nodes runs Mesos slave daemons.
 
 Master node has pre-installed marathon scheduler.
 Slave nodes may have pre-installed docker (uncomment in init.sh).
@@ -26,7 +35,7 @@ should work.
 Nodes ssh keys are pre-generated and added to each node's `authorized_hosts`.
 So internode `ssh` should work without password.
 
-For general mesos overview please refer to
+For general Mesos overview please refer to
 http://mesos.apache.org/documentation/latest/mesos-architecture/
 
 Host Names

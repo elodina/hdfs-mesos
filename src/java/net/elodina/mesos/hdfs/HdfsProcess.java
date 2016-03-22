@@ -1,6 +1,7 @@
 package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.util.IO;
+import net.elodina.mesos.util.Net;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Strings;
 import org.apache.log4j.Logger;
@@ -46,7 +47,7 @@ public class HdfsProcess {
 
         logger.info("Waiting for process IPC port ready ...");
         while (!isProcessStopped()) {
-            if (Util.isPortOpen(hostname, node.reservation.ports.get(Node.Port.IPC))) {
+            if (Net.isPortOpen(hostname, node.reservation.ports.get(Node.Port.IPC))) {
                 logger.info("Process IPC port is ready");
                 return true;
             }

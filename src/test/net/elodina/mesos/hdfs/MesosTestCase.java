@@ -1,6 +1,7 @@
 package net.elodina.mesos.hdfs;
 
 import com.google.protobuf.ByteString;
+import net.elodina.mesos.util.Net;
 import net.elodina.mesos.util.Range;
 import net.elodina.mesos.util.Strings;
 import org.apache.log4j.BasicConfigurator;
@@ -38,7 +39,7 @@ public class MesosTestCase {
         executorDriver = new TestExecutorDriver();
 
         Scheduler.Config config = Scheduler.$.config;
-        config.api = "http://localhost:" + Util.findAvailPort();
+        config.api = "http://localhost:" + Net.findAvailPort();
         config.jar = new File("hdfs-mesos-0.1.jar");
         config.hadoop = new File("hadoop-1.2.1.tar.gz");
 

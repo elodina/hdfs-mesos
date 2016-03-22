@@ -1,11 +1,11 @@
-package net.elodina.mesos.hdfs;
+package net.elodina.mesos.util;
 
 import java.io.IOError;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Util {
+public class Net {
     public static int findAvailPort() {
         try (ServerSocket s = new ServerSocket(0)) {
             return s.getLocalPort();
@@ -22,5 +22,4 @@ public class Util {
             return false;
         }
     }
-
 }

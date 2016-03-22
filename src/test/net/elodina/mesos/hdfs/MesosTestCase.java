@@ -1,6 +1,7 @@
 package net.elodina.mesos.hdfs;
 
 import com.google.protobuf.ByteString;
+import net.elodina.mesos.util.Range;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.SchedulerDriver;
@@ -106,7 +107,7 @@ public class MesosTestCase {
     public TaskInfo task() { return task("" + UUID.randomUUID(), "Task", "" + UUID.randomUUID(), Util.formatMap(Collections.singletonMap("node", new Node().toJson()))); }
     public TaskInfo task(String id, String name, String slaveId, String data) {
         TaskInfo.Builder builder = TaskInfo.newBuilder()
-            .setName(id)
+            .setName(name)
             .setTaskId(TaskID.newBuilder().setValue(id))
             .setSlaveId(SlaveID.newBuilder().setValue(slaveId));
 
@@ -134,7 +135,7 @@ public class MesosTestCase {
         List<Value.Range> result = new ArrayList<>();
         for (String part : s.split(",")) {
             part = part.trim();
-            Util.Range r = new Util.Range(part);
+            Range r = new Range(part);
             result.add(Value.Range.newBuilder().setBegin(r.start()).setEnd(r.end()).build());
         }
 

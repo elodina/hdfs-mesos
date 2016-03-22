@@ -2,13 +2,13 @@ package net.elodina.mesos.hdfs;
 
 import com.google.protobuf.ByteString;
 import net.elodina.mesos.util.Period;
+import net.elodina.mesos.util.Range;
 import org.apache.mesos.Protos;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.*;
 
-import static net.elodina.mesos.hdfs.Util.Range;
 import static org.apache.mesos.Protos.*;
 
 public class Node {

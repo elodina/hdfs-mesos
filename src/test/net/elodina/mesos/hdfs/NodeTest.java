@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.Range;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -7,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static net.elodina.mesos.hdfs.Util.Range;
 import static org.apache.mesos.Protos.*;
 import static org.junit.Assert.*;
 

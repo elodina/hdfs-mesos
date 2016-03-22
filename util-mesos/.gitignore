@@ -1,0 +1,13 @@
+*.class
+*.log
+todo.txt
+
+*.iml
+*.ipr
+*.iws
+.idea/
+
+.gradle/
+
+build/
+util-mesos*.jar

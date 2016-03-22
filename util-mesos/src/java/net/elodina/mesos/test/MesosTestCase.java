@@ -1,7 +1,6 @@
 package net.elodina.mesos.test;
 
 import com.google.protobuf.ByteString;
-import net.elodina.mesos.hdfs.Node;
 import net.elodina.mesos.util.Range;
 import net.elodina.mesos.util.Strings;
 import org.junit.Ignore;
@@ -63,7 +62,7 @@ public class MesosTestCase {
         return builder.build();
     }
 
-    public TaskInfo task() { return task("" + UUID.randomUUID(), "Task", "" + UUID.randomUUID(), Strings.formatMap(Collections.singletonMap("node", new Node().toJson()))); }
+    public TaskInfo task() { return task("" + UUID.randomUUID(), "Task", "" + UUID.randomUUID(), ""); }
     public TaskInfo task(String id, String name, String slaveId, String data) {
         TaskInfo.Builder builder = TaskInfo.newBuilder()
             .setName(name)

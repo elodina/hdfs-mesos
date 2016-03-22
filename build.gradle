@@ -3,11 +3,12 @@ apply plugin: 'java'
 
 version = '0.0.1.0'
 
-jar.archiveName = "hdfs-mesos-${version}.jar"
+jar.archiveName = "$name-${version}.jar"
 libsDirName = '../'
 
 repositories {
     mavenCentral()
+    flatDir { dirs 'lib' }
 }
 
 sourceSets {
@@ -21,6 +22,7 @@ sourceSets {
 
 dependencies {
     compile "org.apache.mesos:mesos:0.25.0"
+    compile name: "util-mesos-0.0.1.0"
     compile "com.google.protobuf:protobuf-java:2.5.0"
     compile "org.eclipse.jetty:jetty-http:9.0.4.v20130625"
     compile "org.eclipse.jetty:jetty-io:9.0.4.v20130625"

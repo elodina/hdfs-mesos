@@ -14,3 +14,5 @@ build/
 hdfs-mesos-*.jar
 hdfs-mesos.json
 hdfs-mesos.properties
+
+hadoop-*.tar.gz

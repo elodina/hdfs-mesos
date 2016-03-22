@@ -1,0 +1,26 @@
+apply plugin: 'idea'
+apply plugin: 'java'
+
+version = '0.0.1.0'
+
+jar.archiveName = "$name-${version}.jar"
+libsDirName = '../'
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        java { srcDirs = ['src/java'] }
+    }
+    test {
+        java { srcDirs = ['src/test'] }
+    }
+}
+
+dependencies {
+    compile "org.apache.mesos:mesos:0.25.0"
+    compile "com.google.protobuf:protobuf-java:2.5.0"
+    compile 'junit:junit:4.12'
+}

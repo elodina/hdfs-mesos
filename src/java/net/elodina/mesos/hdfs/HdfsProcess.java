@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.Period;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -48,7 +49,7 @@ public class HdfsProcess {
                 return true;
             }
 
-            Util.Period delay = new Util.Period("1s");
+            Period delay = new Period("1s");
             logger.info("Process IPC port is not ready. Sleeping " + delay);
 
             try { Thread.sleep(delay.ms()); }

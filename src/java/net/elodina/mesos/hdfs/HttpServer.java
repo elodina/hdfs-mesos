@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.Period;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
@@ -215,9 +216,9 @@ public class HttpServer {
                 if (!start && node.state == Node.State.IDLE) throw new HttpError(400, "node idle");
             }
 
-            Util.Period timeout = new Util.Period("2m");
+            Period timeout = new Period("2m");
             if (request.getParameter("timeout") != null)
-                try { timeout = new Util.Period(request.getParameter("timeout")); }
+                try { timeout = new Period(request.getParameter("timeout")); }
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid timeout"); }
 
 

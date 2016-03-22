@@ -1,7 +1,7 @@
 package net.elodina.mesos.hdfs;
 
 import com.google.protobuf.ByteString;
-import net.elodina.mesos.hdfs.Util.Period;
+import net.elodina.mesos.util.Period;
 import net.elodina.mesos.hdfs.Util.Str;
 import org.apache.log4j.*;
 import org.apache.mesos.MesosSchedulerDriver;

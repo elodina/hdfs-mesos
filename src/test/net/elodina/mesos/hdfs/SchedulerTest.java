@@ -1,12 +1,12 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.Period;
 import org.apache.mesos.Protos;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Date;
 
-import static net.elodina.mesos.hdfs.Util.Period;
 import static org.apache.mesos.Protos.TaskStatus;
 import static org.junit.Assert.*;
 

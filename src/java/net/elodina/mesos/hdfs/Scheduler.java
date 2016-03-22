@@ -1,11 +1,8 @@
 package net.elodina.mesos.hdfs;
 
 import com.google.protobuf.ByteString;
-import net.elodina.mesos.util.IO;
-import net.elodina.mesos.util.Period;
-import net.elodina.mesos.hdfs.Util.Str;
-import net.elodina.mesos.util.Strings;
-import net.elodina.mesos.util.Version;
+import net.elodina.mesos.util.*;
+import net.elodina.mesos.util.Repr;
 import org.apache.log4j.*;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
@@ -29,7 +26,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
     @Override
     public void registered(SchedulerDriver driver, Protos.FrameworkID id, Protos.MasterInfo master) {
-        logger.info("[registered] framework:" + Str.id(id.getValue()) + " master:" + Str.master(master));
+        logger.info("[registered] framework:" + Repr.id(id.getValue()) + " master:" + Repr.master(master));
         this.driver = driver;
 
         checkMesosVersion(master);
@@ -41,7 +38,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
     @Override
     public void reregistered(SchedulerDriver driver, Protos.MasterInfo master) {
-        logger.info("[reregistered] " + Str.master(master));
+        logger.info("[reregistered] " + Repr.master(master));
 
         this.driver = driver;
         reconciler.start(driver, new Date());
@@ -49,24 +46,24 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
     @Override
     public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
-        logger.info("[resourceOffers]\n" + Str.offers(offers));
+        logger.info("[resourceOffers]\n" + Repr.offers(offers));
         onOffers(offers);
     }
 
     @Override
     public void offerRescinded(SchedulerDriver driver, Protos.OfferID id) {
-        logger.info("[offerRescinded] " + Str.id(id.getValue()));
+        logger.info("[offerRescinded] " + Repr.id(id.getValue()));
     }
 
     @Override
     public void statusUpdate(SchedulerDriver driver, TaskStatus status) {
-        logger.info("[statusUpdate] " + Str.status(status));
+        logger.info("[statusUpdate] " + Repr.status(status));
         onTaskStatus(status);
     }
 
     @Override
     public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
-        logger.info("[frameworkMessage] executor:" + Str.id(executorId.getValue()) + ", slave: " + Str.id(slaveId.getValue()) + ", data: " + new String(data));
+        logger.info("[frameworkMessage] executor:" + Repr.id(executorId.getValue()) + ", slave: " + Repr.id(slaveId.getValue()) + ", data: " + new String(data));
     }
 
     @Override
@@ -77,12 +74,12 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
     @Override
     public void slaveLost(SchedulerDriver driver, Protos.SlaveID id) {
-        logger.info("[slaveLost] " + Str.id(id.getValue()));
+        logger.info("[slaveLost] " + Repr.id(id.getValue()));
     }
 
     @Override
     public void executorLost(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, int status) {
-        logger.info("[executorLost] executor:" + Str.id(executorId.getValue()) + ", slave: " + Str.id(slaveId.getValue()) + ", status: " + status);
+        logger.info("[executorLost] executor:" + Repr.id(executorId.getValue()) + ", slave: " + Repr.id(slaveId.getValue()) + ", status: " + status);
     }
 
     @Override
@@ -96,7 +93,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             String reason = acceptOffer(offer);
 
             if (reason != null) {
-                logger.info("Declined offer " + Str.offer(offer) + ":\n" + reason);
+                logger.info("Declined offer " + Repr.offer(offer) + ":\n" + reason);
                 driver.declineOffer(offer.getId());
             }
         }

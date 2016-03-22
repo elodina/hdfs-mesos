@@ -1,6 +1,7 @@
 package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.util.IO;
+import net.elodina.mesos.util.Repr;
 import org.apache.log4j.*;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
@@ -8,9 +9,11 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
-import static net.elodina.mesos.hdfs.Util.Str;
 import static org.apache.mesos.Protos.*;
 
 public class Executor implements org.apache.mesos.Executor {
@@ -26,13 +29,13 @@ public class Executor implements org.apache.mesos.Executor {
 
     @Override
     public void registered(ExecutorDriver driver, ExecutorInfo executorInfo, FrameworkInfo framework, SlaveInfo slave) {
-        logger.info("[registered] framework:" + Str.framework(framework) + " slave:" + Str.slave(slave));
+        logger.info("[registered] framework:" + Repr.framework(framework) + " slave:" + Repr.slave(slave));
         hostname = slave.getHostname();
     }
 
     @Override
     public void reregistered(ExecutorDriver driver, SlaveInfo slave) {
-        logger.info("[registered] " + Str.slave(slave));
+        logger.info("[registered] " + Repr.slave(slave));
     }
 
     @Override
@@ -42,7 +45,7 @@ public class Executor implements org.apache.mesos.Executor {
 
     @Override
     public void launchTask(final ExecutorDriver driver, final TaskInfo task) {
-        logger.info("[launchTask] " + Str.task(task));
+        logger.info("[launchTask] " + Repr.task(task));
 
         new Thread() {
             @Override
@@ -83,7 +86,7 @@ public class Executor implements org.apache.mesos.Executor {
 
     @Override
     public void killTask(ExecutorDriver driver, TaskID id) {
-        logger.info("[killTask] " + Str.id(id.getValue()));
+        logger.info("[killTask] " + Repr.id(id.getValue()));
         if (process != null) process.stop();
     }
 

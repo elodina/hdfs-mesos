@@ -1,7 +1,5 @@
 package net.elodina.mesos.util;
 
-import net.elodina.mesos.hdfs.Util;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,5 +36,5 @@ public class Version implements Comparable<Version> {
         return obj instanceof Version && values.equals(((Version) obj).values);
     }
 
-    public String toString() { return Util.join(values, "."); }
+    public String toString() { return Strings.join(values, "."); }
 }

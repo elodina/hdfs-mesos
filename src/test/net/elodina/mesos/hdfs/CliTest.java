@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.Strings;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +73,7 @@ public class CliTest extends MesosTestCase {
         // update node
         exec("node update nn --core-site-opts=a=1");
         assertOutContains("node updated");
-        assertEquals(Util.parseMap("a=1"), nn.coreSiteOpts);
+        assertEquals(Strings.parseMap("a=1"), nn.coreSiteOpts);
     }
 
     @Test

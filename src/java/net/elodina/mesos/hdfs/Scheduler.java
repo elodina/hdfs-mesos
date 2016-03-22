@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.hdfs.Util.Str;
+import net.elodina.mesos.util.Strings;
 import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
 import org.apache.mesos.MesosSchedulerDriver;
@@ -136,7 +137,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             }
         }
 
-        return Util.join(reasons, ", ");
+        return Strings.join(reasons, ", ");
     }
 
     void launchTask(Node node, Protos.Offer offer) {

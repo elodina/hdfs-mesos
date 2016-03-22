@@ -2,6 +2,7 @@ package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
+import net.elodina.mesos.util.Strings;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -170,7 +171,7 @@ public class HdfsProcess {
         env.put("JAVA_HOME", "" + Executor.javaHome);
         if (node.hadoopJvmOpts != null) env.put("HADOOP_OPTS", node.hadoopJvmOpts);
 
-        logger.info("Starting process '" + Util.join(builder.command(), " ") + "'");
+        logger.info("Starting process '" + Strings.join(builder.command(), " ") + "'");
         return builder.start();
     }
 }

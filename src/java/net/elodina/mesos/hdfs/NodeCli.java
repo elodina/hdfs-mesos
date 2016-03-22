@@ -3,6 +3,7 @@ package net.elodina.mesos.hdfs;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import net.elodina.mesos.util.Strings;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -95,7 +96,7 @@ public class NodeCli {
         parser.accepts("hdfs-site-opts", "Hadoop hdfs-site.xml options.").withRequiredArg().ofType(String.class);
 
         if (help) {
-            printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");
+            printLine(Strings.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");
             try { parser.printHelpOn(out); }
             catch (IOException ignore) {}
 
@@ -159,7 +160,7 @@ public class NodeCli {
         parser.accepts("timeout", "timeout (30s, 1m, 1h). 0s - no timeout").withRequiredArg().ofType(String.class);
 
         if (help) {
-            printLine(Util.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");
+            printLine(Strings.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");
             try { parser.printHelpOn(out); }
             catch (IOException ignore) {}
 
@@ -224,7 +225,7 @@ public class NodeCli {
         try { json = sendRequest("/node/remove", Collections.singletonMap("node", expr)); }
         catch (IOException e) { throw new Error("" + e); }
 
-        String title = json.size() == 1 ? "node " + json.get(0) : "nodes " + Util.join(json, ", ");
+        String title = json.size() == 1 ? "node " + json.get(0) : "nodes " + Strings.join(json, ", ");
         title += " removed";
 
         printLine(title);
@@ -239,8 +240,8 @@ public class NodeCli {
         if (node.executorJvmOpts != null) printLine("executor-jvm-opts: " + node.executorJvmOpts, indent);
         if (node.hadoopJvmOpts != null) printLine("hadoop-jvm-opts: " + node.hadoopJvmOpts, indent);
 
-        if (!node.coreSiteOpts.isEmpty()) printLine("core-site-opts: " + Util.formatMap(node.coreSiteOpts), indent);
-        if (!node.hdfsSiteOpts.isEmpty()) printLine("hdfs-site-opts: " + Util.formatMap(node.hdfsSiteOpts), indent);
+        if (!node.coreSiteOpts.isEmpty()) printLine("core-site-opts: " + Strings.formatMap(node.coreSiteOpts), indent);
+        if (!node.hdfsSiteOpts.isEmpty()) printLine("hdfs-site-opts: " + Strings.formatMap(node.hdfsSiteOpts), indent);
 
         if (node.reservation != null) printLine("reservation: " + nodeReservation(node.reservation), indent);
         if (node.runtime != null) printNodeRuntime(node.runtime, indent);
@@ -277,7 +278,7 @@ public class NodeCli {
 
         s += "cpus:" + reservation.cpus;
         s += ", mem:" + reservation.mem;
-        s += ", ports:" + Util.formatMap(reservation.ports);
+        s += ", ports:" + Strings.formatMap(reservation.ports);
 
         return s;
     }

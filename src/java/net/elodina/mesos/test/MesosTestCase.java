@@ -1,62 +1,19 @@
-package net.elodina.mesos.hdfs;
+package net.elodina.mesos.test;
 
 import com.google.protobuf.ByteString;
-import net.elodina.mesos.util.Net;
+import net.elodina.mesos.hdfs.Node;
 import net.elodina.mesos.util.Range;
 import net.elodina.mesos.util.Strings;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.mesos.ExecutorDriver;
-import org.apache.mesos.SchedulerDriver;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Ignore;
 
-import java.io.File;
-import java.nio.file.Files;
 import java.util.*;
 
 import static org.apache.mesos.Protos.*;
-import static org.junit.Assert.assertTrue;
 
 @Ignore
 public class MesosTestCase {
-    TestSchedulerDriver schedulerDriver;
-    TestExecutorDriver executorDriver;
-
-    @Before
-    public void before() throws Exception {
-        BasicConfigurator.configure();
-        Scheduler.$.initLogging();
-
-        File storageFile = Files.createTempFile(MesosTestCase.class.getSimpleName(), null).toFile();
-        assertTrue(storageFile.delete());
-        Nodes.storage = Storage.file(storageFile);
-        Nodes.reset();
-
-        schedulerDriver = new TestSchedulerDriver();
-        Scheduler.$.registered(schedulerDriver, frameworkId(), master());
-
-        executorDriver = new TestExecutorDriver();
-
-        Scheduler.Config config = Scheduler.$.config;
-        config.api = "http://localhost:" + Net.findAvailPort();
-        config.jar = new File("hdfs-mesos-0.1.jar");
-        config.hadoop = new File("hadoop-1.2.1.tar.gz");
-
-        Cli.api = config.api;
-    }
-
-    @After
-    public void after() throws Exception {
-        Scheduler.$.disconnected(schedulerDriver);
-        BasicConfigurator.resetConfiguration();
-
-        Scheduler.Config config = Scheduler.$.config;
-        config.api = null;
-        config.jar = null;
-
-        Nodes.storage.clear();
-    }
+    protected TestSchedulerDriver schedulerDriver = new TestSchedulerDriver();
+    protected TestExecutorDriver executorDriver = new TestExecutorDriver();
 
     public FrameworkID frameworkId() { return frameworkId("" + UUID.randomUUID()); }
     public FrameworkID frameworkId(String id) { return FrameworkID.newBuilder().setValue(id).build(); }
@@ -64,7 +21,7 @@ public class MesosTestCase {
     public TaskID taskId() { return taskId("" + UUID.randomUUID()); }
     public TaskID taskId(String id) { return TaskID.newBuilder().setValue(id).build(); }
 
-    static final int LOCALHOST_IP = 2130706433;
+    protected static final int LOCALHOST_IP = 2130706433;
     public MasterInfo master() { return master("" + UUID.randomUUID(), LOCALHOST_IP, 5050, "master", "0.23.0"); }
     public MasterInfo master(String id, int ip, int port, String hostname, String version) {
         return MasterInfo.newBuilder()
@@ -232,130 +189,5 @@ public class MesosTestCase {
         }
 
         return resources;
-    }
-
-    public static class TestSchedulerDriver implements SchedulerDriver {
-        public Status status = Status.DRIVER_RUNNING;
-
-        public List<String> declinedOffers = new ArrayList<>();
-        public List<String> acceptedOffers = new ArrayList<>();
-
-        public List<TaskInfo> launchedTasks = new ArrayList<>();
-        public List<String> killedTasks = new ArrayList<>();
-        public List<String> reconciledTasks = new ArrayList<>();
-
-        public Status declineOffer(OfferID id) {
-            declinedOffers.add(id.getValue());
-            return status;
-        }
-
-        public Status declineOffer(OfferID id, Filters filters) {
-            declinedOffers.add(id.getValue());
-            return status;
-        }
-
-        public Status launchTasks(OfferID offerId, Collection<TaskInfo> tasks) {
-            acceptedOffers.add(offerId.getValue());
-            launchedTasks.addAll(tasks);
-            return status;
-        }
-
-        public Status launchTasks(OfferID offerId, Collection<TaskInfo> tasks, Filters filters) {
-            acceptedOffers.add(offerId.getValue());
-            launchedTasks.addAll(tasks);
-            return status;
-        }
-
-        public Status launchTasks(Collection<OfferID> offerIds, Collection<TaskInfo> tasks) {
-            for (OfferID offerId : offerIds) acceptedOffers.add(offerId.getValue());
-            launchedTasks.addAll(tasks);
-            return status;
-        }
-
-        public Status launchTasks(Collection<OfferID> offerIds, Collection<TaskInfo> tasks, Filters filters) {
-            for (OfferID offerId : offerIds) acceptedOffers.add(offerId.getValue());
-            launchedTasks.addAll(tasks);
-            return status;
-        }
-
-        public Status stop() { return status = Status.DRIVER_STOPPED; }
-
-        public Status stop(boolean failover) { return status = Status.DRIVER_STOPPED; }
-
-        public Status killTask(TaskID id) {
-            killedTasks.add(id.getValue());
-            return status;
-        }
-
-        public Status requestResources(Collection<Request> requests) { throw new UnsupportedOperationException(); }
-
-        public Status sendFrameworkMessage(ExecutorID executorId, SlaveID slaveId, byte[] data) { throw new UnsupportedOperationException(); }
-
-        public Status join() { throw new UnsupportedOperationException(); }
-
-        public Status reconcileTasks(Collection<TaskStatus> statuses) {
-            if (statuses.isEmpty()) reconciledTasks.add("");
-            for (TaskStatus status : statuses) reconciledTasks.add(status.getTaskId().getValue());
-            return status;
-        }
-
-        public Status reviveOffers() { throw new UnsupportedOperationException(); }
-
-        public Status run() { return status = Status.DRIVER_RUNNING; }
-
-        public Status abort() { return status = Status.DRIVER_ABORTED; }
-
-        public Status start() { return status = Status.DRIVER_RUNNING; }
-
-        public Status acceptOffers(Collection<OfferID> offerIds, Collection<Offer.Operation> operations, Filters filters) { throw new UnsupportedOperationException(); }
-
-        public Status acknowledgeStatusUpdate(TaskStatus status) { throw new UnsupportedOperationException(); }
-
-        public Status suppressOffers() { throw new UnsupportedOperationException(); }
-    }
-
-    static class TestExecutorDriver implements ExecutorDriver {
-        public Status status = Status.DRIVER_RUNNING;
-        public final List<TaskStatus> statusUpdates = new ArrayList<>();
-
-        public Status start() {
-            status = Status.DRIVER_RUNNING;
-            return status;
-        }
-
-        public Status stop() {
-            status = Status.DRIVER_STOPPED;
-            return status;
-        }
-
-        public Status abort() {
-            status = Status.DRIVER_ABORTED;
-            return status;
-        }
-
-        public Status join() { return status; }
-
-        public Status run() {
-            status = Status.DRIVER_RUNNING;
-            return status;
-        }
-
-        public Status sendStatusUpdate(TaskStatus status) {
-            synchronized (statusUpdates) {
-                statusUpdates.add(status);
-                statusUpdates.notify();
-            }
-
-            return this.status;
-        }
-
-        public void waitForStatusUpdates(int count) throws InterruptedException {
-            synchronized (statusUpdates) {
-                while (statusUpdates.size() < count)
-                    statusUpdates.wait();
-            }
-        }
-
-        public Status sendFrameworkMessage(byte[] message) { throw new UnsupportedOperationException(); }
     }
 }

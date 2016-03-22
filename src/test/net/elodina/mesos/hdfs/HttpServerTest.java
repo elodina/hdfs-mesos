@@ -21,7 +21,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.fail;
 
-public class HttpServerTest extends MesosTestCase {
+public class HttpServerTest extends HdfsMesosTestCase {
     private HttpServer server;
     private File dir;
 

@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.test.MesosTestCase;
 import net.elodina.mesos.util.Period;
 import org.apache.mesos.Protos;
 import org.junit.Test;
@@ -10,7 +11,7 @@ import java.util.Date;
 import static org.apache.mesos.Protos.TaskStatus;
 import static org.junit.Assert.*;
 
-public class SchedulerTest extends MesosTestCase {
+public class SchedulerTest extends HdfsMesosTestCase {
     @Test
     public void onTaskStarted() {
         TaskStatus status = taskStatus(Protos.TaskState.TASK_RUNNING);

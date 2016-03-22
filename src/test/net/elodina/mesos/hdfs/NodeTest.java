@@ -11,7 +11,7 @@ import java.util.List;
 import static org.apache.mesos.Protos.*;
 import static org.junit.Assert.*;
 
-public class NodeTest extends MesosTestCase {
+public class NodeTest extends HdfsMesosTestCase {
     @Test
     public void matches() {
         Node node = new Node("0", Node.Type.NAMENODE);

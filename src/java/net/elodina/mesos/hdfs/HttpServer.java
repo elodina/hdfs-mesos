@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
@@ -277,7 +278,7 @@ public class HttpServer {
             response.setContentType("application/zip");
             response.setHeader("Content-Length", "" + file.length());
             response.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
-            Util.IO.copyAndClose(new FileInputStream(file), response.getOutputStream());
+            IO.copyAndClose(new FileInputStream(file), response.getOutputStream());
         }
     }
 

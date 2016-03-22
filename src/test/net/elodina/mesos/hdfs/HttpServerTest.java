@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.IO;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
@@ -39,7 +40,7 @@ public class HttpServerTest extends MesosTestCase {
     @After
     public void after() throws Exception {
         server.stop();
-        Util.IO.delete(dir);
+        IO.delete(dir);
 
         super.after();
     }
@@ -47,7 +48,7 @@ public class HttpServerTest extends MesosTestCase {
     @Test
     public void download_jar() throws IOException {
         Scheduler.$.config.jar = new File(dir, "hdfs-mesos-0.1.jar");
-        Util.IO.writeFile(Scheduler.$.config.jar, "jar");
+        IO.writeFile(Scheduler.$.config.jar, "jar");
 
         byte[] data = download("/jar/hdfs-mesos.jar");
         assertEquals("jar", new String(data));
@@ -56,7 +57,7 @@ public class HttpServerTest extends MesosTestCase {
     @Test
     public void download_hadoop() throws IOException {
         Scheduler.$.config.hadoop = new File(dir, "hadoop-1.2.1.tar.gz");
-        Util.IO.writeFile(Scheduler.$.config.hadoop, "hadoop");
+        IO.writeFile(Scheduler.$.config.hadoop, "hadoop");
 
         byte[] data = download("/hadoop/hadoop.tar.gz");
         assertEquals("hadoop", new String(data));
@@ -275,7 +276,7 @@ public class HttpServerTest extends MesosTestCase {
 
         try {
             ByteArrayOutputStream data = new ByteArrayOutputStream();
-            Util.IO.copyAndClose(c.getInputStream(), data);
+            IO.copyAndClose(c.getInputStream(), data);
             return data.toByteArray();
         } finally {
             c.disconnect();

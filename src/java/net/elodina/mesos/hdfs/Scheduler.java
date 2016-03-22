@@ -1,6 +1,7 @@
 package net.elodina.mesos.hdfs;
 
 import com.google.protobuf.ByteString;
+import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.hdfs.Util.Str;
 import net.elodina.mesos.util.Version;
@@ -337,12 +338,12 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
         void resolveDeps() {
             String hadoopMask = "hadoop-.*gz";
-            hadoop = Util.IO.findFile(new File("."), hadoopMask);
+            hadoop = IO.findFile(new File("."), hadoopMask);
             if (hadoop == null) throw new IllegalStateException(hadoopMask + " not found in current dir");
             checkHadoopVersion();
 
             String jarMask = "hdfs-mesos-.*jar";
-            jar = Util.IO.findFile(new File("."), jarMask);
+            jar = IO.findFile(new File("."), jarMask);
             if (jar == null) throw new IllegalStateException(jarMask + " not found in current dir");
         }
 

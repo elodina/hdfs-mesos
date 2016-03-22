@@ -3,6 +3,7 @@ package net.elodina.mesos.hdfs;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import net.elodina.mesos.util.IO;
 import org.json.simple.JSONAware;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -146,7 +147,7 @@ public class Cli {
 
             try {
                 ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
-                Util.IO.copyAndClose(connection.getInputStream(), responseBody);
+                IO.copyAndClose(connection.getInputStream(), responseBody);
                 response = responseBody.toString("utf-8");
             } catch (IOException e) {
                 if (connection.getResponseCode() != 200) throw new IOException(connection.getResponseCode() + " - " + connection.getResponseMessage());

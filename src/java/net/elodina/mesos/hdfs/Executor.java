@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.IO;
 import org.apache.log4j.*;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
@@ -114,7 +115,7 @@ public class Executor implements org.apache.mesos.Executor {
 
     static void initDirs() {
         String hadoopMask = "hadoop-.*";
-        hadoopDir = Util.IO.findDir(new File("."), hadoopMask);
+        hadoopDir = IO.findDir(new File("."), hadoopMask);
         if (hadoopDir == null) throw new IllegalStateException(hadoopMask + " not found in current dir");
 
         dataDir = new File(new File("."), "data");
@@ -124,7 +125,7 @@ public class Executor implements org.apache.mesos.Executor {
     }
 
     static File findJavaHome() {
-        File jreDir = Util.IO.findDir(new File("."), "jre.*");
+        File jreDir = IO.findDir(new File("."), "jre.*");
         if (jreDir != null) return jreDir;
 
         if (System.getenv("JAVA_HOME") != null)
@@ -157,7 +158,7 @@ public class Executor implements org.apache.mesos.Executor {
             int code = process.waitFor();
             if (code != 0) throw new IOException("Process exited with code " + code);
 
-            File file = new File(Util.IO.readFile(tmpFile).trim()); // $JRE_PATH/bin/java
+            File file = new File(IO.readFile(tmpFile).trim()); // $JRE_PATH/bin/java
             if (!tmpFile.delete()) throw new IOException("Failed to delete " + tmpFile);
 
             file = file.getParentFile();

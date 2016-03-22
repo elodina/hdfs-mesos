@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import org.apache.log4j.Logger;
 
@@ -110,7 +111,7 @@ public class HdfsProcess {
         }
 
         content += "</configuration>";
-        Util.IO.writeFile(file, content);
+        IO.writeFile(file, content);
     }
 
     private void configureLogs() throws IOException {
@@ -119,7 +120,7 @@ public class HdfsProcess {
         map.put("log4j.appender.console.target=.*", "log4j.appender.console.target=System.out");
 
         File file = new File(Executor.hadoopDir, "conf/log4j.properties");
-        Util.IO.replaceInFile(file, map);
+        IO.replaceInFile(file, map);
     }
 
     private static String escapeXmlText(String s) { return s.replace("<", "&lt;").replace(">", "&gt;"); }

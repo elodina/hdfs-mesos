@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.IO;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -22,7 +23,7 @@ public abstract class Storage {
         @Override
         public void save() {
             JSONObject json = Nodes.toJson();
-            try { Util.IO.writeFile(file, "" + json); }
+            try { IO.writeFile(file, "" + json); }
             catch (IOException e) { throw new IOError(e); }
         }
 
@@ -31,7 +32,7 @@ public abstract class Storage {
             if (!file.exists()) return;
 
             JSONObject obj;
-            try { obj = (JSONObject) new JSONParser().parse(Util.IO.readFile(file)); }
+            try { obj = (JSONObject) new JSONParser().parse(IO.readFile(file)); }
             catch (ParseException | IOException e) { throw new IOError(e); }
 
             Nodes.fromJson(obj);

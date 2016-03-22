@@ -7,7 +7,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 
-import static net.elodina.mesos.hdfs.Util.*;
+import static net.elodina.mesos.hdfs.Util.IO;
+import static net.elodina.mesos.hdfs.Util.Range;
 import static org.junit.Assert.*;
 
 public class UtilTest {
@@ -158,34 +159,6 @@ public class UtilTest {
         assertEquals("0", "" + new Range("0"));
         assertEquals("0..10", "" + new Range("0..10"));
         assertEquals("0", "" + new Range("0..0"));
-    }
-
-    // Version
-    @Test
-    public void Version_init() {
-        assertEquals(Arrays.<Integer>asList(), new Version().values());
-        assertEquals(Arrays.asList(1, 0), new Version(1, 0).values());
-        assertEquals(Arrays.asList(1, 2, 3, 4), new Version("1.2.3.4").values());
-
-        try { new Version(" "); fail(); }
-        catch (IllegalArgumentException e) {}
-
-        try { new Version("."); fail(); }
-        catch (IllegalArgumentException e) {}
-
-        try { new Version("a"); fail(); }
-        catch (IllegalArgumentException e) {}
-    }
-
-    @Test
-    public void Version_compareTo() {
-        assertEquals(0, new Version().compareTo(new Version()));
-        assertEquals(0, new Version(0).compareTo(new Version(0)));
-
-        assertTrue(new Version(0).compareTo(new Version(1)) < 0);
-        assertTrue(new Version(0).compareTo(new Version(0, 0)) < 0);
-
-        assertTrue(new Version(0, 9, 0, 0).compareTo(new Version(0, 8, 2, 0)) > 0);
     }
 
     // IO

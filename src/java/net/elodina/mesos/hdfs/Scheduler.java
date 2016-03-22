@@ -3,6 +3,7 @@ package net.elodina.mesos.hdfs;
 import com.google.protobuf.ByteString;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.hdfs.Util.Str;
+import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
@@ -199,8 +200,8 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     }
 
     void checkMesosVersion(MasterInfo master) {
-        Util.Version minVersion = new Util.Version("0.23.0");
-        Util.Version version = !master.getVersion().isEmpty() ? new Util.Version(master.getVersion()) : null;
+        Version minVersion = new Version("0.23.0");
+        Version version = !master.getVersion().isEmpty() ? new Version(master.getVersion()) : null;
 
         if (version == null || version.compareTo(minVersion) < 0) {
             String versionStr = version == null ? "?(<0.23.0)" : "" + version;
@@ -352,9 +353,9 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             int extIdx = name.indexOf(".tar.gz");
 
             if (hyphenIdx == -1 || extIdx == -1) throw new IllegalStateException("Can't extract version from " + name);
-            Util.Version version = new Util.Version(name.substring(hyphenIdx + 1, extIdx));
+            Version version = new Version(name.substring(hyphenIdx + 1, extIdx));
 
-            if (version.compareTo(new Util.Version("1.2")) < 0 || version.compareTo(new Util.Version("1.3")) >= 0)
+            if (version.compareTo(new Version("1.2")) < 0 || version.compareTo(new Version("1.3")) >= 0)
                 throw new IllegalStateException("Supported hadoop versions are 1.2.x, current is " + version);
         }
 

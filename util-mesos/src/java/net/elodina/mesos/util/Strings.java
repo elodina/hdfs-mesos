@@ -29,6 +29,10 @@ public class Strings {
 
     public static Map<String, String> parseMap(String s, boolean nullValues) { return parseMap(s, ',', '=', nullValues); }
 
+    public static Map<String, String> parseMap(String s, char entrySep) { return parseMap(s, entrySep, '=', false); }
+
+    public static Map<String, String> parseMap(String s, char entrySep, char valueSep) { return parseMap(s, entrySep, valueSep, false); }
+
     public static Map<String, String> parseMap(String s, char entrySep, char valueSep, boolean nullValues) {
         Map<String, String> result = new LinkedHashMap<>();
         if (s == null) return result;

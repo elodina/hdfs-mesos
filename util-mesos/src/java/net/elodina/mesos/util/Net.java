@@ -2,6 +2,7 @@ package net.elodina.mesos.util;
 
 import java.io.IOError;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -11,6 +12,15 @@ public class Net {
             return s.getLocalPort();
         } catch (IOException e) {
             throw new IOError(e);
+        }
+    }
+
+    public static boolean isPortAvail(String host, int port) {
+        try (ServerSocket socket = new ServerSocket()) {
+            socket.bind(new InetSocketAddress(host, port));
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 

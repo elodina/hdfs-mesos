@@ -2,17 +2,38 @@ package net.elodina.mesos.util;
 
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class IOTest {
+    @Test
+    public void copyAndCloseTest() throws IOException {
+        byte[] data = new byte[4 * 1024 * 1024];
+        for (int i = 0; i < data.length; i++) data[i] = new Integer(i).byteValue();
+
+        final AtomicBoolean inClosed = new AtomicBoolean(false);
+        final AtomicBoolean outClosed = new AtomicBoolean(false);
+
+        InputStream in = new ByteArrayInputStream(data) {
+            public void close() throws IOException { super.close(); inClosed.set(true); }
+        };
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream() {
+            public void close() throws IOException { super.close(); outClosed.set(true); }
+        };
+
+        IO.copyAndClose(in, out);
+        assertTrue(Arrays.equals(data, out.toByteArray()));
+        assertTrue(inClosed.get());
+        assertTrue(outClosed.get());
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Test
     public void findFile0() throws IOException {

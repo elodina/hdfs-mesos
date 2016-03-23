@@ -75,6 +75,7 @@ public class MesosTestCase {
     }
 
     public TaskStatus taskStatus(TaskState state) { return taskStatus("" + UUID.randomUUID(), state, null); }
+    public TaskStatus taskStatus(String id, TaskState state) { return taskStatus(id, state, ""); }
     public TaskStatus taskStatus(String id, TaskState state, String data) {
         TaskStatus.Builder builder = TaskStatus.newBuilder()
             .setTaskId(TaskID.newBuilder().setValue(id))

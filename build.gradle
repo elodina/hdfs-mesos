@@ -3,7 +3,7 @@ apply plugin: 'java'
 
 version = '0.0.1.0'
 
-jar.archiveName = "$name-${version}.jar"
+jar.archiveName = "hdfs-mesos-${version}.jar"
 libsDirName = '../'
 
 repositories {

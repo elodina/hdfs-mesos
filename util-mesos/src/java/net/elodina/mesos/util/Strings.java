@@ -25,7 +25,7 @@ public class Strings {
         return result;
     }
 
-    public static Map<String, String> parseMap(String s) { return parseMap(s, true); }
+    public static Map<String, String> parseMap(String s) { return parseMap(s, false); }
 
     public static Map<String, String> parseMap(String s, boolean nullValues) { return parseMap(s, ',', '=', nullValues); }
 

@@ -17,6 +17,8 @@ public class TestSchedulerDriver implements SchedulerDriver {
     public List<String> killedTasks = new ArrayList<>();
     public List<String> reconciledTasks = new ArrayList<>();
 
+    public List<Message> sentFrameworkMessages = new ArrayList<>();
+
     public Protos.Status declineOffer(Protos.OfferID id) {
         declinedOffers.add(id.getValue());
         return status;
@@ -62,7 +64,10 @@ public class TestSchedulerDriver implements SchedulerDriver {
 
     public Protos.Status requestResources(Collection<Protos.Request> requests) { throw new UnsupportedOperationException(); }
 
-    public Protos.Status sendFrameworkMessage(Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) { throw new UnsupportedOperationException(); }
+    public Protos.Status sendFrameworkMessage(Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
+        sentFrameworkMessages.add(new Message(executorId.getValue(), slaveId.getValue(), data));
+        return status;
+    }
 
     public Protos.Status join() { throw new UnsupportedOperationException(); }
 
@@ -85,4 +90,16 @@ public class TestSchedulerDriver implements SchedulerDriver {
     public Protos.Status acknowledgeStatusUpdate(Protos.TaskStatus status) { throw new UnsupportedOperationException(); }
 
     public Protos.Status suppressOffers() { throw new UnsupportedOperationException(); }
+
+    public static class Message {
+        public String executorId;
+        public String slaveId;
+        public byte[] data;
+
+        public Message(String executorId, String slaveId, byte[] data) {
+            this.executorId = executorId;
+            this.slaveId = slaveId;
+            this.data = data;
+        }
+    }
 }

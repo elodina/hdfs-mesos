@@ -17,6 +17,12 @@ public class MesosTestCase {
     public FrameworkID frameworkId() { return frameworkId("" + UUID.randomUUID()); }
     public FrameworkID frameworkId(String id) { return FrameworkID.newBuilder().setValue(id).build(); }
 
+    public ExecutorID executorId() { return executorId("" + UUID.randomUUID()); }
+    public ExecutorID executorId(String id) { return ExecutorID.newBuilder().setValue(id).build(); }
+
+    public SlaveID slaveId() { return slaveId("" + UUID.randomUUID()); }
+    public SlaveID slaveId(String id) { return SlaveID.newBuilder().setValue(id).build(); }
+
     public TaskID taskId() { return taskId("" + UUID.randomUUID()); }
     public TaskID taskId(String id) { return TaskID.newBuilder().setValue(id).build(); }
 

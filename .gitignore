@@ -11,6 +11,7 @@ todo.txt
 vagrant/.vagrant
 
 build/
+tmp/
 hdfs-mesos-*.jar
 hdfs-mesos.json
 hdfs-mesos.properties

@@ -4,7 +4,8 @@ apply plugin: 'java'
 version = '0.0.1.0'
 
 jar.archiveName = "hdfs-mesos-${version}.jar"
-libsDirName = '../'
+buildDir = 'out/gradle'
+libsDirName = '../../'
 
 repositories {
     mavenCentral()

@@ -354,8 +354,10 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             if (hyphenIdx == -1 || extIdx == -1) throw new IllegalStateException("Can't extract version from " + name);
             Version version = new Version(name.substring(hyphenIdx + 1, extIdx));
 
-            if (version.compareTo(new Version("1.2")) < 0 || version.compareTo(new Version("1.3")) >= 0)
-                throw new IllegalStateException("Supported hadoop versions are 1.2.x, current is " + version);
+            boolean supported1x = version.compareTo(new Version("1.2")) >= 0 && version.compareTo(new Version("1.3")) < 0;
+            boolean supported2x = version.compareTo(new Version("2.7")) >= 0 && version.compareTo(new Version("2.8")) < 0;
+            if (!supported1x && !supported2x)
+                throw new IllegalStateException("Supported hadoop versions are 1.2.x and 2.7.x, current is " + version);
         }
 
         public String toString() {

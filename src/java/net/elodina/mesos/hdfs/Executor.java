@@ -2,6 +2,7 @@ package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Repr;
+import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.MesosExecutorDriver;
@@ -20,6 +21,8 @@ public class Executor implements org.apache.mesos.Executor {
     public static final Logger logger = Logger.getLogger(Executor.class);
 
     public static File hadoopDir;
+    public static Version hadoopVersion;
+
     public static File dataDir;
     public static File javaHome;
     public static File hadoop() { return new File(hadoopDir, "bin/hadoop"); }
@@ -120,6 +123,10 @@ public class Executor implements org.apache.mesos.Executor {
         String hadoopMask = "hadoop-.*";
         hadoopDir = IO.findDir(new File("."), hadoopMask);
         if (hadoopDir == null) throw new IllegalStateException(hadoopMask + " not found in current dir");
+
+        int hyphenIdx = hadoopDir.getName().lastIndexOf("-");
+        if (hyphenIdx == -1) throw new IllegalStateException("Can't extract version from " + hadoopDir);
+        hadoopVersion = new Version(hadoopDir.getName().substring(hyphenIdx + 1));
 
         dataDir = new File(new File("."), "data");
         javaHome = findJavaHome();

@@ -20,7 +20,7 @@ You should be familiar with HDFS and Mesos basics:
 Project requires:
 - Mesos 0.23.0+
 - JDK 1.7.x
-- Hadoop 1.2.x
+- Hadoop 1.2.x or 2.7.x
 
 
 Mesos in Vagrant
@@ -59,7 +59,6 @@ Download jar:
 # git clone https://github.com/elodina/hdfs-mesos.git
 # cd hdfs-mesos
 # ./gradlew jar
-# wget https://archive.apache.org/dist/kafka/0.8.2.2/kafka_2.10-0.8.2.2.tgz
 ```
 
 **2.** Download hadoop tarball:

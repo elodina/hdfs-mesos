@@ -79,7 +79,7 @@ public class HdfsProcess {
         props.put("fs.default.name", node.runtime.fsUri);
         props.putAll(node.coreSiteOpts);
 
-        File file = new File(Executor.hadoopDir, "conf/core-site.xml");
+        File file = new File(Executor.hadoopConfDir(), "core-site.xml");
         writePropsXml(file, props);
     }
 
@@ -98,7 +98,7 @@ public class HdfsProcess {
 
         props.putAll(node.hdfsSiteOpts);
 
-        File file = new File(Executor.hadoopDir, "conf/hdfs-site.xml");
+        File file = new File(Executor.hadoopConfDir(), "hdfs-site.xml");
         writePropsXml(file, props);
     }
 
@@ -121,7 +121,7 @@ public class HdfsProcess {
         map.put("log4j.appender.console.layout.ConversionPattern=.*", "log4j.appender.console.layout.ConversionPattern=[" + node.type.name().toLowerCase() + "] %d [%t] %p %c{2} - %m%n");
         map.put("log4j.appender.console.target=.*", "log4j.appender.console.target=System.out");
 
-        File file = new File(Executor.hadoopDir, "conf/log4j.properties");
+        File file = new File(Executor.hadoopConfDir(), "log4j.properties");
         IO.replaceInFile(file, map);
     }
 

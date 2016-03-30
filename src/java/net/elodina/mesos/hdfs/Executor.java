@@ -25,7 +25,12 @@ public class Executor implements org.apache.mesos.Executor {
 
     public static File dataDir;
     public static File javaHome;
+
     public static File hadoop() { return new File(hadoopDir, "bin/hadoop"); }
+
+    public static boolean hadoop2x() { return hadoopVersion.compareTo(new Version("2.0")) >= 0; }
+
+    public static File hadoopConfDir() { return new File(hadoopDir, hadoop2x() ? "etc/hadoop" : "conf"); }
 
     private String hostname;
     private HdfsProcess process;

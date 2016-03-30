@@ -75,7 +75,7 @@ public class HdfsProcess {
 
     private void createCoreSiteXml() throws IOException {
         Map<String, String> props = new HashMap<>();
-        props.put("hadoop.tmp.dir", "" + new File(Executor.dataDir, "tmp"));
+        props.put("hadoop.tmp.dir", "" + Executor.dataDir.getAbsolutePath());
         props.put("fs.default.name", node.runtime.fsUri);
         props.putAll(node.coreSiteOpts);
 
@@ -86,14 +86,12 @@ public class HdfsProcess {
     private void createHdfsSiteXml() throws IOException {
         Map<String, String> props = new HashMap<>();
 
-        if (node.type == Node.Type.NAMENODE) {
+        if (node.type == Node.Type.NAMENODE)
             props.put("dfs.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.HTTP));
-            props.put("dfs.name.dir", "" + getNameNodeDir());
-        } else {
+        else {
             props.put("dfs.datanode.http.address", hostname + ":" + node.reservation.ports.get(Node.Port.HTTP));
             props.put("dfs.datanode.address", hostname + ":" + node.reservation.ports.get(Node.Port.DATA));
             props.put("dfs.datanode.ipc.address", hostname + ":" + node.reservation.ports.get(Node.Port.IPC));
-            props.put("dfs.data.dir", "" + getDataNodeDir());
         }
 
         props.putAll(node.hdfsSiteOpts);
@@ -128,13 +126,9 @@ public class HdfsProcess {
     private static String escapeXmlText(String s) { return s.replace("<", "&lt;").replace(">", "&gt;"); }
 
     private File getNameNodeDir() {
-        if (node.hdfsSiteOpts.containsKey("dfs.name.dir")) return new File(node.hdfsSiteOpts.get("dfs.name.dir"));
-        return new File(Executor.dataDir, "namenode");
-    }
-
-    private File getDataNodeDir() {
-        if (node.hdfsSiteOpts.containsKey("dfs.data.dir")) return new File(node.hdfsSiteOpts.get("dfs.data.dir"));
-        return new File(Executor.dataDir, "datanode");
+        String key = Executor.hadoop2x() ? "dfs.namenode.name.dir" : "dfs.name.dir";
+        if (node.hdfsSiteOpts.containsKey(key)) return new File(node.hdfsSiteOpts.get(key));
+        return new File(Executor.dataDir, "dfs/name");
     }
 
     private void formatNameNodeIfRequired() throws IOException, InterruptedException {
@@ -146,7 +140,7 @@ public class HdfsProcess {
 
         logger.info("Formatting namenode");
 
-        ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), "namenode", "-format", "-force")
+        ProcessBuilder builder = new ProcessBuilder(Executor.hdfs().getPath(), "namenode", "-format", "-force")
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .redirectError(ProcessBuilder.Redirect.INHERIT);
 
@@ -164,7 +158,7 @@ public class HdfsProcess {
             default: throw new IllegalStateException("unsupported node type " + node.type);
         }
 
-        ProcessBuilder builder = new ProcessBuilder(Executor.hadoop().getPath(), cmd)
+        ProcessBuilder builder = new ProcessBuilder(Executor.hdfs().getPath(), cmd)
             .redirectOutput(ProcessBuilder.Redirect.INHERIT)
             .redirectError(ProcessBuilder.Redirect.INHERIT);
 

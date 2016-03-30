@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static net.elodina.mesos.hdfs.Executor.hadoop1x;
+
 public class HdfsProcess {
     private static Logger logger = Logger.getLogger(HdfsProcess.class);
 
@@ -126,7 +128,7 @@ public class HdfsProcess {
     private static String escapeXmlText(String s) { return s.replace("<", "&lt;").replace(">", "&gt;"); }
 
     private File getNameNodeDir() {
-        String key = Executor.hadoop2x() ? "dfs.namenode.name.dir" : "dfs.name.dir";
+        String key = hadoop1x() ? "dfs.name.dir" : "dfs.namenode.name.dir";
         if (node.hdfsSiteOpts.containsKey(key)) return new File(node.hdfsSiteOpts.get(key));
         return new File(Executor.dataDir, "dfs/name");
     }

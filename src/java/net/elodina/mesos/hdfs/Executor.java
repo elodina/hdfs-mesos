@@ -26,11 +26,11 @@ public class Executor implements org.apache.mesos.Executor {
     public static File dataDir;
     public static File javaHome;
 
-    public static boolean hadoop2x() { return hadoopVersion.compareTo(new Version("2.0")) >= 0; }
+    public static boolean hadoop1x() { return hadoopVersion.compareTo(new Version("2.0")) < 0; }
 
-    public static File hdfs() { return new File(hadoopDir, hadoop2x() ? "/bin/hdfs" : "bin/hadoop"); }
+    public static File hdfs() { return new File(hadoopDir, hadoop1x() ? "bin/hadoop" : "/bin/hdfs"); }
 
-    public static File hadoopConfDir() { return new File(hadoopDir, hadoop2x() ? "etc/hadoop" : "conf"); }
+    public static File hadoopConfDir() { return new File(hadoopDir, hadoop1x() ? "conf" : "etc/hadoop"); }
 
     private String hostname;
     private HdfsProcess process;

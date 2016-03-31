@@ -178,6 +178,8 @@ public class HttpServer {
             try { Strings.parseMap(hdfsSiteOpts, false); }
             catch (IllegalArgumentException e) { throw new HttpError(400, "invalid hdfsSiteOpts"); }
 
+            String externalFsUri = request.getParameter("externalFsUri");
+
             List<Node> nodes = new ArrayList<>();
             for (String id : ids) {
                 Node node;
@@ -194,6 +196,8 @@ public class HttpServer {
 
                 if (coreSiteOpts != null) node.coreSiteOpts = Strings.parseMap(coreSiteOpts);
                 if (hdfsSiteOpts != null) node.hdfsSiteOpts = Strings.parseMap(hdfsSiteOpts);
+
+                if (externalFsUri != null) node.externalFsUri = externalFsUri.equals("") ? null : externalFsUri;
             }
             Nodes.save();
 

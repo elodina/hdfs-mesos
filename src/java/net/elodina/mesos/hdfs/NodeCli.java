@@ -95,6 +95,8 @@ public class NodeCli {
         parser.accepts("core-site-opts", "Hadoop core-site.xml options.").withRequiredArg().ofType(String.class);
         parser.accepts("hdfs-site-opts", "Hadoop hdfs-site.xml options.").withRequiredArg().ofType(String.class);
 
+        parser.accepts("external-fs-uri", "Hadoop fs-uri of external node.").withRequiredArg().ofType(String.class);
+
         if (help) {
             printLine(Strings.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");
             try { parser.printHelpOn(out); }
@@ -128,6 +130,8 @@ public class NodeCli {
         String coreSiteOpts = (String) options.valueOf("core-site-opts");
         String hdfsSiteOpts = (String) options.valueOf("hdfs-site-opts");
 
+        String externalFsUri = (String) options.valueOf("external-fs-uri");
+
         Map<String, String> params = new HashMap<>();
         params.put("node", expr);
 
@@ -140,6 +144,8 @@ public class NodeCli {
 
         if (coreSiteOpts != null) params.put("coreSiteOpts", coreSiteOpts);
         if (hdfsSiteOpts != null) params.put("hdfsSiteOpts", hdfsSiteOpts);
+
+        if (externalFsUri != null) params.put("externalFsUri", externalFsUri);
 
         JSONArray json;
         try { json = sendRequest("/node/" + cmd, params); }
@@ -233,7 +239,13 @@ public class NodeCli {
 
     private static void printNode(Node node, int indent) {
         printLine("id: " + node.id, indent);
-        printLine("type: " + node.type.name().toLowerCase(), indent);
+        printLine("type: " + node.type.name().toLowerCase() + (node.isExternal() ? " (external)" : ""), indent);
+
+        if (node.isExternal()) {
+            printLine("external-fs-uri: " + node.externalFsUri, indent);
+            return;
+        }
+
         printLine("state: " + node.state.name().toLowerCase(), indent);
         printLine("resources: " + nodeResources(node), indent);
 

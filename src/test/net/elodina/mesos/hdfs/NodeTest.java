@@ -163,6 +163,8 @@ public class NodeTest extends HdfsMesosTestCase {
         node.coreSiteOpts.put("a", "1");
         node.hdfsSiteOpts.put("b", "2");
 
+        node.externalFsUri = "external-fs-uri";
+
         node.initRuntime(offer());
 
         Node read = new Node(node.toJson());
@@ -177,6 +179,8 @@ public class NodeTest extends HdfsMesosTestCase {
         assertEquals(node.hadoopJvmOpts, read.hadoopJvmOpts);
         assertEquals(node.coreSiteOpts, read.coreSiteOpts);
         assertEquals(node.hdfsSiteOpts, read.hdfsSiteOpts);
+
+        assertEquals(node.externalFsUri, read.externalFsUri);
 
         assertNotNull(read.runtime);
         assertNotNull(read.reservation);

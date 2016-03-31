@@ -24,6 +24,8 @@ public class Node {
     public Map<String, String> coreSiteOpts = new HashMap<>();
     public Map<String, String> hdfsSiteOpts = new HashMap<>();
 
+    public String externalFsUri;
+
     public Runtime runtime;
     public Reservation reservation;
 
@@ -31,6 +33,8 @@ public class Node {
     public Node(String id) { this.id = id; }
     public Node(String id, Node.Type type) { this.id = id; this.type = type; }
     public Node(JSONObject json) { fromJson(json); }
+
+    public boolean isExternal() { return externalFsUri != null; }
 
     public String matches(Offer offer) {
         Reservation reservation = reserve(offer);
@@ -201,6 +205,8 @@ public class Node {
         if (!coreSiteOpts.isEmpty()) json.put("coreSiteOpts", new JSONObject(coreSiteOpts));
         if (!hdfsSiteOpts.isEmpty()) json.put("hdfsSiteOpts", new JSONObject(hdfsSiteOpts));
 
+        if (externalFsUri != null) json.put("externalFsUri", externalFsUri);
+
         if (runtime != null) json.put("runtime", runtime.toJson());
         if (reservation != null) json.put("reservation", reservation.toJson());
 
@@ -229,6 +235,8 @@ public class Node {
             JSONObject hdfsSiteOptsJson = (JSONObject) json.get("hdfsSiteOpts");
             for (Object name : hdfsSiteOptsJson.keySet()) hdfsSiteOpts.put("" + name, "" + hdfsSiteOptsJson.get("" + name));
         }
+
+        if (json.containsKey("externalFsUri")) externalFsUri = (String) json.get("externalFsUri");
 
         if (json.containsKey("runtime")) runtime = new Runtime((JSONObject) json.get("runtime"));
         if (json.containsKey("reservation")) reservation = new Reservation((JSONObject) json.get("reservation"));

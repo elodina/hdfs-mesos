@@ -70,6 +70,7 @@ install_hadoop() {
     version=$1
 
     pushd /opt
+    echo "Downloading hadoop $version ..."
     wget -q http://archive.apache.org/dist/hadoop/common/hadoop-$version/hadoop-$version.tar.gz
     tar -xf hadoop*.tar.gz
     rm hadoop*.tar.gz

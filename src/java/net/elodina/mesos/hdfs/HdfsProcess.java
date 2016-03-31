@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.elodina.mesos.hdfs.Executor.hadoop1x;
-
 public class HdfsProcess {
     private static Logger logger = Logger.getLogger(HdfsProcess.class);
 
@@ -77,7 +75,7 @@ public class HdfsProcess {
 
     private void createCoreSiteXml() throws IOException {
         Map<String, String> props = new HashMap<>();
-        props.put("hadoop.tmp.dir", "" + Executor.dataDir.getAbsolutePath());
+        props.put("hadoop.tmp.dir", getTmpDir().getAbsolutePath());
         props.put("fs.default.name", node.runtime.fsUri);
         props.putAll(node.coreSiteOpts);
 
@@ -128,9 +126,15 @@ public class HdfsProcess {
     private static String escapeXmlText(String s) { return s.replace("<", "&lt;").replace(">", "&gt;"); }
 
     private File getNameNodeDir() {
-        String key = hadoop1x() ? "dfs.name.dir" : "dfs.namenode.name.dir";
-        if (node.hdfsSiteOpts.containsKey(key)) return new File(node.hdfsSiteOpts.get(key));
-        return new File(Executor.dataDir, "dfs/name");
+        String dir = node.hdfsSiteOpts.get("dfs.name.dir");                    // 1.x override
+        if (dir == null) dir = node.hdfsSiteOpts.get("dfs.namenode.name.dir"); // 2.x override
+        if (dir == null) dir = new File(getTmpDir(), "dfs/name").getPath();    // default
+        return new File(dir);
+    }
+
+    private File getTmpDir() {
+        String dir = node.coreSiteOpts.get("hadoop.tmp.dir");
+        return dir != null ? new File(dir) : Executor.dataDir;
     }
 
     private void formatNameNodeIfRequired() throws IOException, InterruptedException {

@@ -221,6 +221,7 @@ public class HttpServer {
                 if (node == null) throw new HttpError(400, "node not found");
                 if (start && node.state != Node.State.IDLE) throw new HttpError(400, "node not idle");
                 if (!start && node.state == Node.State.IDLE) throw new HttpError(400, "node idle");
+                if (node.isExternal()) throw new HttpError(400, "node external");
             }
 
             Period timeout = new Period("2m");

@@ -223,7 +223,13 @@ public class HttpServerTest extends HdfsMesosTestCase {
         try { request("/node/stop?node=nn"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node idle")); }
 
+        // node external
+        nn.externalFsUri = "uri";
+        try { request("/node/start?node=nn"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node external")); }
+
         // timeout
+        nn.externalFsUri = null;
         try { request("/node/start?node=nn&timeout=invalid"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid timeout")); }
     }

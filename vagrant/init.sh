@@ -67,7 +67,18 @@ set_java_home() {
 }
 
 install_hadoop() {
-    apt-get install -qy hadoop
+    version=$1
+
+    pushd /opt
+    wget -q http://archive.apache.org/dist/hadoop/common/hadoop-$version/hadoop-$version.tar.gz
+    tar -xf hadoop*.tar.gz
+    rm hadoop*.tar.gz
+
+    HADOOP_HOME=/opt/$(echo hadoop*)
+    echo "export HADOOP_PREFIX=$HADOOP_HOME" >> /home/vagrant/.profile
+    echo 'export PATH=$HADOOP_PREFIX/bin:$PATH' >> /home/vagrant/.profile
+
+    popd
 }
 
 if [[ $1 != "master" && $1 != "slave" ]]; then
@@ -115,7 +126,7 @@ set_java_home
 
 install_mesos $mode
 if [ $mode == "master" ]; then
-    install_hadoop
+    install_hadoop "1.2.1"
     install_marathon
 fi
 #install_docker

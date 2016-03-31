@@ -20,12 +20,34 @@ public class NodeTest extends HdfsMesosTestCase {
 
         assertEquals("cpus < 0.5", node.matches(offer("cpus:0.1")));
         assertEquals("mem < 500", node.matches(offer("cpus:0.5; mem:400")));
+    }
 
-        assertNull(node.matches(offer("cpus:0.5; mem:500; ports:0..4")));
+    @Test
+    public void matches_namenode_state() {
+        Node node = new Node("0", Node.Type.NAMENODE);
+        node.cpus = 0.5;
+        node.mem = 500;
 
-        // no running name node
+        Offer offer = offer("cpus:0.5; mem:500; ports:0..4");
+        assertNull(node.matches(offer));
+
+        // no name node
         node.type = Node.Type.DATANODE;
-        assertEquals("no running name node", node.matches(offer("cpus:0.5; mem:500; ports:0..4")));
+        assertEquals("no namenode", node.matches(offer));
+
+        // no running or external namenode
+        Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+        assertEquals("no running or external namenode", node.matches(offer));
+
+        // external namenode
+        nn.externalFsUri = "fs-uri";
+        assertNull(node.matches(offer));
+
+        // running namenode
+        nn.externalFsUri = null;
+        nn.initRuntime(offer);
+        nn.state = Node.State.RUNNING;
+        assertNull(node.matches(offer));
     }
 
     @Test
@@ -105,7 +127,14 @@ public class NodeTest extends HdfsMesosTestCase {
         // data node, running name node
         Node nn = Nodes.addNode(new Node("1", Node.Type.NAMENODE));
         nn.initRuntime(offer);
-        assertTrue(nn.runtime.fsUri, nn.runtime.fsUri.contains(nn.runtime.hostname));
+        node.initRuntime(offer);
+        assertTrue(node.runtime.fsUri, node.runtime.fsUri.contains(nn.runtime.hostname));
+
+        // data node, external name node
+        nn.runtime = null;
+        nn.externalFsUri = "fs-uri";
+        node.initRuntime(offer);
+        assertEquals(nn.externalFsUri, node.runtime.fsUri);
     }
 
     @Test

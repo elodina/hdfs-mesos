@@ -44,8 +44,10 @@ public class Node {
 
         if (type == Type.DATANODE) {
             List<Node> nns = Nodes.getNodes(Node.Type.NAMENODE);
-            boolean nnRunning = !nns.isEmpty() && nns.get(0).state == Node.State.RUNNING;
-            if (!nnRunning) return "no running name node";
+            Node nn = nns.isEmpty() ? null : nns.get(0);
+
+            if (nn == null) return "no namenode";
+            if (!nn.isExternal() && nn.state != State.RUNNING) return "no running or external namenode";
         }
 
         return null;
@@ -142,8 +144,9 @@ public class Node {
     private String getFsUri() {
         List<Node> nodes = Nodes.getNodes(Type.NAMENODE);
         Node node = !nodes.isEmpty() ? nodes.get(0) : null;
-
         if (node == null) throw new IllegalStateException("no namenode");
+
+        if (node.isExternal()) return node.externalFsUri;
         if (node.runtime == null) throw new IllegalStateException("namenode not started");
 
         String host = node.runtime.hostname;

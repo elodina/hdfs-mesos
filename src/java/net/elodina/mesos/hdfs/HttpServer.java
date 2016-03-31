@@ -197,7 +197,8 @@ public class HttpServer {
                 if (coreSiteOpts != null) node.coreSiteOpts = Strings.parseMap(coreSiteOpts);
                 if (hdfsSiteOpts != null) node.hdfsSiteOpts = Strings.parseMap(hdfsSiteOpts);
 
-                if (externalFsUri != null) node.externalFsUri = externalFsUri.equals("") ? null : externalFsUri;
+                if (externalFsUri != null && node.type == Node.Type.NAMENODE)
+                    node.externalFsUri = externalFsUri.equals("") ? null : externalFsUri;
             }
             Nodes.save();
 

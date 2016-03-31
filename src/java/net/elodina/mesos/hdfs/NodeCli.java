@@ -95,7 +95,7 @@ public class NodeCli {
         parser.accepts("core-site-opts", "Hadoop core-site.xml options.").withRequiredArg().ofType(String.class);
         parser.accepts("hdfs-site-opts", "Hadoop hdfs-site.xml options.").withRequiredArg().ofType(String.class);
 
-        parser.accepts("external-fs-uri", "Hadoop fs-uri of external node.").withRequiredArg().ofType(String.class);
+        parser.accepts("external-fs-uri", "FS URI of external namenode. If defined this node becomes external.").withRequiredArg().ofType(String.class);
 
         if (help) {
             printLine(Strings.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");

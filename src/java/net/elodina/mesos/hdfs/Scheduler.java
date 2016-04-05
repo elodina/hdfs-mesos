@@ -314,6 +314,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
     public static class Config {
         public String api;
+        public String storage = "file:hdfs-mesos.json";
 
         public File jar;
         public File hadoop;
@@ -331,7 +332,6 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         public String user;
         public String principal;
         public String secret;
-        public String storage = "file:hdfs-mesos.json";
 
         public String frameworkName = "hdfs";
         public String frameworkRole = "*";

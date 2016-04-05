@@ -17,9 +17,12 @@ public class SchedulerCli {
     public static void handle(List<String> args, boolean help) {
         OptionParser parser = new OptionParser();
         parser.accepts("api", "Binding host:port for http/artifact server.").withRequiredArg().ofType(String.class);
+        parser.accepts("storage", " Storage for cluster state.\nDefault - file:hdfs-mesos.json.\nExamples:\n  file:hdfs-mesos.json;\n  zk:master:2181/hdfs-mesos;\n  zk:m1:2181,m2:2181/hdfs-mesos;").withRequiredArg().ofType(String.class);
+
         parser.accepts("master", "Mesos Master addresses.").withRequiredArg().ofType(String.class);
         parser.accepts("user", "Mesos user. Default - none").withRequiredArg().ofType(String.class);
-        parser.accepts("storage", " Storage for cluster state.\nDefault - file:hdfs-mesos.json.\nExamples:\n  file:hdfs-mesos.json;\n  zk:master:2181/hdfs-mesos;\n  zk:m1:2181,m2:2181/hdfs-mesos;").withRequiredArg().ofType(String.class);
+
+        parser.accepts("framework-name", "Framework name. Defaults to hdfs.").withRequiredArg().ofType(String.class);
 
         if (help) {
             printLine("Generic Options");
@@ -46,6 +49,12 @@ public class SchedulerCli {
         if (api == null) api = defaults.get("api");
         if (api == null) throw new Error("api required");
 
+        String storage = (String) options.valueOf("storage");
+        if (storage == null) storage = defaults.get("storage");
+        if (storage != null)
+            try { Storage.byUri(storage); }
+            catch (IllegalArgumentException e) { throw new Error("invalid storage"); }
+
         String master = (String) options.valueOf("master");
         if (master == null) master = defaults.get("master");
         if (master == null) throw new Error("master required");
@@ -53,18 +62,17 @@ public class SchedulerCli {
         String user = (String) options.valueOf("user");
         if (user == null) user = defaults.get("user");
 
-        String storage = (String) options.valueOf("storage");
-        if (storage == null) storage = defaults.get("storage");
-        if (storage != null)
-            try { Storage.byUri(storage); }
-            catch (IllegalArgumentException e) { throw new Error("invalid storage"); }
+        String frameworkName = (String) options.valueOf("framework-name");
+        if (frameworkName == null) frameworkName = defaults.get("framework-name");
 
         Scheduler.Config config = Scheduler.$.config;
         config.api = api;
-        config.master = master;
-        config.user = user;
         if (storage != null) config.storage = storage;
 
+        config.master = master;
+        config.user = user;
+
+        if (frameworkName != null) config.frameworkName = frameworkName;
         Scheduler.$.run();
     }
 

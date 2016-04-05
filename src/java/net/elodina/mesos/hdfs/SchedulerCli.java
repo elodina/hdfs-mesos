@@ -22,8 +22,10 @@ public class SchedulerCli {
         parser.accepts("api", "Binding host:port for http/artifact server.").withRequiredArg().ofType(String.class);
         parser.accepts("storage", " Storage for cluster state.\nDefault - " + config.storage + ".\nExamples:\n  file:hdfs-mesos.json;\n  zk:master:2181/hdfs-mesos;\n  zk:m1:2181,m2:2181/hdfs-mesos;").withRequiredArg().ofType(String.class);
 
-        parser.accepts("master", "Mesos Master addresses.").withRequiredArg().ofType(String.class);
+        parser.accepts("master", "Mesos Master address(es).").withRequiredArg().ofType(String.class);
         parser.accepts("user", "Mesos user. Default - none").withRequiredArg().ofType(String.class);
+        parser.accepts("principal", "Principal (username) used to register framework.").withRequiredArg().ofType(String.class);
+        parser.accepts("secret", "Secret (password) used to register framework.").withRequiredArg().ofType(String.class);
 
         parser.accepts("framework-name", "Framework name. Default - " + config.frameworkName + ".").withRequiredArg().ofType(String.class);
         parser.accepts("framework-role", "Framework role. Default- " + config.frameworkRole + ".").withRequiredArg().ofType(String.class);
@@ -67,6 +69,13 @@ public class SchedulerCli {
         String user = (String) options.valueOf("user");
         if (user == null) user = defaults.get("user");
 
+        String principal = (String) options.valueOf("principal");
+        if (principal == null) principal = defaults.get("principal");
+
+        String secret = (String) options.valueOf("secret");
+        if (secret == null) secret = defaults.get("secret");
+
+
         String frameworkName = (String) options.valueOf("framework-name");
         if (frameworkName == null) frameworkName = defaults.get("framework-name");
 
@@ -84,6 +93,8 @@ public class SchedulerCli {
 
         config.master = master;
         config.user = user;
+        config.principal = principal;
+        config.secret = secret;
 
         if (frameworkName != null) config.frameworkName = frameworkName;
         if (frameworkRole != null) config.frameworkRole = frameworkRole;

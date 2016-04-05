@@ -35,6 +35,7 @@ dependencies {
     compile "net.sf.jopt-simple:jopt-simple:4.8"
     compile 'com.googlecode.json-simple:json-simple:1.1.1'
     compile "log4j:log4j:1.2.16"
+    compile "com.101tec:zkclient:0.6"
     testCompile 'junit:junit:4.12'
 }
 

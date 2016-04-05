@@ -3,13 +3,12 @@ package net.elodina.mesos.hdfs;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class Nodes {
-    public static Storage storage = Storage.file(new File("hdfs-mesos.json"));
+    public static Storage storage = Storage.byUri(Scheduler.$.config.storage);
 
     public static String frameworkId;
     private static List<Node> nodes = new ArrayList<>();

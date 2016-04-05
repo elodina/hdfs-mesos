@@ -127,7 +127,7 @@ set_java_home
 
 install_mesos $mode
 if [ $mode == "master" ]; then
-    install_hadoop "1.2.1"
+    install_hadoop "2.7.2"
     install_marathon
 fi
 #install_docker

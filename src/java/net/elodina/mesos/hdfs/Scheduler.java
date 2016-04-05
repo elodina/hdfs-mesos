@@ -263,6 +263,8 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         root.setLevel(Level.INFO);
 
         Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
+        Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
+        Logger.getLogger("org.I0Itec.zkclient").setLevel(Level.WARN);
 
         PatternLayout layout = new PatternLayout("%d [%t] %p %c{2} - %m%n");
         root.addAppender(new ConsoleAppender(layout));
@@ -329,6 +331,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         public String user;
         public String principal;
         public String secret;
+        public String storage = "file:hdfs-mesos.json";
 
         public String frameworkName = "hdfs";
         public String frameworkRole = "*";

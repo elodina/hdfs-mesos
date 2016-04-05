@@ -19,6 +19,7 @@ public class SchedulerCli {
         parser.accepts("api", "Binding host:port for http/artifact server.").withRequiredArg().ofType(String.class);
         parser.accepts("master", "Mesos Master addresses.").withRequiredArg().ofType(String.class);
         parser.accepts("user", "Mesos user. Default - none").withRequiredArg().ofType(String.class);
+        parser.accepts("storage", " Storage for cluster state.\nDefault - file:hdfs-mesos.json.\nExamples:\n  file:hdfs-mesos.json;\n  zk:master:2181/hdfs-mesos;\n  zk:m1:2181,m2:2181/hdfs-mesos;").withRequiredArg().ofType(String.class);
 
         if (help) {
             printLine("Generic Options");
@@ -52,9 +53,17 @@ public class SchedulerCli {
         String user = (String) options.valueOf("user");
         if (user == null) user = defaults.get("user");
 
-        Scheduler.$.config.api = api;
-        Scheduler.$.config.master = master;
-        Scheduler.$.config.user = user;
+        String storage = (String) options.valueOf("storage");
+        if (storage == null) storage = defaults.get("storage");
+        if (storage != null)
+            try { Storage.byUri(storage); }
+            catch (IllegalArgumentException e) { throw new Error("invalid storage"); }
+
+        Scheduler.Config config = Scheduler.$.config;
+        config.api = api;
+        config.master = master;
+        config.user = user;
+        if (storage != null) config.storage = storage;
 
         Scheduler.$.run();
     }

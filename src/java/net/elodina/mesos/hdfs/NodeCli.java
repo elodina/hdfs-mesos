@@ -89,6 +89,8 @@ public class NodeCli {
         parser.accepts("cpus", "CPU amount (0.5, 1, 2).").withRequiredArg().ofType(Double.class);
         parser.accepts("mem", "Mem amount in Mb.").withRequiredArg().ofType(Long.class);
 
+        parser.accepts("constraints", "Node constraints (hostname=like:master,rack=like:1.*)").withRequiredArg();
+
         parser.accepts("executor-jvm-opts", "Executor JVM options.").withRequiredArg().ofType(String.class);
         parser.accepts("hadoop-jvm-opts", "Hadoop JVM options.").withRequiredArg().ofType(String.class);
 
@@ -124,6 +126,8 @@ public class NodeCli {
         Double cpus = (Double) options.valueOf("cpus");
         Long mem = (Long) options.valueOf("mem");
 
+        String constraints = (String) options.valueOf("constraints");
+
         String executorJvmOpts = (String) options.valueOf("executor-jvm-opts");
         String hadoopJvmOpts = (String) options.valueOf("hadoop-jvm-opts");
 
@@ -138,6 +142,8 @@ public class NodeCli {
         if (type != null) params.put("type", type);
         if (cpus != null) params.put("cpus", "" + cpus);
         if (mem != null) params.put("mem", "" + mem);
+
+        if (constraints != null) params.put("constraints", constraints);
 
         if (executorJvmOpts != null) params.put("executorJvmOpts", executorJvmOpts);
         if (hadoopJvmOpts != null) params.put("hadoopJvmOpts", hadoopJvmOpts);
@@ -248,6 +254,8 @@ public class NodeCli {
 
         printLine("state: " + node.state.name().toLowerCase(), indent);
         printLine("resources: " + nodeResources(node), indent);
+
+        if (!node.constraints.isEmpty()) printLine("constraints: " + Strings.formatMap(node.constraints), indent);
 
         if (node.executorJvmOpts != null) printLine("executor-jvm-opts: " + node.executorJvmOpts, indent);
         if (node.hadoopJvmOpts != null) printLine("hadoop-jvm-opts: " + node.hadoopJvmOpts, indent);

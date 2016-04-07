@@ -1,8 +1,10 @@
 package net.elodina.mesos.hdfs;
 
 import com.google.protobuf.ByteString;
+import net.elodina.mesos.util.Constraint;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Range;
+import net.elodina.mesos.util.Strings;
 import org.apache.mesos.Protos;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -18,6 +20,8 @@ public class Node {
 
     public double cpus = 0.5;
     public long mem = 512;
+
+    public Map<String, Constraint> constraints = new LinkedHashMap<>();
 
     public String executorJvmOpts;
     public String hadoopJvmOpts;
@@ -202,6 +206,8 @@ public class Node {
         json.put("cpus", cpus);
         json.put("mem", mem);
 
+        if (!constraints.isEmpty()) json.put("constraints", Strings.formatMap(constraints));
+
         if (executorJvmOpts != null) json.put("executorJvmOpts", executorJvmOpts);
         if (hadoopJvmOpts != null) json.put("hadoopJvmOpts", hadoopJvmOpts);
 
@@ -223,6 +229,12 @@ public class Node {
 
         cpus = ((Number) json.get("cpus")).doubleValue();
         mem = ((Number) json.get("mem")).longValue();
+
+        constraints.clear();
+        if (json.containsKey("constraints")) {
+            Map<String, String> m = Strings.parseMap((String) json.get("constraints"));
+            for (String name : m.keySet()) constraints.put(name, new Constraint(m.get(name)));
+        }
 
         if (json.containsKey("executorJvmOpts")) executorJvmOpts = (String) json.get("executorJvmOpts");
         if (json.containsKey("hadoopJvmOpts")) hadoopJvmOpts = (String) json.get("hadoopJvmOpts");

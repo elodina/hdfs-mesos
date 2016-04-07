@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.Constraint;
 import net.elodina.mesos.util.Range;
 import org.junit.Test;
 
@@ -187,6 +188,9 @@ public class NodeTest extends HdfsMesosTestCase {
         node.cpus = 2;
         node.mem = 1024;
 
+        node.constraints.put("hostname", new Constraint("like:master"));
+        node.constraints.put("a", new Constraint("like:1"));
+
         node.executorJvmOpts = "executor-opts";
         node.executorJvmOpts = "hadoop-opts";
         node.coreSiteOpts.put("a", "1");
@@ -203,6 +207,8 @@ public class NodeTest extends HdfsMesosTestCase {
 
         assertEquals(node.cpus, read.cpus, 0.001);
         assertEquals(node.mem, read.mem);
+
+        assertEquals(node.constraints, read.constraints);
 
         assertEquals(node.executorJvmOpts, read.executorJvmOpts);
         assertEquals(node.hadoopJvmOpts, read.hadoopJvmOpts);

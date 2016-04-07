@@ -1,5 +1,6 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.util.Constraint;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Strings;
@@ -22,10 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class HttpServer {
     private static final Logger logger = Logger.getLogger(HttpServer.class);
@@ -167,6 +165,15 @@ public class HttpServer {
                 try { mem = Long.valueOf(request.getParameter("mem")); }
                 catch (IllegalArgumentException e) { throw new HttpError(400, "invalid mem"); }
 
+            Map<String, Constraint> constraints = null;
+            if (request.getParameter("constraints") != null) {
+                constraints = new LinkedHashMap<>();
+                Map<String, String> m = Strings.parseMap(request.getParameter("constraints"));
+                for (String name : m.keySet())
+                    try { constraints.put(name, new Constraint(m.get(name))); }
+                    catch (IllegalArgumentException e) { throw new HttpError(400, "invalid constraint: " + e.getMessage()); }
+            }
+
             String executorJvmOpts = request.getParameter("executorJvmOpts");
             String hadoopJvmOpts = request.getParameter("hadoopJvmOpts");
 
@@ -190,6 +197,8 @@ public class HttpServer {
 
                 if (cpus != null) node.cpus = cpus;
                 if (mem != null) node.mem = mem;
+
+                if (constraints != null) node.constraints = constraints;
 
                 if (executorJvmOpts != null) node.executorJvmOpts = executorJvmOpts.equals("") ? null : executorJvmOpts;
                 if (hadoopJvmOpts != null) node.hadoopJvmOpts = hadoopJvmOpts.equals("") ? null : hadoopJvmOpts;

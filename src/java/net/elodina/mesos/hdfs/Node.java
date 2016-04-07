@@ -40,18 +40,35 @@ public class Node {
 
     public boolean isExternal() { return externalFsUri != null; }
 
-    public String matches(Offer offer) {
+    public String matches(Offer offer) { return matches(offer, Collections.<String, Collection<String>>emptyMap()); }
+
+    public String matches(Offer offer, Map<String, Collection<String>> otherAttributes) {
         Reservation reservation = reserve(offer);
 
+        // resources
         if (reservation.cpus < cpus) return "cpus < " + cpus;
         if (reservation.mem < mem) return "mem < " + mem;
 
+        // namenode running
         if (type == Type.DATANODE) {
             List<Node> nns = Nodes.getNodes(Node.Type.NAMENODE);
             Node nn = nns.isEmpty() ? null : nns.get(0);
 
             if (nn == null) return "no namenode";
             if (!nn.isExternal() && nn.state != State.RUNNING) return "no running or external namenode";
+        }
+
+        // constraints
+        Map<String, String> offerAttributes = new HashMap<>();
+        offerAttributes.put("hostname", offer.getHostname());
+
+        for (Attribute attribute : offer.getAttributesList())
+            if (attribute.hasText()) offerAttributes.put(attribute.getName(), attribute.getText().getValue());
+
+        for (String name : constraints.keySet()) {
+            Constraint constraint = constraints.get(name);
+            if (!offerAttributes.containsKey(name)) return "no " + name + " attribute";
+            if (!constraint.matches(offerAttributes.get(name), otherAttributes.get(name))) return name + " doesn't match " + constraint;
         }
 
         return null;

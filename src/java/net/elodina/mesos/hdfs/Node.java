@@ -159,6 +159,10 @@ public class Node {
         runtime.slaveId = offer.getSlaveId().getValue();
         runtime.hostname = offer.getHostname();
 
+        for (Attribute attribute : offer.getAttributesList())
+            if (attribute.hasText())
+                runtime.attributes.put(attribute.getName(), attribute.getText().getValue());
+
         runtime.fsUri = getFsUri();
     }
 
@@ -318,6 +322,7 @@ public class Node {
 
         public String slaveId;
         public String hostname;
+        public Map<String, String> attributes = new HashMap<>();
 
         public String fsUri;
         public boolean killSent;
@@ -334,6 +339,7 @@ public class Node {
 
             json.put("slaveId", slaveId);
             json.put("hostname", hostname);
+            if (!attributes.isEmpty()) json.put("attributes", Strings.formatMap(attributes));
 
             json.put("fsUri", fsUri);
             json.put("killSent", killSent);
@@ -347,6 +353,8 @@ public class Node {
 
             slaveId = (String) json.get("slaveId");
             hostname = (String) json.get("hostname");
+            attributes.clear();
+            if (json.containsKey("attributes")) attributes.putAll(Strings.parseMap((String) json.get("attributes")));
 
             fsUri = (String) json.get("fsUri");
             killSent = (boolean) json.get("killSent");

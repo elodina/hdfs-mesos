@@ -2,6 +2,7 @@ package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.util.Constraint;
 import net.elodina.mesos.util.Range;
+import net.elodina.mesos.util.Strings;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -97,14 +98,17 @@ public class NodeTest extends HdfsMesosTestCase {
         node.cpus = 0.1;
         node.mem = 100;
 
-        Offer offer = offer();
+        Offer offer = offer("id", "fwId", "slaveId", "host", "cpus:2;mem:1024;ports:0..10", "a=1,b=2");
         node.initRuntime(offer);
 
         assertNotNull(node.runtime);
         assertNotNull(node.runtime.taskId);
         assertNotNull(node.runtime.executorId);
         assertNotNull(node.runtime.fsUri);
+
         assertEquals(offer.getSlaveId().getValue(), node.runtime.slaveId);
+        assertEquals(offer.getHostname(), node.runtime.hostname);
+        assertEquals(Strings.parseMap("a=1,b=2"), node.runtime.attributes);
 
         assertNotNull(node.reservation);
         assertEquals(0.1, node.reservation.cpus, 0.001);
@@ -227,6 +231,7 @@ public class NodeTest extends HdfsMesosTestCase {
         Node.Runtime runtime = new Node.Runtime();
         runtime.slaveId = "slaveId";
         runtime.hostname = "hostname";
+        runtime.attributes.putAll(Strings.parseMap("a=1,b=2"));
 
         runtime.fsUri = "hdfs://localhost:31000";
         runtime.killSent = true;
@@ -237,6 +242,7 @@ public class NodeTest extends HdfsMesosTestCase {
 
         assertEquals(runtime.slaveId, read.slaveId);
         assertEquals(runtime.hostname, read.hostname);
+        assertEquals(runtime.attributes, read.attributes);
 
         assertEquals(runtime.fsUri, read.fsUri);
         assertEquals(runtime.killSent, read.killSent);

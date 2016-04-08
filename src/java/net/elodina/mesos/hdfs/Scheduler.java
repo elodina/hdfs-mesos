@@ -126,7 +126,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
         List<String> reasons = new ArrayList<>();
         for (Node node : nodes) {
-            String reason = node.matches(offer);
+            String reason = node.matches(offer, otherNodesAttributes());
             if (reason != null) reasons.add("node " + node.id + ": " + reason);
             else {
                 launchTask(node, offer);
@@ -196,6 +196,27 @@ public class Scheduler implements org.apache.mesos.Scheduler {
                 return node;
 
         return null;
+    }
+
+    private Map<String, Collection<String>> otherNodesAttributes() {
+        class Result {
+            Map<String, Collection<String>> map = new HashMap<>();
+            void add(String name, String value) {
+                if (!map.containsKey(name)) map.put(name, new ArrayList<String>());
+                map.get(name).add(value);
+            }
+        }
+        Result result = new Result();
+
+        for (Node node : Nodes.getNodes()) {
+            if (node.runtime == null) continue;
+
+            result.add("hostname", node.runtime.hostname);
+            for (String name : node.runtime.attributes.keySet())
+                result.add(name, node.runtime.attributes.get(name));
+        }
+
+        return result.map;
     }
 
     void checkMesosVersion(MasterInfo master) {

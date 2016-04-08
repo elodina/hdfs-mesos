@@ -5,10 +5,7 @@ import net.elodina.mesos.util.Range;
 import net.elodina.mesos.util.Strings;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.apache.mesos.Protos.*;
 import static org.junit.Assert.*;
@@ -50,6 +47,47 @@ public class NodeTest extends HdfsMesosTestCase {
         nn.initRuntime(offer);
         nn.state = Node.State.RUNNING;
         assertNull(node.matches(offer));
+    }
+
+    @Test
+    public void matches_constraints() {
+        class O {
+            Offer offer(String attributes) { return NodeTest.this.offer("id", "fw-id", "slave-id", "host", "cpus:2;mem:2048;ports:0..10", attributes); }
+
+            Map<String, Constraint> constraints(String s) {
+                Map<String, Constraint> result = new HashMap<>();
+                Map<String, String> m = Strings.parseMap(s);
+                for (String name : m.keySet()) result.put(name, new Constraint(m.get(name)));
+                return result;
+            }
+
+            Map<String, Collection<String>> otherAttributes(String s) {
+                Map<String, Collection<String>> result = new HashMap<>();
+
+                Map<String, String> m = Strings.parseMap(s);
+                for (String name : m.keySet()) {
+                    if (!result.containsKey(name)) result.put(name, new ArrayList<String>());
+                    result.get(name).addAll(Arrays.asList(m.get(name).split(";")));
+                }
+
+                return result;
+            }
+        }
+        O o = new O();
+
+        Node node = Nodes.addNode(new Node("mm", Node.Type.NAMENODE));
+
+        // like
+        node.constraints = o.constraints("rack=like:1-.*");
+        assertEquals(null, node.matches(o.offer("rack=1-1")));
+        assertEquals(null, node.matches(o.offer("rack=1-2")));
+        assertEquals("rack doesn't match like:1-.*", node.matches(o.offer("rack=2-1")));
+
+        // groupBy
+        node.constraints = o.constraints("rack=groupBy");
+        assertEquals(null, node.matches(o.offer("rack=1")));
+        assertEquals(null, node.matches(o.offer("rack=1"), o.otherAttributes("rack=1")));
+        assertEquals("rack doesn't match groupBy", node.matches(o.offer("rack=2"), o.otherAttributes("rack=1")));
     }
 
     @Test

@@ -1,12 +1,14 @@
 package net.elodina.mesos.hdfs;
 
-import net.elodina.mesos.test.MesosTestCase;
 import net.elodina.mesos.util.Period;
+import net.elodina.mesos.util.Strings;
 import org.apache.mesos.Protos;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
 import static org.apache.mesos.Protos.TaskStatus;
 import static org.junit.Assert.*;
@@ -103,6 +105,23 @@ public class SchedulerTest extends HdfsMesosTestCase {
         assertEquals(Node.State.STARTING, node.state);
         assertNotNull(node.runtime);
         assertNotNull(node.reservation);
+    }
+
+    @Test
+    public void otherAttributes() {
+        Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
+        nn.initRuntime(offer("nn", "ports:0..10"));
+        nn.runtime.attributes = Strings.parseMap("a=1,b=2");
+
+        Node dn = Nodes.addNode(new Node("dn", Node.Type.DATANODE));
+        dn.initRuntime(offer("dn", "ports:0..10"));
+        dn.runtime.attributes = Strings.parseMap("a=3,b=4");
+
+        Map<String,Collection<String>> attrs = Scheduler.$.otherAttributes();
+        assertEquals(3, attrs.size());
+        assertEquals(Arrays.asList("nn", "dn"), attrs.get("hostname"));
+        assertEquals(Arrays.asList("1", "3"), attrs.get("a"));
+        assertEquals(Arrays.asList("2", "4"), attrs.get("b"));
     }
 
     @Test

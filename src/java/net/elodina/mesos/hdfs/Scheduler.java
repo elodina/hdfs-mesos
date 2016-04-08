@@ -126,7 +126,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
         List<String> reasons = new ArrayList<>();
         for (Node node : nodes) {
-            String reason = node.matches(offer, otherNodesAttributes());
+            String reason = node.matches(offer, otherAttributes());
             if (reason != null) reasons.add("node " + node.id + ": " + reason);
             else {
                 launchTask(node, offer);
@@ -198,7 +198,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         return null;
     }
 
-    private Map<String, Collection<String>> otherNodesAttributes() {
+    Map<String, Collection<String>> otherAttributes() {
         class Result {
             Map<String, Collection<String>> map = new HashMap<>();
             void add(String name, String value) {

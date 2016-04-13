@@ -1,20 +1,19 @@
 package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.util.IO;
+import net.elodina.mesos.util.Request;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
@@ -272,20 +271,19 @@ public class HttpServerTest extends HdfsMesosTestCase {
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("node not idle")); }
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends JSONAware> T request(String uri) throws IOException {
-        return Cli.sendRequest(uri, Collections.<String, String>emptyMap());
+        Request.Response response = new Request(Cli.api + "/api" + uri).send();
+        if (response.code() != 200) throw new IOException("Error " + response.code() + ": " + response.message());
+
+        String json = response.asText();
+        if (json == null) return null;
+
+        try { return (T) new JSONParser().parse(json); }
+        catch (ParseException e) { throw new IOException(e); }
     }
 
     public byte[] download(String uri) throws IOException {
-        URL url = new URL(Cli.api + uri);
-        HttpURLConnection c = (HttpURLConnection) url.openConnection();
-
-        try {
-            ByteArrayOutputStream data = new ByteArrayOutputStream();
-            IO.copyAndClose(c.getInputStream(), data);
-            return data.toByteArray();
-        } finally {
-            c.disconnect();
-        }
+        return new Request(Cli.api + uri).send().body();
     }
 }

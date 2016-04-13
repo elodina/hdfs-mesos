@@ -3,15 +3,12 @@ package net.elodina.mesos.hdfs;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import net.elodina.mesos.util.IO;
+import net.elodina.mesos.util.Request;
 import org.json.simple.JSONAware;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.*;
 
 public class Cli {
@@ -131,56 +128,24 @@ public class Cli {
     }
 
     static <T extends JSONAware> T sendRequest(String uri, Map<String, String> params) throws IOException {
-        String qs = queryString(params);
         String url = api + (api.endsWith("/") ? "" : "/") + "api" + uri;
+        Request.Response response = new Request(url)
+            .params(params)
+            .method(Request.Method.POST)
+            .contentType("application/x-www-form-urlencoded; charset=utf-8")
+            .send();
 
-        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-        String response = null;
-        try {
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
+        if (response.code() != 200) throw new IOException("Error " + response.code() + ": " + response.message());
 
-            byte[] requestBody = qs.getBytes("utf-8");
-            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
-            connection.setRequestProperty("Content-Length", "" + requestBody.length);
-            connection.getOutputStream().write(requestBody);
-
-            try {
-                ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
-                IO.copyAndClose(connection.getInputStream(), responseBody);
-                response = responseBody.toString("utf-8");
-            } catch (IOException e) {
-                if (connection.getResponseCode() != 200) throw new IOException(connection.getResponseCode() + " - " + connection.getResponseMessage());
-                else throw e;
-            }
-        } finally {
-            connection.disconnect();
-        }
-
-        if (response.trim().isEmpty()) return null;
+        String text = response.text();
+        if (text == null) return null;
 
         JSONAware json;
-        try { json = (JSONAware) new JSONParser().parse(response); }
+        try { json = (JSONAware) new JSONParser().parse(text); }
         catch (ParseException e) { throw new IOException(e); }
 
         @SuppressWarnings("unchecked") T result = (T) json;
         return result;
-    }
-
-    private static String queryString(Map<String, String> params) {
-        String s = "";
-
-        for (String name : params.keySet()) {
-            String value = params.get(name);
-            if (!s.isEmpty()) s += "&";
-
-            try {
-                s += URLEncoder.encode(name, "utf-8");
-                if (value != null) s += "=" + URLEncoder.encode(value, "utf-8");
-            } catch (UnsupportedEncodingException ignore) {}
-        }
-
-        return s;
     }
 
     static void printLine() { printLine(""); }

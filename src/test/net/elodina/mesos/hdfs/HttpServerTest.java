@@ -276,7 +276,7 @@ public class HttpServerTest extends HdfsMesosTestCase {
         Request.Response response = new Request(Cli.api + "/api" + uri).send();
         if (response.code() != 200) throw new IOException("Error " + response.code() + ": " + response.message());
 
-        String json = response.asText();
+        String json = response.text();
         if (json == null) return null;
 
         try { return (T) new JSONParser().parse(json); }

@@ -1,9 +1,6 @@
 package net.elodina.mesos.hdfs;
 
-import net.elodina.mesos.api.Framework;
-import net.elodina.mesos.api.Master;
-import net.elodina.mesos.api.Offer;
-import net.elodina.mesos.api.Task;
+import net.elodina.mesos.api.*;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Strings;
@@ -231,18 +228,13 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
         framework.timeout(config.frameworkTimeout);
         framework.checkpoint(true);
 
-//        Protos.Credential.Builder credsBuilder = null;
+        Cred cred = null;
         if (config.principal != null && config.secret != null) {
             framework.principal(config.principal);
-
-//            credsBuilder = Protos.Credential.newBuilder();
-//            credsBuilder.setPrincipal(config.principal);
-//            credsBuilder.setSecret(ByteString.copyFromUtf8(config.secret));
+            cred = new Cred(config.principal, config.secret);
         }
 
-        Scheduler.Driver driver;
-//        if (credsBuilder != null) driver = new MesosSchedulerDriver(Scheduler.$, frameworkBuilder.build(), config.master, credsBuilder.build());
-        /*else*/ driver = new TcpV0Driver(Scheduler.$, framework, config.master);
+        Driver driver = new TcpV0Driver(Scheduler.$, framework, config.master, cred);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {

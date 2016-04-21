@@ -4,7 +4,6 @@ import net.elodina.mesos.api.Framework;
 import net.elodina.mesos.api.Master;
 import net.elodina.mesos.api.Offer;
 import net.elodina.mesos.api.Task;
-import net.elodina.mesos.api.TcpV0Driver;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Strings;

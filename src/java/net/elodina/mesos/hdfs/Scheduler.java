@@ -1,100 +1,81 @@
 package net.elodina.mesos.hdfs;
 
-import com.google.protobuf.ByteString;
+import net.elodina.mesos.api.Framework;
+import net.elodina.mesos.api.Master;
+import net.elodina.mesos.api.Offer;
 import net.elodina.mesos.api.Task;
-import net.elodina.mesos.util.*;
+import net.elodina.mesos.api.TcpV0Driver;
+import net.elodina.mesos.util.IO;
+import net.elodina.mesos.util.Period;
+import net.elodina.mesos.util.Strings;
+import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
-import org.apache.mesos.MesosSchedulerDriver;
-import org.apache.mesos.Protos;
-import org.apache.mesos.SchedulerDriver;
 
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
-import static org.apache.mesos.Protos.*;
-
-public class Scheduler implements org.apache.mesos.Scheduler {
+public class Scheduler extends net.elodina.mesos.api.Scheduler {
     public static final Scheduler $ = new Scheduler();
     private static final Logger logger = Logger.getLogger(Scheduler.class);
 
     public Config config = new Config();
     private Reconciler reconciler = new Reconciler();
 
-    private SchedulerDriver driver;
+    private Scheduler.Driver driver;
 
     @Override
-    public void registered(SchedulerDriver driver, Protos.FrameworkID id, Protos.MasterInfo master) {
-        logger.info("[registered] framework:" + Repr.id(id.getValue()) + " master:" + Repr.master(master));
+    public void registered(Scheduler.Driver driver, String id, Master master) {
+        logger.info("[registered] framework:" + id + " master:[" + master + "]");
         this.driver = driver;
 
         checkMesosVersion(master);
         reconciler.start(driver, new Date());
 
-        Nodes.frameworkId = id.getValue();
+        Nodes.frameworkId = id;
         Nodes.save();
     }
 
     @Override
-    public void reregistered(SchedulerDriver driver, Protos.MasterInfo master) {
-        logger.info("[reregistered] " + Repr.master(master));
+    public void reregistered(Scheduler.Driver driver, Master master) {
+        logger.info("[reregistered] " + master);
 
         this.driver = driver;
         reconciler.start(driver, new Date());
     }
 
     @Override
-    public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
-        logger.info("[resourceOffers]\n" + Repr.offers(offers));
+    public void offers(List<Offer> offers) {
+        logger.info("[resourceOffers]\n" + offers);
         onOffers(offers);
     }
 
     @Override
-    public void offerRescinded(SchedulerDriver driver, Protos.OfferID id) {
-        logger.info("[offerRescinded] " + Repr.id(id.getValue()));
-    }
-
-    @Override
-    public void statusUpdate(SchedulerDriver driver, TaskStatus status) {
-        logger.info("[statusUpdate] " + Repr.status(status));
+    public void status(Task.Status status) {
+        logger.info("[statusUpdate] " + status);
         onTaskStatus(status);
     }
 
     @Override
-    public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
-        logger.info("[frameworkMessage] executor:" + Repr.id(executorId.getValue()) + ", slave: " + Repr.id(slaveId.getValue()) + ", data: " + new String(data));
+    public void message(String executorId, String slaveId, byte[] data) {
+        logger.info("[frameworkMessage] executor:" + executorId + ", slave: " + slaveId + ", data: " + new String(data));
     }
 
     @Override
-    public void disconnected(SchedulerDriver driver) {
+    public void disconnected() {
         logger.info("[disconnected]");
         this.driver = null;
     }
 
-    @Override
-    public void slaveLost(SchedulerDriver driver, Protos.SlaveID id) {
-        logger.info("[slaveLost] " + Repr.id(id.getValue()));
-    }
-
-    @Override
-    public void executorLost(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, int status) {
-        logger.info("[executorLost] executor:" + Repr.id(executorId.getValue()) + ", slave: " + Repr.id(slaveId.getValue()) + ", status: " + status);
-    }
-
-    @Override
-    public void error(SchedulerDriver driver, String message) {
-        logger.info("[error] " + message);
-    }
-
-    private void onOffers(List<Protos.Offer> offers) {
+    private void onOffers(List<Offer> offers) {
         // start nodes
-        for (Protos.Offer offer : offers) {
+        for (Offer offer : offers) {
             String reason = acceptOffer(offer);
 
             if (reason != null) {
-                logger.info("Declined offer " + Repr.offer(offer) + ":\n" + reason);
-                driver.declineOffer(offer.getId());
+                logger.info("Declined offer " + offer + ":\n" + reason);
+                driver.declineOffer(offer.id());
             }
         }
 
@@ -106,7 +87,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             }
 
             if (!node.runtime.killSent) {
-                driver.killTask(TaskID.newBuilder().setValue(node.runtime.taskId).build());
+                driver.killTask(node.runtime.taskId);
                 node.runtime.killSent = true;
             }
         }
@@ -115,7 +96,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         Nodes.save();
     }
 
-    String acceptOffer(Protos.Offer offer) {
+    String acceptOffer(Offer offer) {
         if (reconciler.isActive()) return "reconciling";
 
         List<Node> nodes = new ArrayList<>();
@@ -126,7 +107,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
         List<String> reasons = new ArrayList<>();
         for (Node node : nodes) {
-            String reason = node.matches(new net.elodina.mesos.api.Offer().proto0(offer), otherAttributes());
+            String reason = node.matches(offer, otherAttributes());
             if (reason != null) reasons.add("node " + node.id + ": " + reason);
             else {
                 launchTask(node, offer);
@@ -137,36 +118,36 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         return Strings.join(reasons, ", ");
     }
 
-    void launchTask(Node node, Protos.Offer offer) {
-        node.initRuntime(new net.elodina.mesos.api.Offer().proto0(offer));
+    void launchTask(Node node, Offer offer) {
+        node.initRuntime(offer);
         Task task = node.newTask();
 
-        driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task.proto0()), Filters.newBuilder().setRefuseSeconds(1).build());
-        logger.info("Starting node " + node.id + " with task " + node.runtime.taskId + " for offer " + offer.getId().getValue());
+        driver.launchTask(offer.id(), task);
+        logger.info("Starting node " + node.id + " with task " + node.runtime.taskId + " for offer " + offer.id());
     }
 
-    void onTaskStatus(TaskStatus status) {
-        Node node = getNodeByTaskId(status.getTaskId().getValue());
+    void onTaskStatus(Task.Status status) {
+        Node node = getNodeByTaskId(status.id());
 
-        switch (status.getState()) {
-            case TASK_RUNNING:
+        switch (status.state()) {
+            case RUNNING:
                 onTaskStarted(node, status);
                 break;
-            case TASK_FINISHED:
-            case TASK_FAILED:
-            case TASK_KILLED:
-            case TASK_LOST:
-            case TASK_ERROR:
+            case FINISHED:
+            case FAILED:
+            case KILLED:
+            case LOST:
+            case ERROR:
                 onTaskStopped(node, status);
         }
     }
 
-    void onTaskStarted(Node node, TaskStatus status) {
+    void onTaskStarted(Node node, Task.Status status) {
         boolean expectedState = node != null && Arrays.asList(Node.State.STARTING, Node.State.RUNNING, Node.State.RECONCILING).contains(node.state);
         if (!expectedState) {
             String id = node != null ? node.id : "<unknown>";
-            logger.info("Got " + status.getState() + " for node " + id + ", killing task");
-            driver.killTask(status.getTaskId());
+            logger.info("Got " + status.state() + " for node " + id + ", killing task");
+            driver.killTask(status.id());
             return;
         }
 
@@ -176,11 +157,11 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         node.state = Node.State.RUNNING;
     }
 
-    void onTaskStopped(Node node, TaskStatus status) {
+    void onTaskStopped(Node node, Task.Status status) {
         boolean expectedState = node != null && node.state != Node.State.IDLE;
         if (!expectedState) {
             String id = node != null ? node.id : "<unknown>";
-            logger.info("Got " + status.getState() + " for node " + id + ", ignoring it");
+            logger.info("Got " + status.state() + " for node " + id + ", ignoring it");
             return;
         }
 
@@ -219,9 +200,9 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         return result.map;
     }
 
-    void checkMesosVersion(MasterInfo master) {
+    void checkMesosVersion(Master master) {
         Version minVersion = new Version("0.23.0");
-        Version version = !master.getVersion().isEmpty() ? new Version(master.getVersion()) : null;
+        Version version = master.version();
 
         if (version == null || version.compareTo(minVersion) < 0) {
             String versionStr = version == null ? "?(<0.23.0)" : "" + version;
@@ -241,27 +222,28 @@ public class Scheduler implements org.apache.mesos.Scheduler {
         try { server.start(); }
         catch (Exception e) { throw new RuntimeException(e); }
 
-        Protos.FrameworkInfo.Builder frameworkBuilder = Protos.FrameworkInfo.newBuilder();
-        if (Nodes.frameworkId != null) frameworkBuilder.setId(Protos.FrameworkID.newBuilder().setValue(Nodes.frameworkId));
-        frameworkBuilder.setUser(config.user != null ? config.user : "");
+        Framework framework = new Framework();
 
-        frameworkBuilder.setName(config.frameworkName);
-        frameworkBuilder.setRole(config.frameworkRole);
-        frameworkBuilder.setFailoverTimeout(config.frameworkTimeout.ms() / 1000);
-        frameworkBuilder.setCheckpoint(true);
+        if (Nodes.frameworkId != null) framework.id(Nodes.frameworkId);
+        framework.user(config.user != null ? config.user : "");
 
-        Protos.Credential.Builder credsBuilder = null;
+        framework.name(config.frameworkName);
+        framework.role(config.frameworkRole);
+        framework.timeout(config.frameworkTimeout);
+        framework.checkpoint(true);
+
+//        Protos.Credential.Builder credsBuilder = null;
         if (config.principal != null && config.secret != null) {
-            frameworkBuilder.setPrincipal(config.principal);
+            framework.principal(config.principal);
 
-            credsBuilder = Protos.Credential.newBuilder();
-            credsBuilder.setPrincipal(config.principal);
-            credsBuilder.setSecret(ByteString.copyFromUtf8(config.secret));
+//            credsBuilder = Protos.Credential.newBuilder();
+//            credsBuilder.setPrincipal(config.principal);
+//            credsBuilder.setSecret(ByteString.copyFromUtf8(config.secret));
         }
 
-        MesosSchedulerDriver driver;
-        if (credsBuilder != null) driver = new MesosSchedulerDriver(Scheduler.$, frameworkBuilder.build(), config.master, credsBuilder.build());
-        else driver = new MesosSchedulerDriver(Scheduler.$, frameworkBuilder.build(), config.master);
+        Scheduler.Driver driver;
+//        if (credsBuilder != null) driver = new MesosSchedulerDriver(Scheduler.$, frameworkBuilder.build(), config.master, credsBuilder.build());
+        /*else*/ driver = new TcpV0Driver(Scheduler.$, framework, config.master);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -272,8 +254,8 @@ public class Scheduler implements org.apache.mesos.Scheduler {
             }
         });
 
-        Protos.Status status = driver.run();
-        System.exit(status == Protos.Status.DRIVER_STOPPED ? 0 : 1);
+        boolean stopped = driver.run();
+        System.exit(stopped ? 0 : 1);
     }
 
     void initLogging() {
@@ -421,7 +403,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
         public boolean isActive() { return Nodes.getNodes(Node.State.RECONCILING).size() > 0; }
 
-        public void start(SchedulerDriver driver, Date now) {
+        public void start(Scheduler.Driver driver, Date now) {
             tries = 1;
             lastTry = now;
 
@@ -432,10 +414,10 @@ public class Scheduler implements org.apache.mesos.Scheduler {
                 logger.info("Reconciling " + tries + "/" + maxTries + " state of node " + node.id + ", task " + node.runtime.taskId);
             }
 
-            driver.reconcileTasks(Collections.<TaskStatus>emptyList());
+            driver.reconcileTasks(Collections.<String>emptyList());
         }
 
-        public void proceed(SchedulerDriver driver, Date now) {
+        public void proceed(Scheduler.Driver driver, Date now) {
             if (lastTry == null) return;
 
             if (now.getTime() - lastTry.getTime() < delay.ms())
@@ -449,7 +431,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
                     if (node.runtime == null) continue;
 
                     logger.info("Reconciling exceeded " + maxTries + " tries for node " + node.id + ", sending killTask for task " + node.runtime.taskId);
-                    driver.killTask(TaskID.newBuilder().setValue(node.runtime.taskId).build());
+                    driver.killTask(node.runtime.taskId);
                     node.runtime = null;
                     node.state = Node.State.STARTING;
                 }
@@ -459,20 +441,15 @@ public class Scheduler implements org.apache.mesos.Scheduler {
                 return;
             }
 
-            List<TaskStatus> statuses = new ArrayList<>();
+            List<String> ids = new ArrayList<>();
 
             for (Node node : Nodes.getNodes(Node.State.RECONCILING)) {
                 if (node.runtime == null) continue;
-
                 logger.info("Reconciling " + tries + "/" + maxTries + " state of node " + node.id + ", task " + node.runtime.taskId);
-                statuses.add(TaskStatus.newBuilder()
-                    .setTaskId(TaskID.newBuilder().setValue(node.runtime.taskId))
-                    .setState(TaskState.TASK_RUNNING)
-                    .build()
-                );
+                ids.add(node.runtime.taskId);
             }
 
-            if (!statuses.isEmpty()) driver.reconcileTasks(statuses);
+            if (!ids.isEmpty()) driver.reconcileTasks(ids);
         }
     }
 }

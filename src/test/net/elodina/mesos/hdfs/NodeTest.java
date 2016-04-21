@@ -165,7 +165,7 @@ public class NodeTest extends HdfsMesosTestCase {
         Node node = Nodes.addNode(new Node("0", Node.Type.NAMENODE));
 
         // name node
-        Offer offer = new Offer();
+        Offer offer = new Offer("hostname:master, resources:[ports:0..10]");
         node.initRuntime(offer);
         assertTrue(node.runtime.fsUri, node.runtime.fsUri.contains(offer.hostname()));
 
@@ -190,7 +190,7 @@ public class NodeTest extends HdfsMesosTestCase {
     @Test
     public void newTask() {
         Node node = Nodes.addNode(new Node("0"));
-        node.initRuntime(new Offer());
+        node.initRuntime(new Offer("resources:[ports:0..10]"));
 
         Task task = node.newTask();
         assertEquals(task.id(), node.runtime.taskId);
@@ -206,7 +206,7 @@ public class NodeTest extends HdfsMesosTestCase {
     public void newExecutor() {
         Node node = Nodes.addNode(new Node("0"));
         node.executorJvmOpts = "-Xmx100m";
-        node.initRuntime(new Offer());
+        node.initRuntime(new Offer("resources:[ports:0..10]"));
 
         Task.Executor executor = node.newExecutor();
         assertEquals("hdfs-" + node.id, executor.name());

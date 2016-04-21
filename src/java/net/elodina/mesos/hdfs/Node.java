@@ -66,7 +66,7 @@ public class Node {
         offerAttributes.put("hostname", offer.hostname());
 
         for (Attribute attribute : offer.attributes())
-            if (attribute.value().type() == Value.Type.TEXT) offerAttributes.put(attribute.name(), attribute.value().asText());
+            offerAttributes.put(attribute.name(), "" + attribute.value());
 
         for (String name : constraints.keySet()) {
             Constraint constraint = constraints.get(name);
@@ -160,8 +160,7 @@ public class Node {
         runtime.hostname = offer.hostname();
 
         for (Attribute attribute : offer.attributes())
-            if (attribute.value().type() == Value.Type.TEXT)
-                runtime.attributes.put(attribute.name(), attribute.value().asText());
+            runtime.attributes.put(attribute.name(), "" + attribute.value());
 
         runtime.fsUri = getFsUri();
     }
@@ -319,7 +318,7 @@ public class Node {
 
         public String slaveId;
         public String hostname;
-        public Map<String, String> attributes = new HashMap<>();
+        public Map<String, String> attributes = new LinkedHashMap<>();
 
         public String fsUri;
         public boolean killSent;

@@ -1,8 +1,10 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.api.Master;
+import net.elodina.mesos.api.Offer;
+import net.elodina.mesos.api.Task;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Strings;
-import org.apache.mesos.Protos;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -10,13 +12,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-import static org.apache.mesos.Protos.TaskStatus;
 import static org.junit.Assert.*;
 
 public class SchedulerTest extends HdfsMesosTestCase {
     @Test
     public void onTaskStarted() {
-        TaskStatus status = taskStatus(Protos.TaskState.TASK_RUNNING);
+        Task.Status status = new Task.Status("state:running");
         Node node = Nodes.addNode(new Node("0"));
 
         // no node
@@ -27,7 +28,7 @@ public class SchedulerTest extends HdfsMesosTestCase {
         // unexpected states
         for (Node.State state : Arrays.asList(Node.State.IDLE, Node.State.STOPPING)) {
             node.state = state;
-            node.initRuntime(new net.elodina.mesos.api.Offer());
+            node.initRuntime(new Offer("resources:[ports:0..10]"));
 
             Scheduler.$.onTaskStarted(node, status);
             assertEquals(state, node.state);
@@ -39,7 +40,7 @@ public class SchedulerTest extends HdfsMesosTestCase {
         // expected states
         for (Node.State state : Arrays.asList(Node.State.STARTING, Node.State.RUNNING, Node.State.RECONCILING)) {
             node.state = state;
-            node.initRuntime(new net.elodina.mesos.api.Offer());
+            node.initRuntime(new Offer("resources:[ports:0..10]"));
 
             Scheduler.$.onTaskStarted(node, status);
             assertEquals(Node.State.RUNNING, node.state);
@@ -50,7 +51,7 @@ public class SchedulerTest extends HdfsMesosTestCase {
     @Test
     public void onTaskStopped() {
         Node node = Nodes.addNode(new Node("0"));
-        TaskStatus status = taskStatus(Protos.TaskState.TASK_FINISHED);
+        Task.Status status = new Task.Status("state:finished");
 
         // no node
         Scheduler.$.onTaskStopped(null, status);
@@ -62,7 +63,7 @@ public class SchedulerTest extends HdfsMesosTestCase {
         // expected states
         for (Node.State state : Arrays.asList(Node.State.STARTING, Node.State.RUNNING, Node.State.STOPPING, Node.State.RECONCILING)) {
             node.state = state;
-            node.initRuntime(new net.elodina.mesos.api.Offer());
+            node.initRuntime(new Offer("resources:[ports:0..10]"));
 
             Scheduler.$.onTaskStopped(node, status);
             assertEquals(state == Node.State.STOPPING ? Node.State.IDLE : Node.State.STARTING, node.state);
@@ -77,19 +78,19 @@ public class SchedulerTest extends HdfsMesosTestCase {
         nn.state = Node.State.RECONCILING;
 
         // reconciling
-        assertEquals("reconciling", Scheduler.$.acceptOffer(offer()));
+        assertEquals("reconciling", Scheduler.$.acceptOffer(new Offer()));
 
         // nothing to start
         nn.state = Node.State.IDLE;
-        assertEquals("nothing to start", Scheduler.$.acceptOffer(offer()));
+        assertEquals("nothing to start", Scheduler.$.acceptOffer(new Offer()));
 
         // low resources
         nn.state = Node.State.STARTING;
         nn.cpus = 2;
-        assertEquals("node nn: cpus < 2.0", Scheduler.$.acceptOffer(offer("cpus:0.1")));
+        assertEquals("node nn: cpus < 2.0", Scheduler.$.acceptOffer(new Offer("resources:[cpus:0.1]")));
 
         // offer accepted
-        assertEquals(null, Scheduler.$.acceptOffer(offer("cpus:2;mem:2048;ports:0..10")));
+        assertEquals(null, Scheduler.$.acceptOffer(new Offer("resources:[cpus:2;mem:2048;ports:0..10]")));
         assertNotNull(nn.runtime);
         assertEquals(1, schedulerDriver.launchedTasks.size());
     }
@@ -99,7 +100,7 @@ public class SchedulerTest extends HdfsMesosTestCase {
         Node node = Nodes.addNode(new Node("nn"));
         node.state = Node.State.STARTING;
 
-        Scheduler.$.launchTask(node, offer());
+        Scheduler.$.launchTask(node, new Offer("resources:[ports:0..10]"));
         assertEquals(1, schedulerDriver.launchedTasks.size());
 
         assertEquals(Node.State.STARTING, node.state);
@@ -110,11 +111,11 @@ public class SchedulerTest extends HdfsMesosTestCase {
     @Test
     public void otherAttributes() {
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
-        nn.initRuntime(new net.elodina.mesos.api.Offer("hostname:nn, resources:[ports:0..10]"));
+        nn.initRuntime(new Offer("hostname:nn, resources:[ports:0..10]"));
         nn.runtime.attributes = Strings.parseMap("a=1,b=2");
 
         Node dn = Nodes.addNode(new Node("dn", Node.Type.DATANODE));
-        dn.initRuntime(new net.elodina.mesos.api.Offer("hostname:dn, resources:[ports:0..10]"));
+        dn.initRuntime(new Offer("hostname:dn, resources:[ports:0..10]"));
         dn.runtime.attributes = Strings.parseMap("a=3,b=4");
 
         Map<String,Collection<String>> attrs = Scheduler.$.otherAttributes();
@@ -127,18 +128,18 @@ public class SchedulerTest extends HdfsMesosTestCase {
     @Test
     public void checkMesosVersion() {
         // no version
-        Scheduler.$.checkMesosVersion(master("id", LOCALHOST_IP, 5000, "host", ""));
-        assertEquals(Protos.Status.DRIVER_STOPPED, schedulerDriver.status);
+        Scheduler.$.checkMesosVersion(new Master());
+        assertTrue(schedulerDriver.stopped);
 
         // unsupported version
-        schedulerDriver.start();
-        Scheduler.$.checkMesosVersion(master("id", LOCALHOST_IP, 5000, "host", "0.22.0"));
-        assertEquals(Protos.Status.DRIVER_STOPPED, schedulerDriver.status);
+        schedulerDriver.stopped = false;
+        Scheduler.$.checkMesosVersion(new Master("version:0.22.0"));
+        assertTrue(schedulerDriver.stopped);
 
         // supported version
-        schedulerDriver.start();
-        Scheduler.$.checkMesosVersion(master("id", LOCALHOST_IP, 5000, "host", "0.23.0"));
-        assertEquals(Protos.Status.DRIVER_RUNNING, schedulerDriver.status);
+        schedulerDriver.stopped = false;
+        Scheduler.$.checkMesosVersion(new Master("version:0.23.0"));
+        assertFalse(schedulerDriver.stopped);
     }
 
     // Reconciler
@@ -160,10 +161,10 @@ public class SchedulerTest extends HdfsMesosTestCase {
         schedulerDriver.reconciledTasks.clear();
 
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
-        nn.initRuntime(new net.elodina.mesos.api.Offer());
+        nn.initRuntime(new Offer("resources:[ports:0..10]"));
 
         Node dn = Nodes.addNode(new Node("dn", Node.Type.DATANODE));
-        dn.initRuntime(new net.elodina.mesos.api.Offer());
+        dn.initRuntime(new Offer("resources:[ports:0..10]"));
 
         // start
         Scheduler.Reconciler reconciler = new Scheduler.Reconciler();
@@ -184,11 +185,11 @@ public class SchedulerTest extends HdfsMesosTestCase {
         Date now = new Date();
 
         Node nn = Nodes.addNode(new Node("nn", Node.Type.NAMENODE));
-        nn.initRuntime(new net.elodina.mesos.api.Offer());
+        nn.initRuntime(new Offer("resources:[ports:0..10]"));
         nn.state = Node.State.RECONCILING;
 
         Node dn = Nodes.addNode(new Node("dn", Node.Type.DATANODE));
-        dn.initRuntime(new net.elodina.mesos.api.Offer());
+        dn.initRuntime(new Offer("resources:[ports:0..10]"));
         dn.state = Node.State.RECONCILING;
 
         Scheduler.Reconciler reconciler = new Scheduler.Reconciler(new Period("0"), 2);

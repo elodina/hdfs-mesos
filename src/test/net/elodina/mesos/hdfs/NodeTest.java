@@ -1,5 +1,10 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.api.Attribute;
+import net.elodina.mesos.api.Command;
+import net.elodina.mesos.api.Offer;
+import net.elodina.mesos.api.Resource;
+import net.elodina.mesos.api.Task;
 import net.elodina.mesos.util.Constraint;
 import net.elodina.mesos.util.Range;
 import net.elodina.mesos.util.Strings;
@@ -7,7 +12,6 @@ import org.junit.Test;
 
 import java.util.*;
 
-import static org.apache.mesos.Protos.*;
 import static org.junit.Assert.*;
 
 public class NodeTest extends HdfsMesosTestCase {
@@ -17,8 +21,8 @@ public class NodeTest extends HdfsMesosTestCase {
         node.cpus = 0.5;
         node.mem = 500;
 
-        assertEquals("cpus < 0.5", node.matches(offer("cpus:0.1")));
-        assertEquals("mem < 500", node.matches(offer("cpus:0.5; mem:400")));
+        assertEquals("cpus < 0.5", node.matches(new Offer("resources:[cpus:0.1]")));
+        assertEquals("mem < 500", node.matches(new Offer("resources:[cpus:0.5; mem:400]")));
     }
 
     @Test
@@ -27,7 +31,7 @@ public class NodeTest extends HdfsMesosTestCase {
         node.cpus = 0.5;
         node.mem = 500;
 
-        Offer offer = offer("cpus:0.5; mem:500; ports:0..4");
+        Offer offer = new Offer("id:1, frameworkId:2, slaveId:3, hostname:host, resources:[cpus:0.5; mem:500; ports:0..4]");
         assertNull(node.matches(offer));
 
         // no name node
@@ -52,7 +56,10 @@ public class NodeTest extends HdfsMesosTestCase {
     @Test
     public void matches_constraints() {
         class O {
-            Offer offer(String attributes) { return NodeTest.this.offer("id", "fw-id", "slave-id", "host", "cpus:2;mem:2048;ports:0..10", attributes); }
+            Offer offer(String attributes) {
+                return new Offer("id:id, frameworkId:fw-id, slaveId:slaveId, hostname:host, resources:[cpus:2;mem:2048;ports:0..10]")
+                    .attributes(Attribute.parse(attributes));
+            }
 
             Map<String, Constraint> constraints(String s) {
                 Map<String, Constraint> result = new HashMap<>();
@@ -97,13 +104,13 @@ public class NodeTest extends HdfsMesosTestCase {
         node.mem = 400;
 
         // incomplete reservation
-        Node.Reservation reservation = node.reserve(offer("cpus:0.3;mem:300"));
+        Node.Reservation reservation = node.reserve(new Offer("resources:[cpus:0.3;mem:300]"));
         assertEquals(0.3d, reservation.cpus, 0.001);
         assertEquals(300, reservation.mem);
         assertTrue("" + reservation.ports, reservation.ports.isEmpty());
 
         // complete reservation
-        reservation = node.reserve(offer("cpus:0.7;mem:1000;ports:0..10"));
+        reservation = node.reserve(new Offer("resources:[cpus:0.7;mem:1000;ports:0..10]"));
         assertEquals(node.cpus, reservation.cpus, 0.001);
         assertEquals(node.mem, reservation.mem);
         assertEquals(2, reservation.ports.size());
@@ -136,7 +143,7 @@ public class NodeTest extends HdfsMesosTestCase {
         node.cpus = 0.1;
         node.mem = 100;
 
-        Offer offer = offer("id", "fwId", "slaveId", "host", "cpus:2;mem:1024;ports:0..10", "a=1,b=2");
+        Offer offer = new Offer("id:id, frameworkId:fwId, slaveId:slaveId, hostname:host, resources:[cpus:2;mem:1024;ports:0..10], attributes:[a=1,b=2]");
         node.initRuntime(offer);
 
         assertNotNull(node.runtime);
@@ -144,8 +151,8 @@ public class NodeTest extends HdfsMesosTestCase {
         assertNotNull(node.runtime.executorId);
         assertNotNull(node.runtime.fsUri);
 
-        assertEquals(offer.getSlaveId().getValue(), node.runtime.slaveId);
-        assertEquals(offer.getHostname(), node.runtime.hostname);
+        assertEquals(offer.slaveId(), node.runtime.slaveId);
+        assertEquals(offer.hostname(), node.runtime.hostname);
         assertEquals(Strings.parseMap("a=1,b=2"), node.runtime.attributes);
 
         assertNotNull(node.reservation);
@@ -158,9 +165,9 @@ public class NodeTest extends HdfsMesosTestCase {
         Node node = Nodes.addNode(new Node("0", Node.Type.NAMENODE));
 
         // name node
-        Offer offer = offer();
+        Offer offer = new Offer();
         node.initRuntime(offer);
-        assertTrue(node.runtime.fsUri, node.runtime.fsUri.contains(offer.getHostname()));
+        assertTrue(node.runtime.fsUri, node.runtime.fsUri.contains(offer.hostname()));
 
         // data node, no name node
         node.type = Node.Type.DATANODE;
@@ -183,39 +190,39 @@ public class NodeTest extends HdfsMesosTestCase {
     @Test
     public void newTask() {
         Node node = Nodes.addNode(new Node("0"));
-        node.initRuntime(offer());
+        node.initRuntime(new Offer());
 
-        TaskInfo task = node.newTask();
-        assertEquals("hdfs-" + node.id, task.getName());
-        assertEquals(task.getTaskId().getValue(), node.runtime.taskId);
-        assertEquals(task.getSlaveId().getValue(), node.runtime.slaveId);
+        Task task = node.newTask();
+        assertEquals(task.id(), node.runtime.taskId);
+        assertEquals("hdfs-" + node.id, task.name());
+        assertEquals(task.slaveId(), node.runtime.slaveId);
 
-        assertNotNull(task.getExecutor());
-        assertEquals("" + node.toJson(), task.getData().toStringUtf8());
-        assertEquals(node.reservation.toResources(), task.getResourcesList());
+        assertNotNull(task.executor());
+        assertEquals("" + node.toJson(), new String(task.data()));
+        assertEquals(node.reservation.toResources(), task.resources());
     }
 
     @Test
     public void newExecutor() {
         Node node = Nodes.addNode(new Node("0"));
         node.executorJvmOpts = "-Xmx100m";
-        node.initRuntime(offer());
+        node.initRuntime(new Offer());
 
-        ExecutorInfo executor = node.newExecutor();
-        assertEquals("hdfs-" + node.id, executor.getName());
-        assertEquals(node.runtime.executorId, executor.getExecutorId().getValue());
+        Task.Executor executor = node.newExecutor();
+        assertEquals("hdfs-" + node.id, executor.name());
+        assertEquals(node.runtime.executorId, executor.id());
 
         // uris
-        CommandInfo command = executor.getCommand();
-        assertEquals(2, command.getUrisCount());
+        Command command = executor.command();
+        assertEquals(2, command.uris().size());
 
-        String uri = command.getUris(0).getValue();
+        String uri = command.uris().get(0).value();
         assertTrue(uri, uri.contains(Scheduler.$.config.jar.getName()));
-        uri = command.getUris(1).getValue();
+        uri = command.uris().get(1).value();
         assertTrue(uri, uri.contains(Scheduler.$.config.hadoop.getName()));
 
         // cmd
-        String cmd = command.getValue();
+        String cmd = command.value();
         assertTrue(cmd, cmd.contains("java"));
         assertTrue(cmd, cmd.contains(node.executorJvmOpts));
         assertTrue(cmd, cmd.contains(Executor.class.getName()));
@@ -240,7 +247,7 @@ public class NodeTest extends HdfsMesosTestCase {
 
         node.externalFsUri = "external-fs-uri";
 
-        node.initRuntime(offer());
+        node.initRuntime(new Offer());
 
         Node read = new Node(node.toJson());
         assertEquals(node.id, read.id);
@@ -303,7 +310,7 @@ public class NodeTest extends HdfsMesosTestCase {
 
     @Test
     public void Reservation_toResources() {
-        assertEquals(resources(""), new Node.Reservation().toResources());
-        assertEquals(resources("cpus:0.5;mem:500;ports:1000..1000"), new Node.Reservation(0.5, 500, Collections.singletonMap("namenode", 1000)).toResources());
+        assertEquals(Resource.parse(""), new Node.Reservation().toResources());
+        assertEquals(Resource.parse("cpus:0.5;mem:500;ports:1000..1000"), new Node.Reservation(0.5, 500, Collections.singletonMap("namenode", 1000)).toResources());
     }
 }

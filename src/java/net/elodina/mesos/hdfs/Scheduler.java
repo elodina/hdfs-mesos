@@ -1,8 +1,8 @@
 package net.elodina.mesos.hdfs;
 
 import com.google.protobuf.ByteString;
+import net.elodina.mesos.api.Task;
 import net.elodina.mesos.util.*;
-import net.elodina.mesos.util.Repr;
 import org.apache.log4j.*;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
@@ -126,7 +126,7 @@ public class Scheduler implements org.apache.mesos.Scheduler {
 
         List<String> reasons = new ArrayList<>();
         for (Node node : nodes) {
-            String reason = node.matches(offer, otherAttributes());
+            String reason = node.matches(new net.elodina.mesos.api.Offer().proto0(offer), otherAttributes());
             if (reason != null) reasons.add("node " + node.id + ": " + reason);
             else {
                 launchTask(node, offer);
@@ -138,10 +138,10 @@ public class Scheduler implements org.apache.mesos.Scheduler {
     }
 
     void launchTask(Node node, Protos.Offer offer) {
-        node.initRuntime(offer);
-        TaskInfo task = node.newTask();
+        node.initRuntime(new net.elodina.mesos.api.Offer().proto0(offer));
+        Task task = node.newTask();
 
-        driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task), Filters.newBuilder().setRefuseSeconds(1).build());
+        driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task.proto0()), Filters.newBuilder().setRefuseSeconds(1).build());
         logger.info("Starting node " + node.id + " with task " + node.runtime.taskId + " for offer " + offer.getId().getValue());
     }
 

@@ -1,17 +1,20 @@
 package net.elodina.mesos.hdfs;
 
-import com.google.protobuf.ByteString;
+import net.elodina.mesos.api.Attribute;
+import net.elodina.mesos.api.Command;
+import net.elodina.mesos.api.Offer;
+import net.elodina.mesos.api.Resource;
+import net.elodina.mesos.api.Task;
+import net.elodina.mesos.api.Value;
 import net.elodina.mesos.util.Constraint;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Range;
 import net.elodina.mesos.util.Strings;
-import org.apache.mesos.Protos;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.nio.charset.Charset;
 import java.util.*;
-
-import static org.apache.mesos.Protos.*;
 
 public class Node {
     public String id;
@@ -60,10 +63,10 @@ public class Node {
 
         // constraints
         Map<String, String> offerAttributes = new HashMap<>();
-        offerAttributes.put("hostname", offer.getHostname());
+        offerAttributes.put("hostname", offer.hostname());
 
-        for (Attribute attribute : offer.getAttributesList())
-            if (attribute.hasText()) offerAttributes.put(attribute.getName(), attribute.getText().getValue());
+        for (Attribute attribute : offer.attributes())
+            if (attribute.value().type() == Value.Type.TEXT) offerAttributes.put(attribute.name(), attribute.value().asText());
 
         for (String name : constraints.keySet()) {
             Constraint constraint = constraints.get(name);
@@ -76,17 +79,17 @@ public class Node {
 
     public Reservation reserve(Offer offer) {
         Map<String, Resource> resources = new HashMap<>();
-        for (Resource resource : offer.getResourcesList()) resources.put(resource.getName(), resource);
+        for (Resource resource : offer.resources()) resources.put(resource.name(), resource);
 
         // cpu
         double reservedCpus = 0;
         Resource cpusResource = resources.get("cpus");
-        if (cpusResource != null) reservedCpus = Math.min(cpusResource.getScalar().getValue(), cpus);
+        if (cpusResource != null) reservedCpus = Math.min(cpusResource.value().asDouble(), cpus);
 
         // mem
         long reservedMem = 0;
         Resource memResource = resources.get("mem");
-        if (memResource != null) reservedMem = Math.min((long) memResource.getScalar().getValue(), mem);
+        if (memResource != null) reservedMem = Math.min((long) memResource.value().asLong(), mem);
 
         // ports
         Map<String, Integer> reservedPorts = reservePorts(offer);
@@ -99,15 +102,12 @@ public class Node {
 
         // find resource
         Resource portsResource = null;
-        for (Resource resource : offer.getResourcesList())
-            if (resource.getName().equals("ports")) { portsResource = resource; break; }
+        for (Resource resource : offer.resources())
+            if (resource.name().equals("ports")) { portsResource = resource; break; }
         if (portsResource == null) return ports;
 
         // collect & sort ranges
-        List<Range> availPorts = new ArrayList<>();
-        for (Value.Range r : portsResource.getRanges().getRangeList())
-            availPorts.add(new Range((int) r.getBegin(), (int) r.getEnd()));
-
+        List<Range> availPorts = new ArrayList<>(portsResource.value().asRanges());
         Collections.sort(availPorts, new Comparator<Range>() {
             public int compare(Range x, Range y) { return x.start() - y.start(); }
         });
@@ -156,12 +156,12 @@ public class Node {
         reservation = reserve(offer);
 
         runtime = new Runtime();
-        runtime.slaveId = offer.getSlaveId().getValue();
-        runtime.hostname = offer.getHostname();
+        runtime.slaveId = offer.slaveId();
+        runtime.hostname = offer.hostname();
 
-        for (Attribute attribute : offer.getAttributesList())
-            if (attribute.hasText())
-                runtime.attributes.put(attribute.getName(), attribute.getText().getValue());
+        for (Attribute attribute : offer.attributes())
+            if (attribute.value().type() == Value.Type.TEXT)
+                runtime.attributes.put(attribute.name(), attribute.value().asText());
 
         runtime.fsUri = getFsUri();
     }
@@ -181,39 +181,36 @@ public class Node {
         return "hdfs://" + host + ":" + port;
     }
 
-    public TaskInfo newTask() {
+    public Task newTask() {
         if (runtime == null) throw new IllegalStateException("runtime == null");
         if (reservation == null) throw new IllegalStateException("reservation == null");
 
-        return TaskInfo.newBuilder()
-            .setName("hdfs-" + id)
-            .setTaskId(TaskID.newBuilder().setValue(runtime.taskId))
-            .setSlaveId(SlaveID.newBuilder().setValue(runtime.slaveId))
-            .setExecutor(newExecutor())
-            .setData(ByteString.copyFromUtf8("" + toJson()))
-            .addAllResources(reservation.toResources())
-            .build();
+        return new Task()
+            .id(runtime.taskId)
+            .name("hdfs-" + id)
+            .slaveId(runtime.slaveId)
+            .executor(newExecutor())
+            .data(toJson().toString().getBytes(Charset.forName("utf-8")))
+            .resources(reservation.toResources());
     }
 
-    ExecutorInfo newExecutor() {
+    Task.Executor newExecutor() {
         if (runtime == null) throw new IllegalStateException("runtime == null");
-        CommandInfo.Builder commandBuilder = CommandInfo.newBuilder();
 
         Scheduler.Config config = Scheduler.$.config;
         String cmd = "java -cp " + config.jar.getName();
         if (executorJvmOpts != null) cmd += " " + executorJvmOpts;
         cmd += " net.elodina.mesos.hdfs.Executor";
 
-        commandBuilder
-            .addUris(CommandInfo.URI.newBuilder().setValue(config.api + "/jar/" + config.jar.getName()).setExtract(false))
-            .addUris(CommandInfo.URI.newBuilder().setValue(config.api + "/hadoop/" + config.hadoop.getName()))
-            .setValue(cmd);
+        Command command = new Command()
+            .addUri(new Command.URI(config.api + "/jar/" + config.jar.getName(), false))
+            .addUri(new Command.URI(config.api + "/hadoop/" + config.hadoop.getName()))
+            .value(cmd);
 
-        return ExecutorInfo.newBuilder()
-            .setName("hdfs-" + id)
-            .setExecutorId(ExecutorID.newBuilder().setValue(runtime.executorId))
-            .setCommand(commandBuilder)
-            .build();
+        return new Task.Executor()
+            .id(runtime.executorId)
+            .name("hdfs-" + id)
+            .command(command);
     }
 
     @SuppressWarnings("unchecked")
@@ -379,30 +376,15 @@ public class Node {
         public List<Resource> toResources() {
             class R {
                 Resource cpus(double value) {
-                    return Resource.newBuilder()
-                        .setName("cpus")
-                        .setType(Protos.Value.Type.SCALAR)
-                        .setScalar(Protos.Value.Scalar.newBuilder().setValue(value))
-                        .setRole("*")
-                        .build();
+                    return new Resource("cpus", new Value(Value.Type.SCALAR, value));
                 }
 
                 Resource mem(long value) {
-                    return Resource.newBuilder()
-                        .setName("mem")
-                        .setType(Protos.Value.Type.SCALAR)
-                        .setScalar(Protos.Value.Scalar.newBuilder().setValue(value))
-                        .setRole("*")
-                        .build();
+                    return new Resource("mem", new Value(Value.Type.SCALAR, (double)value));
                 }
 
                 Resource port(long value) {
-                    return Resource.newBuilder()
-                        .setName("ports")
-                        .setType(Protos.Value.Type.RANGES)
-                        .setRanges(Protos.Value.Ranges.newBuilder().addRange(Protos.Value.Range.newBuilder().setBegin(value).setEnd(value)))
-                        .setRole("*")
-                        .build();
+                    return new Resource("ports", new Value(Value.Type.RANGES, Arrays.asList(new Range((int)value))));
                 }
             }
 

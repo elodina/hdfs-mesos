@@ -57,7 +57,7 @@ public class NodeTest extends HdfsMesosTestCase {
     public void matches_constraints() {
         class O {
             Offer offer(String attributes) {
-                return new Offer("id:id, frameworkId:fw-id, slaveId:slaveId, hostname:host, resources:[cpus:2;mem:2048;ports:0..10]")
+                return new Offer("id:id, frameworkId:fwId, slaveId:slaveId, hostname:host, resources:[cpus:2;mem:2048;ports:0..10]")
                     .attributes(Attribute.parse(attributes));
             }
 
@@ -311,6 +311,6 @@ public class NodeTest extends HdfsMesosTestCase {
     @Test
     public void Reservation_toResources() {
         assertEquals(Resource.parse(""), new Node.Reservation().toResources());
-        assertEquals(Resource.parse("cpus:0.5;mem:500;ports:1000..1000"), new Node.Reservation(0.5, 500, Collections.singletonMap("namenode", 1000)).toResources());
+        assertEquals(Resource.parse("cpus:0.5;mem:500;ports:1000..1000"), new Node.Reservation(0.5, 500, Collections.singletonMap("ipc", 1000)).toResources());
     }
 }

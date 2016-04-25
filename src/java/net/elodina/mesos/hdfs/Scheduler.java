@@ -8,6 +8,7 @@ import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -197,6 +198,7 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
     }
 
     void checkMesosVersion(Master master) {
+        if (master == null) return;
         Version minVersion = new Version("0.23.0");
         Version version = master.version();
 
@@ -235,6 +237,7 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
         }
 
         Driver driver = new SchedulerDriverV1(Scheduler.$, framework, config.master);
+        driver.setDebug(new PrintWriter(System.err, true)); // todo fix me?
 //        Driver driver = new TcpV0Driver(Scheduler.$, framework, config.master, cred);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {

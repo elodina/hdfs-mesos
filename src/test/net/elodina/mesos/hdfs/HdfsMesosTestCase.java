@@ -2,6 +2,7 @@ package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.api.Master;
 import net.elodina.mesos.api.Task;
+import net.elodina.mesos.api.driver.SchedulerDriver;
 import net.elodina.mesos.test.MesosTestCase;
 import net.elodina.mesos.util.Net;
 import org.apache.log4j.BasicConfigurator;
@@ -51,7 +52,7 @@ public class HdfsMesosTestCase extends MesosTestCase {
         Nodes.storage.clear();
     }
 
-    public static class TestSchedulerDriver extends Scheduler.Driver {
+    public static class TestSchedulerDriver extends SchedulerDriver {
         public List<String> declinedOffers = new ArrayList<>();
         public List<String> acceptedOffers = new ArrayList<>();
 

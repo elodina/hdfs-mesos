@@ -1,6 +1,8 @@
 package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.api.*;
+import net.elodina.mesos.api.driver.SchedulerDriver;
+import net.elodina.mesos.api.driver.SchedulerDriverV1;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Strings;
@@ -8,7 +10,9 @@ import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -20,10 +24,10 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
     public Config config = new Config();
     private Reconciler reconciler = new Reconciler();
 
-    private Scheduler.Driver driver;
+    private SchedulerDriver driver;
 
     @Override
-    public void registered(Scheduler.Driver driver, String id, Master master) {
+    public void registered(SchedulerDriver driver, String id, Master master) {
         logger.info("[registered] framework:" + id + " master:[" + master + "]");
         this.driver = driver;
 
@@ -35,7 +39,7 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
     }
 
     @Override
-    public void reregistered(Scheduler.Driver driver, Master master) {
+    public void reregistered(SchedulerDriver driver, Master master) {
         logger.info("[reregistered] " + master);
 
         this.driver = driver;
@@ -236,9 +240,9 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
             cred = new Cred(config.principal, config.secret);
         }
 
-        Driver driver = new SchedulerDriverV1(Scheduler.$, framework, config.master);
-        driver.setDebug(new PrintWriter(System.err, true)); // todo fix me?
-//        Driver driver = new TcpV0Driver(Scheduler.$, framework, config.master, cred);
+//        Driver driver = new SchedulerDriverV0(Scheduler.$, framework, config.master, cred);
+        SchedulerDriver driver = new SchedulerDriverV1(Scheduler.$, framework, config.master);
+        driver.setDebug(new PrintWriter(new Log4jWriter(), true));
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -261,6 +265,8 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
 
         Logger root = Logger.getRootLogger();
         root.setLevel(Level.INFO);
+
+        Logger.getLogger("net.elodina.mesos.api").setLevel(Level.DEBUG);
 
         Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
         Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
@@ -400,7 +406,7 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
 
         public boolean isActive() { return Nodes.getNodes(Node.State.RECONCILING).size() > 0; }
 
-        public void start(Scheduler.Driver driver, Date now) {
+        public void start(SchedulerDriver driver, Date now) {
             tries = 1;
             lastTry = now;
 
@@ -414,7 +420,7 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
             driver.reconcileTasks(Collections.<String>emptyList());
         }
 
-        public void proceed(Scheduler.Driver driver, Date now) {
+        public void proceed(SchedulerDriver driver, Date now) {
             if (lastTry == null) return;
 
             if (now.getTime() - lastTry.getTime() < delay.ms())
@@ -448,5 +454,18 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
 
             if (!ids.isEmpty()) driver.reconcileTasks(ids);
         }
+    }
+
+    private class Log4jWriter extends Writer {
+        private Logger logger = Logger.getLogger(SchedulerDriver.class);
+
+        @Override
+        public void write(char[] chars, int off, int len) throws IOException { logger.debug(new String(chars, off, len)); }
+
+        @Override
+        public void flush() throws IOException {}
+
+        @Override
+        public void close() throws IOException {}
     }
 }

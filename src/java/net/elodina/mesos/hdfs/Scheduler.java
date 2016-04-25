@@ -234,7 +234,8 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
             cred = new Cred(config.principal, config.secret);
         }
 
-        Driver driver = new TcpV0Driver(Scheduler.$, framework, config.master, cred);
+        Driver driver = new SchedulerDriverV1(Scheduler.$, framework, config.master);
+//        Driver driver = new TcpV0Driver(Scheduler.$, framework, config.master, cred);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -245,7 +246,9 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
             }
         });
 
-        boolean stopped = driver.run();
+        boolean stopped;
+        try { stopped = driver.run(); }
+        catch (Exception e) { throw new Error(e); }
         System.exit(stopped ? 0 : 1);
     }
 

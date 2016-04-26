@@ -25,6 +25,7 @@ dependencies {
     compile "org.apache.mesos:mesos:0.25.0"
     compile name: "util-mesos-0.0.1.0"
     compile "com.google.protobuf:protobuf-java:2.5.0"
+    compile 'com.googlecode.protobuf-java-format:protobuf-java-format:1.4'
     compile "org.eclipse.jetty:jetty-http:9.0.4.v20130625"
     compile "org.eclipse.jetty:jetty-io:9.0.4.v20130625"
     compile "org.eclipse.jetty:jetty-security:9.0.4.v20130625"

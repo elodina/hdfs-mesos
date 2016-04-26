@@ -175,12 +175,15 @@ public class Node {
         if (runtime == null) throw new IllegalStateException("runtime == null");
         if (reservation == null) throw new IllegalStateException("reservation == null");
 
+        String data = "" + toJson();
+        if (Scheduler.$.config.driverV1()) data = Base64.encode(data);
+
         return new Task()
             .id(runtime.taskId)
             .name("hdfs-" + id)
             .slaveId(runtime.slaveId)
             .executor(newExecutor())
-            .data(Base64.encode("" + toJson()).getBytes())
+            .data(data.getBytes())
             .resources(reservation.toResources());
     }
 

@@ -6,10 +6,7 @@ import joptsimple.OptionSet;
 import net.elodina.mesos.util.Period;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import static net.elodina.mesos.hdfs.Cli.Error;
 import static net.elodina.mesos.hdfs.Cli.*;
@@ -22,6 +19,7 @@ public class SchedulerCli {
         parser.accepts("api", "Binding host:port for http/artifact server.").withRequiredArg().ofType(String.class);
         parser.accepts("storage", " Storage for cluster state.\nDefault - " + config.storage + ".\nExamples:\n  file:hdfs-mesos.json;\n  zk:master:2181/hdfs-mesos;\n  zk:m1:2181,m2:2181/hdfs-mesos;").withRequiredArg().ofType(String.class);
 
+        parser.accepts("driver", "Mesos driver version (v0, v1). Default - " + config.driver).withRequiredArg().ofType(String.class);
         parser.accepts("master", "Mesos Master address(es).").withRequiredArg().ofType(String.class);
         parser.accepts("user", "Mesos user. Default - none").withRequiredArg().ofType(String.class);
         parser.accepts("principal", "Principal (username) used to register framework.").withRequiredArg().ofType(String.class);
@@ -62,6 +60,11 @@ public class SchedulerCli {
             try { Storage.byUri(storage); }
             catch (IllegalArgumentException e) { throw new Error("invalid storage"); }
 
+        String driver = (String) options.valueOf("driver");
+        if (driver == null) driver = defaults.get("driver");
+        if (driver != null && !Arrays.asList("v0", "v1").contains(driver))
+            throw new Error("invalid driver");
+
         String master = (String) options.valueOf("master");
         if (master == null) master = defaults.get("master");
         if (master == null) throw new Error("master required");
@@ -91,6 +94,7 @@ public class SchedulerCli {
         config.api = api;
         if (storage != null) config.storage = storage;
 
+        if (driver != null) config.driver = driver;
         config.master = master;
         config.user = user;
         config.principal = principal;

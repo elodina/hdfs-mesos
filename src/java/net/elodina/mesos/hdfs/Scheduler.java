@@ -3,6 +3,7 @@ package net.elodina.mesos.hdfs;
 import net.elodina.mesos.api.*;
 import net.elodina.mesos.api.scheduler.SchedulerDriver;
 import net.elodina.mesos.api.scheduler.SchedulerDriverV0;
+import net.elodina.mesos.api.scheduler.SchedulerDriverV1;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Strings;
@@ -40,19 +41,19 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
 
     @Override
     public void offers(List<Offer> offers) {
-        logger.info("[resourceOffers]:\n" + offers);
+        logger.info("[offers]:\n" + offers);
         onOffers(offers);
     }
 
     @Override
     public void status(Task.Status status) {
-        logger.info("[statusUpdate] " + status);
+        logger.info("[status] " + status);
         onTaskStatus(status);
     }
 
     @Override
     public void message(String executorId, String slaveId, byte[] data) {
-        logger.info("[frameworkMessage] executor:" + executorId + ", slave: " + slaveId + ", data: " + new String(data));
+        logger.info("[message] executor:" + executorId + ", slave: " + slaveId + ", data: " + new String(data));
     }
 
     @Override
@@ -232,8 +233,9 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
             cred = new Cred(config.principal, config.secret);
         }
 
-        SchedulerDriver driver = new SchedulerDriverV0(Scheduler.$, framework, config.master, cred);
-//        SchedulerDriver driver = new SchedulerDriverV1(Scheduler.$, framework, config.master);
+        SchedulerDriver driver = config.driverV1()
+            ? new SchedulerDriverV1(Scheduler.$, framework, config.master)
+            : new SchedulerDriverV0(Scheduler.$, framework, config.master, cred);
         driver.setDebug(new PrintWriter(new Log4jWriter(), true));
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -326,6 +328,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
             }
         }
 
+        public String driver = "v0";
         public String master;
         public String user;
         public String principal;
@@ -334,6 +337,8 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
         public String frameworkName = "hdfs";
         public String frameworkRole = "*";
         public Period frameworkTimeout = new Period("30d");
+
+        public boolean driverV1() { return driver.equals("v1"); }
 
         void resolveDeps() {
             String hadoopMask = "hadoop-.*gz";
@@ -367,7 +372,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
             s += "api: " + api;
             s += "\nfiles: jar:" + jar + ", hadoop:" + hadoop;
 
-            s += "\nmesos: master:" + master + ", user:" + (user == null ? "<default>" : user);
+            s += "\nmesos: driver:" + driver + ", master:" + master + ", user:" + (user == null ? "<default>" : user);
             s += ", principal:" + (principal == null ? "<none>" : principal) + ", secret:" + (secret == null ? "<none>" : "******");
 
             s += "\nframework: name:" + frameworkName + ", role:" + frameworkRole + ", timeout:" + frameworkTimeout;

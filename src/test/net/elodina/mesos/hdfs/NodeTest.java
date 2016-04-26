@@ -1,11 +1,6 @@
 package net.elodina.mesos.hdfs;
 
-import net.elodina.mesos.api.Attribute;
-import net.elodina.mesos.api.Command;
-import net.elodina.mesos.api.Offer;
-import net.elodina.mesos.api.Resource;
-import net.elodina.mesos.api.Task;
-import net.elodina.mesos.util.Base64;
+import net.elodina.mesos.api.*;
 import net.elodina.mesos.util.Constraint;
 import net.elodina.mesos.util.Range;
 import net.elodina.mesos.util.Strings;
@@ -199,7 +194,7 @@ public class NodeTest extends HdfsMesosTestCase {
         assertEquals(task.slaveId(), node.runtime.slaveId);
 
         assertNotNull(task.executor());
-        assertEquals("" + node.toJson(), Base64.decode(new String(task.data())));
+        assertEquals("" + node.toJson(), new String(task.data()));
         assertEquals(node.reservation.toResources(), task.resources());
     }
 

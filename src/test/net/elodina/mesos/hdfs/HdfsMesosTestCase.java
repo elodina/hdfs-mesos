@@ -2,7 +2,7 @@ package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.api.Master;
 import net.elodina.mesos.api.Task;
-import net.elodina.mesos.api.driver.SchedulerDriver;
+import net.elodina.mesos.api.scheduler.SchedulerDriver;
 import net.elodina.mesos.test.MesosTestCase;
 import net.elodina.mesos.util.Net;
 import org.apache.log4j.BasicConfigurator;

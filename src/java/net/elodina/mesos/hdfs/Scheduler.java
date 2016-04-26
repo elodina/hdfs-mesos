@@ -1,8 +1,8 @@
 package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.api.*;
-import net.elodina.mesos.api.driver.SchedulerDriver;
-import net.elodina.mesos.api.driver.SchedulerDriverV1;
+import net.elodina.mesos.api.scheduler.SchedulerDriver;
+import net.elodina.mesos.api.scheduler.SchedulerDriverV0;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Strings;
@@ -17,7 +17,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
-public class Scheduler extends net.elodina.mesos.api.Scheduler {
+public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
     public static final Scheduler $ = new Scheduler();
     private static final Logger logger = Logger.getLogger(Scheduler.class);
 
@@ -232,8 +232,8 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
             cred = new Cred(config.principal, config.secret);
         }
 
-//        Driver driver = new SchedulerDriverV0(Scheduler.$, framework, config.master, cred);
-        SchedulerDriver driver = new SchedulerDriverV1(Scheduler.$, framework, config.master);
+        SchedulerDriver driver = new SchedulerDriverV0(Scheduler.$, framework, config.master, cred);
+//        SchedulerDriver driver = new SchedulerDriverV1(Scheduler.$, framework, config.master);
         driver.setDebug(new PrintWriter(new Log4jWriter(), true));
 
         Runtime.getRuntime().addShutdownHook(new Thread() {

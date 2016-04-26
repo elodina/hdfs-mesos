@@ -1,19 +1,10 @@
 package net.elodina.mesos.hdfs;
 
-import net.elodina.mesos.api.Attribute;
-import net.elodina.mesos.api.Command;
-import net.elodina.mesos.api.Offer;
-import net.elodina.mesos.api.Resource;
-import net.elodina.mesos.api.Task;
-import net.elodina.mesos.api.Value;
-import net.elodina.mesos.util.Constraint;
-import net.elodina.mesos.util.Period;
-import net.elodina.mesos.util.Range;
-import net.elodina.mesos.util.Strings;
+import net.elodina.mesos.api.*;
+import net.elodina.mesos.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.nio.charset.Charset;
 import java.util.*;
 
 public class Node {
@@ -189,7 +180,7 @@ public class Node {
             .name("hdfs-" + id)
             .slaveId(runtime.slaveId)
             .executor(newExecutor())
-            .data(toJson().toString().getBytes(Charset.forName("utf-8")))
+            .data(Base64.encode("" + toJson()).getBytes())
             .resources(reservation.toResources());
     }
 

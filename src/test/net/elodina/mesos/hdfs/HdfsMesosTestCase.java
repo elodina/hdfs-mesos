@@ -37,7 +37,7 @@ public class HdfsMesosTestCase extends MesosTestCase {
         config.hadoop = new File("hadoop-1.2.1.tar.gz");
 
         Cli.api = config.api;
-        Scheduler.$.registered(schedulerDriver, "id", new Master());
+        Scheduler.$.subscribed(schedulerDriver, "id", new Master());
     }
 
     @After

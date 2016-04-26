@@ -27,8 +27,8 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
     private SchedulerDriver driver;
 
     @Override
-    public void registered(SchedulerDriver driver, String id, Master master) {
-        logger.info("[registered] framework:" + id + " master:[" + master + "]");
+    public void subscribed(SchedulerDriver driver, String id, Master master) {
+        logger.info("[subscribed] framework:" + id + (master != null ? " master:[" + master + "]" : ""));
         this.driver = driver;
 
         checkMesosVersion(master);
@@ -39,16 +39,8 @@ public class Scheduler extends net.elodina.mesos.api.Scheduler {
     }
 
     @Override
-    public void reregistered(SchedulerDriver driver, Master master) {
-        logger.info("[reregistered] " + master);
-
-        this.driver = driver;
-        reconciler.start(driver, new Date());
-    }
-
-    @Override
     public void offers(List<Offer> offers) {
-        logger.info("[resourceOffers]\n" + offers);
+        logger.info("[resourceOffers]:\n" + offers);
         onOffers(offers);
     }
 

@@ -12,7 +12,6 @@ import org.apache.log4j.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -236,7 +235,8 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
         SchedulerDriver driver = config.driverV1()
             ? new SchedulerDriverV1(Scheduler.$, framework, config.master)
             : new SchedulerDriverV0(Scheduler.$, framework, config.master, cred);
-        driver.setDebug(new PrintWriter(new Log4jWriter(), true));
+
+        if (config.debug) driver.setDebug(new Log4jWriter());
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
@@ -313,6 +313,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
     }
 
     public static class Config {
+        public boolean debug;
         public String api;
         public String storage = "file:hdfs-mesos.json";
 
@@ -455,9 +456,17 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
 
     private class Log4jWriter extends Writer {
         private Logger logger = Logger.getLogger(SchedulerDriver.class);
+        private String buffer = "";
 
         @Override
-        public void write(char[] chars, int off, int len) throws IOException { logger.debug(new String(chars, off, len)); }
+        public void write(char[] chars, int off, int len) throws IOException {
+            buffer += new String(chars, off, len);
+
+            for (int lf = buffer.indexOf(System.lineSeparator()); lf != -1; lf = buffer.indexOf(System.lineSeparator())) {
+                logger.debug(buffer.substring(0, lf));
+                buffer = buffer.substring(lf + System.lineSeparator().length());
+            }
+        }
 
         @Override
         public void flush() throws IOException {}

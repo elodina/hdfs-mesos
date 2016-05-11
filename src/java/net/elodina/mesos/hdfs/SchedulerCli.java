@@ -19,6 +19,7 @@ public class SchedulerCli {
         parser.accepts("api", "Binding host:port for http/artifact server.").withRequiredArg().ofType(String.class);
         parser.accepts("storage", " Storage for cluster state.\nDefault - " + config.storage + ".\nExamples:\n  file:hdfs-mesos.json;\n  zk:master:2181/hdfs-mesos;\n  zk:m1:2181,m2:2181/hdfs-mesos;").withRequiredArg().ofType(String.class);
 
+        parser.accepts("debug", "Enable debug logging. Default - false").withRequiredArg().ofType(Boolean.class);
         parser.accepts("driver", "Mesos driver version (v0, v1). Default - " + config.driver).withRequiredArg().ofType(String.class);
         parser.accepts("master", "Mesos Master address(es).").withRequiredArg().ofType(String.class);
         parser.accepts("user", "Mesos user. Default - none").withRequiredArg().ofType(String.class);
@@ -59,6 +60,10 @@ public class SchedulerCli {
         if (storage != null)
             try { Storage.byUri(storage); }
             catch (IllegalArgumentException e) { throw new Error("invalid storage"); }
+
+        Boolean debug = (Boolean) options.valueOf("debug");
+        if (debug == null && defaults.containsKey("debug")) debug = Boolean.valueOf(defaults.get("debug"));
+        if (debug != null) config.debug = debug;
 
         String driver = (String) options.valueOf("driver");
         if (driver == null) driver = defaults.get("driver");

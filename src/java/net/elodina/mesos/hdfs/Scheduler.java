@@ -17,6 +17,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
+import static net.elodina.mesos.api.Base.shortId;
+
 public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
     public static final Scheduler $ = new Scheduler();
     private static final Logger logger = Logger.getLogger(Scheduler.class);
@@ -28,7 +30,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
 
     @Override
     public void subscribed(SchedulerDriver driver, String id, Master master) {
-        logger.info("[subscribed] framework:" + id + (master != null ? " master:[" + master + "]" : ""));
+        logger.info("[subscribed] framework:" + shortId(id) + (master != null ? ", master:[" + master.toString(true) + "]" : ""));
         this.driver = driver;
 
         checkMesosVersion(master);
@@ -40,19 +42,21 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
 
     @Override
     public void offers(List<Offer> offers) {
-        logger.info("[offers]:\n" + offers);
+        String s = "";
+        for (Offer offer : offers) s += "\n" + offer.toString(true);
+        logger.info("[offers]:" + s);
         onOffers(offers);
     }
 
     @Override
     public void status(Task.Status status) {
-        logger.info("[status] " + status);
+        logger.info("[status] " + status.toString(true));
         onTaskStatus(status);
     }
 
     @Override
     public void message(String executorId, String slaveId, byte[] data) {
-        logger.info("[message] executor:" + executorId + ", slave: " + slaveId + ", data: " + new String(data));
+        logger.info("[message] executor:" + shortId(executorId) + ", slave: " + shortId(slaveId) + ", data: " + new String(data));
     }
 
     @Override
@@ -67,7 +71,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
             String reason = acceptOffer(offer);
 
             if (reason != null) {
-                logger.info("Declined offer " + offer + ":\n" + reason);
+                logger.info("Declined offer " + shortId(offer.id()) + ": " + reason);
                 driver.declineOffer(offer.id());
             }
         }
@@ -116,7 +120,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
         Task task = node.newTask();
 
         driver.launchTask(offer.id(), task);
-        logger.info("Starting node " + node.id + " with task " + node.runtime.taskId + " for offer " + offer.id());
+        logger.info("Starting node " + node.id + " with task " + shortId(node.runtime.taskId) + " with offer " + shortId(offer.id()));
     }
 
     void onTaskStatus(Task.Status status) {
@@ -145,7 +149,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
         }
 
         if (node.state == Node.State.RECONCILING)
-            logger.info("Finished reconciling of node " + node.id + ", task " + node.runtime.taskId);
+            logger.info("Finished reconciling of node " + node.id + ", task " + shortId(node.runtime.taskId));
 
         node.state = Node.State.RUNNING;
     }
@@ -412,7 +416,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
                 if (node.runtime == null) continue;
 
                 node.state = Node.State.RECONCILING;
-                logger.info("Reconciling " + tries + "/" + maxTries + " state of node " + node.id + ", task " + node.runtime.taskId);
+                logger.info("Reconciling " + tries + "/" + maxTries + " state of node " + node.id + ", task " + shortId(node.runtime.taskId));
             }
 
             driver.reconcileTasks(Collections.<String>emptyList());
@@ -431,7 +435,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
                 for (Node node : Nodes.getNodes(Node.State.RECONCILING)) {
                     if (node.runtime == null) continue;
 
-                    logger.info("Reconciling exceeded " + maxTries + " tries for node " + node.id + ", sending killTask for task " + node.runtime.taskId);
+                    logger.info("Reconciling exceeded " + maxTries + " tries for node " + node.id + ", sending killTask for task " + shortId(node.runtime.taskId));
                     driver.killTask(node.runtime.taskId);
                     node.runtime = null;
                     node.state = Node.State.STARTING;
@@ -446,7 +450,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
 
             for (Node node : Nodes.getNodes(Node.State.RECONCILING)) {
                 if (node.runtime == null) continue;
-                logger.info("Reconciling " + tries + "/" + maxTries + " state of node " + node.id + ", task " + node.runtime.taskId);
+                logger.info("Reconciling " + tries + "/" + maxTries + " state of node " + node.id + ", task " + shortId(node.runtime.taskId));
                 ids.add(node.runtime.taskId);
             }
 

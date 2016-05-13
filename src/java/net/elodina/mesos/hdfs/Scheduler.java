@@ -17,7 +17,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
-import static net.elodina.mesos.api.Base.shortId;
+import static net.elodina.mesos.api.Message.shortId;
 
 public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
     public static final Scheduler $ = new Scheduler();

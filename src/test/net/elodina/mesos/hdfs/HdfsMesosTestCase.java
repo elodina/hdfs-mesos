@@ -52,7 +52,7 @@ public class HdfsMesosTestCase extends MesosTestCase {
         Nodes.storage.clear();
     }
 
-    public static class TestSchedulerDriver extends SchedulerDriver {
+    public static class TestSchedulerDriver implements SchedulerDriver {
         public List<String> declinedOffers = new ArrayList<>();
         public List<String> acceptedOffers = new ArrayList<>();
 

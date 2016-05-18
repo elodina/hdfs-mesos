@@ -17,7 +17,7 @@ import java.util.*;
 
 import static net.elodina.mesos.api.Message.shortId;
 
-public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
+public class Scheduler implements net.elodina.mesos.api.scheduler.Scheduler {
     public static final Scheduler $ = new Scheduler();
     private static final Logger logger = Logger.getLogger(Scheduler.class);
 

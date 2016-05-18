@@ -1,11 +1,13 @@
 package net.elodina.mesos.hdfs;
 
+import net.elodina.mesos.api.Framework;
+import net.elodina.mesos.api.Slave;
+import net.elodina.mesos.api.Task;
+import net.elodina.mesos.api.executor.ExecutorDriver;
+import net.elodina.mesos.api.executor.ExecutorDriverV0;
 import net.elodina.mesos.util.IO;
-import net.elodina.mesos.util.Repr;
 import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
-import org.apache.mesos.ExecutorDriver;
-import org.apache.mesos.MesosExecutorDriver;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -15,9 +17,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import static org.apache.mesos.Protos.*;
-
-public class Executor implements org.apache.mesos.Executor {
+public class Executor implements net.elodina.mesos.api.executor.Executor {
     public static final Logger logger = Logger.getLogger(Executor.class);
 
     public static File hadoopDir;
@@ -32,41 +32,39 @@ public class Executor implements org.apache.mesos.Executor {
 
     public static File hadoopConfDir() { return new File(hadoopDir, hadoop1x() ? "conf" : "etc/hadoop"); }
 
+    private ExecutorDriver driver;
     private String hostname;
     private HdfsProcess process;
 
     @Override
-    public void registered(ExecutorDriver driver, ExecutorInfo executorInfo, FrameworkInfo framework, SlaveInfo slave) {
-        logger.info("[registered] framework:" + Repr.framework(framework) + " slave:" + Repr.slave(slave));
-        hostname = slave.getHostname();
+    public void registered(ExecutorDriver driver, Task.Executor executor, Framework framework, Slave slave) {
+        logger.info("[registered] " + (framework != null ? "framework:" + framework.toString(true) : "") + " slave:" + slave.toString(true));
+        this.driver = driver;
+        hostname = slave.hostname();
     }
 
     @Override
-    public void reregistered(ExecutorDriver driver, SlaveInfo slave) {
-        logger.info("[registered] " + Repr.slave(slave));
-    }
-
-    @Override
-    public void disconnected(ExecutorDriver driver) {
+    public void disconnected() {
         logger.info("[disconnected]");
+        driver = null;
     }
 
     @Override
-    public void launchTask(final ExecutorDriver driver, final TaskInfo task) {
-        logger.info("[launchTask] " + Repr.task(task));
+    public void launchTask(final Task task) {
+        logger.info("[launchTask] " + task.toString(true));
 
         new Thread() {
             @Override
             public void run() {
                 setName("ProcessRunner");
 
-                try { runHdfs(task, driver); }
+                try { runHdfs(task); }
                 catch (Throwable t) {
                     logger.error("", t);
 
                     StringWriter buffer = new StringWriter();
                     t.printStackTrace(new PrintWriter(buffer, true));
-                    driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_ERROR).setMessage("" + buffer).build());
+                    driver.sendStatus(new Task.Status(task.id(), Task.State.ERROR).message("" + buffer));
                 }
 
                 driver.stop();
@@ -74,42 +72,42 @@ public class Executor implements org.apache.mesos.Executor {
         }.start();
     }
 
-    private void runHdfs(TaskInfo task, ExecutorDriver driver) throws InterruptedException, IOException {
+    private void runHdfs(Task task) throws InterruptedException, IOException {
         JSONObject json;
-        try { json = (JSONObject) new JSONParser().parse(task.getData().toStringUtf8()); }
+        try { json = (JSONObject) new JSONParser().parse(new String(task.data(), "utf-8")); }
         catch (ParseException e) { throw new IllegalStateException(e); }
         Node node = new Node(json);
 
         process = new HdfsProcess(node, hostname);
         process.start();
-        driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_STARTING).build());
+        driver.sendStatus(new Task.Status(task.id(), Task.State.STARTING));
 
         if (process.waitForOperable())
-            driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_RUNNING).build());
+            driver.sendStatus(new Task.Status(task.id(), Task.State.RUNNING));
 
         int code = process.waitFor();
-        if (code == 0 || code == 143) driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_FINISHED).build());
-        else driver.sendStatusUpdate(TaskStatus.newBuilder().setTaskId(task.getTaskId()).setState(TaskState.TASK_FAILED).setMessage("process exited with " + code).build());
+        if (code == 0 || code == 143) driver.sendStatus(new Task.Status(task.id(), Task.State.FINISHED));
+        else driver.sendStatus(new Task.Status(task.id(), Task.State.FAILED).message("process exited with " + code));
     }
 
     @Override
-    public void killTask(ExecutorDriver driver, TaskID id) {
-        logger.info("[killTask] " + Repr.id(id.getValue()));
+    public void killTask(String id) {
+        logger.info("[killTask] " + id);
         if (process != null) process.stop();
     }
 
     @Override
-    public void frameworkMessage(ExecutorDriver driver, byte[] data) {
-        logger.info("[frameworkMessage] " + new String(data));
+    public void message(byte[] data) {
+        logger.info("[message] " + new String(data));
     }
 
     @Override
-    public void shutdown(ExecutorDriver driver) {
+    public void shutdown() {
         logger.info("[shutdown]");
     }
 
     @Override
-    public void error(ExecutorDriver driver, String message) {
+    public void error(String message) {
         logger.info("[error] " + message);
     }
 
@@ -117,11 +115,9 @@ public class Executor implements org.apache.mesos.Executor {
         initLogging();
         initDirs();
 
-        MesosExecutorDriver driver = new MesosExecutorDriver(new Executor());
-        Status status = driver.run();
-
-        int code = status == Status.DRIVER_STOPPED ? 0 : 1;
-        System.exit(code);
+        ExecutorDriverV0 driver = new ExecutorDriverV0(new Executor());
+        boolean ok = driver.run();
+        System.exit(ok ? 0 : 1);
     }
 
     static void initDirs() {
@@ -190,6 +186,8 @@ public class Executor implements org.apache.mesos.Executor {
 
         Logger root = Logger.getRootLogger();
         root.setLevel(Level.INFO);
+
+        Logger.getLogger("net.elodina.mesos.api").setLevel(Level.DEBUG);
 
         PatternLayout layout = new PatternLayout("[executor] %d [%t] %p %c{2} - %m%n");
         root.addAppender(new ConsoleAppender(layout));

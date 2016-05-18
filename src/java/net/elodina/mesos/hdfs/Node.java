@@ -193,7 +193,9 @@ public class Node {
         Scheduler.Config config = Scheduler.$.config;
         String cmd = "java -cp " + config.jar.getName();
         if (executorJvmOpts != null) cmd += " " + executorJvmOpts;
+
         cmd += " net.elodina.mesos.hdfs.Executor";
+        if (config.debug) cmd += " --debug=true";
 
         Command command = new Command()
             .addUri(new Command.URI(config.api + "/jar/" + config.jar.getName(), false))

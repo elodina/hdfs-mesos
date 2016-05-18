@@ -1,5 +1,8 @@
 package net.elodina.mesos.hdfs;
 
+import joptsimple.OptionException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
 import net.elodina.mesos.api.Framework;
 import net.elodina.mesos.api.Slave;
 import net.elodina.mesos.api.Task;
@@ -16,9 +19,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 
 public class Executor implements net.elodina.mesos.api.executor.Executor {
     public static final Logger logger = Logger.getLogger(Executor.class);
+
+    public static boolean debug;
+    public static String driverVersion = "v0";
 
     public static File hadoopDir;
     public static Version hadoopVersion;
@@ -112,6 +119,7 @@ public class Executor implements net.elodina.mesos.api.executor.Executor {
     }
 
     public static void main(String[] args) {
+        parseArgs(args);
         initLogging();
         initDirs();
 
@@ -181,13 +189,50 @@ public class Executor implements net.elodina.mesos.api.executor.Executor {
         }
     }
 
+    private static void parseArgs(String... args) {
+        OptionParser parser = new OptionParser();
+        parser.accepts("debug", "Enable debug logging. Default - false").withRequiredArg().ofType(Boolean.class);
+        parser.accepts("driver", "Mesos driver version (v0, v1). Default - " + driverVersion).withRequiredArg().ofType(String.class);
+
+        boolean help = args.length > 0 && args[0].equals("help");
+        if (help) {
+            System.out.println("Generic Options");
+
+            try { parser.printHelpOn(System.out); }
+            catch (IOException ignore) {}
+
+            System.exit(0);
+        }
+
+        OptionSet options = null;
+        try { options = parser.parse(args); }
+        catch (OptionException e) {
+            try { parser.printHelpOn(System.out); }
+            catch (IOException ignore) {}
+
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+
+        Boolean debug = (Boolean) options.valueOf("debug");
+
+        String driver = (String) options.valueOf("driver");
+        if (driver != null && !Arrays.asList("v0", "v1").contains(driver)) {
+            System.err.println("Invalid driver");
+            System.exit(1);
+        }
+
+        if (debug != null) Executor.debug = debug;
+        if (driver != null) Executor.driverVersion = driver;
+    }
+
     static void initLogging() {
         BasicConfigurator.resetConfiguration();
 
         Logger root = Logger.getRootLogger();
         root.setLevel(Level.INFO);
 
-        Logger.getLogger("net.elodina.mesos.api").setLevel(Level.DEBUG);
+        Logger.getLogger("net.elodina.mesos.api").setLevel(debug ? Level.DEBUG : Level.INFO);
 
         PatternLayout layout = new PatternLayout("[executor] %d [%t] %p %c{2} - %m%n");
         root.addAppender(new ConsoleAppender(layout));

@@ -11,8 +11,6 @@ import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -240,8 +238,6 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
             ? new SchedulerDriverV1(Scheduler.$, framework, config.master)
             : new SchedulerDriverV0(Scheduler.$, framework, config.master, cred);
 
-        if (config.debug) driver.setDebug(new Log4jWriter());
-
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 logger.info("Stopping " + getClass().getSimpleName());
@@ -264,7 +260,7 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
         Logger root = Logger.getRootLogger();
         root.setLevel(Level.INFO);
 
-        Logger.getLogger("net.elodina.mesos.api").setLevel(Level.DEBUG);
+        Logger.getLogger("net.elodina.mesos.api").setLevel(config.debug ? Level.DEBUG : Level.INFO);
 
         Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARN);
         Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN);
@@ -456,26 +452,5 @@ public class Scheduler extends net.elodina.mesos.api.scheduler.Scheduler {
 
             if (!ids.isEmpty()) driver.reconcileTasks(ids);
         }
-    }
-
-    private class Log4jWriter extends Writer {
-        private Logger logger = Logger.getLogger(SchedulerDriver.class);
-        private String buffer = "";
-
-        @Override
-        public void write(char[] chars, int off, int len) throws IOException {
-            buffer += new String(chars, off, len);
-
-            for (int lf = buffer.indexOf(System.lineSeparator()); lf != -1; lf = buffer.indexOf(System.lineSeparator())) {
-                logger.debug(buffer.substring(0, lf));
-                buffer = buffer.substring(lf + System.lineSeparator().length());
-            }
-        }
-
-        @Override
-        public void flush() throws IOException {}
-
-        @Override
-        public void close() throws IOException {}
     }
 }

@@ -195,10 +195,11 @@ public class Node {
         if (executorJvmOpts != null) cmd += " " + executorJvmOpts;
 
         cmd += " net.elodina.mesos.hdfs.Executor";
-        if (config.debug) cmd += " --debug=true";
+        cmd += " --driver=" + config.driver;
+        cmd += " --debug=" + config.debug;
 
         Command command = new Command()
-            .addUri(new Command.URI(config.api + "/jar/" + config.jar.getName(), false))
+            .addUri(new Command.URI(config.api + "/jar/" + config.jar.getName(), false).cache(false))
             .addUri(new Command.URI(config.api + "/hadoop/" + config.hadoop.getName()))
             .value(cmd);
 

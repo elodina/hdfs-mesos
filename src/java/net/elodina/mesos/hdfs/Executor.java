@@ -8,6 +8,7 @@ import net.elodina.mesos.api.Slave;
 import net.elodina.mesos.api.Task;
 import net.elodina.mesos.api.driver.ExecutorDriver;
 import net.elodina.mesos.api.driver.ExecutorDriverV0;
+import net.elodina.mesos.api.driver.ExecutorDriverV1;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
@@ -26,6 +27,7 @@ public class Executor implements net.elodina.mesos.api.Executor {
 
     public static boolean debug;
     public static String driverVersion = "v0";
+    public static boolean driverV1() { return driverVersion.equals("v1"); }
 
     public static File hadoopDir;
     public static Version hadoopVersion;
@@ -123,7 +125,9 @@ public class Executor implements net.elodina.mesos.api.Executor {
         initLogging();
         initDirs();
 
-        ExecutorDriverV0 driver = new ExecutorDriverV0(new Executor());
+        Executor executor = new Executor();
+        ExecutorDriver driver = driverV1() ? new ExecutorDriverV1(executor) : new ExecutorDriverV0(executor);
+
         boolean ok = driver.run();
         System.exit(ok ? 0 : 1);
     }

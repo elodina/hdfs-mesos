@@ -1,6 +1,7 @@
 package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.api.*;
+import net.elodina.mesos.util.Base64;
 import net.elodina.mesos.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

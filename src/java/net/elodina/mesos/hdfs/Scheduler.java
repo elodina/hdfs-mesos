@@ -1,9 +1,9 @@
 package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.api.*;
-import net.elodina.mesos.api.scheduler.SchedulerDriver;
-import net.elodina.mesos.api.scheduler.SchedulerDriverV0;
-import net.elodina.mesos.api.scheduler.SchedulerDriverV1;
+import net.elodina.mesos.api.driver.SchedulerDriver;
+import net.elodina.mesos.api.driver.SchedulerDriverV0;
+import net.elodina.mesos.api.driver.SchedulerDriverV1;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Strings;
@@ -17,7 +17,7 @@ import java.util.*;
 
 import static net.elodina.mesos.api.Message.shortId;
 
-public class Scheduler implements net.elodina.mesos.api.scheduler.Scheduler {
+public class Scheduler implements net.elodina.mesos.api.Scheduler {
     public static final Scheduler $ = new Scheduler();
     private static final Logger logger = Logger.getLogger(Scheduler.class);
 

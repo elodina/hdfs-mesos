@@ -6,8 +6,8 @@ import joptsimple.OptionSet;
 import net.elodina.mesos.api.Framework;
 import net.elodina.mesos.api.Slave;
 import net.elodina.mesos.api.Task;
-import net.elodina.mesos.api.executor.ExecutorDriver;
-import net.elodina.mesos.api.executor.ExecutorDriverV0;
+import net.elodina.mesos.api.driver.ExecutorDriver;
+import net.elodina.mesos.api.driver.ExecutorDriverV0;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
@@ -21,7 +21,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-public class Executor implements net.elodina.mesos.api.executor.Executor {
+public class Executor implements net.elodina.mesos.api.Executor {
     public static final Logger logger = Logger.getLogger(Executor.class);
 
     public static boolean debug;

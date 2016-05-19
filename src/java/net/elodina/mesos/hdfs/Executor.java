@@ -9,6 +9,7 @@ import net.elodina.mesos.api.Task;
 import net.elodina.mesos.api.driver.ExecutorDriver;
 import net.elodina.mesos.api.driver.ExecutorDriverV0;
 import net.elodina.mesos.api.driver.ExecutorDriverV1;
+import net.elodina.mesos.util.Base64;
 import net.elodina.mesos.util.IO;
 import net.elodina.mesos.util.Version;
 import org.apache.log4j.*;
@@ -47,7 +48,7 @@ public class Executor implements net.elodina.mesos.api.Executor {
 
     @Override
     public void registered(ExecutorDriver driver, Task.Executor executor, Framework framework, Slave slave) {
-        logger.info("[registered] " + (framework != null ? "framework:" + framework.toString(true) : "") + " slave:" + slave.toString(true));
+        logger.info("[registered] " + (framework != null ? "framework:[" + framework.toString(true) : "]") + " slave:[" + slave.toString(true) + "]");
         this.driver = driver;
         hostname = slave.hostname();
     }
@@ -82,8 +83,11 @@ public class Executor implements net.elodina.mesos.api.Executor {
     }
 
     private void runHdfs(Task task) throws InterruptedException, IOException {
+        String data = new String(task.data(), "utf-8");
+        if (driverV1()) data = Base64.decode(data);
+
         JSONObject json;
-        try { json = (JSONObject) new JSONParser().parse(new String(task.data(), "utf-8")); }
+        try { json = (JSONObject) new JSONParser().parse(data); }
         catch (ParseException e) { throw new IllegalStateException(e); }
         Node node = new Node(json);
 

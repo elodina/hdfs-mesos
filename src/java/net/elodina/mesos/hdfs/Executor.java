@@ -6,6 +6,7 @@ import joptsimple.OptionSet;
 import net.elodina.mesos.api.Framework;
 import net.elodina.mesos.api.Slave;
 import net.elodina.mesos.api.Task;
+import net.elodina.mesos.api.driver.DriverException;
 import net.elodina.mesos.api.driver.ExecutorDriver;
 import net.elodina.mesos.api.driver.ExecutorDriverV0;
 import net.elodina.mesos.api.driver.ExecutorDriverV1;
@@ -74,7 +75,9 @@ public class Executor implements net.elodina.mesos.api.Executor {
 
                     StringWriter buffer = new StringWriter();
                     t.printStackTrace(new PrintWriter(buffer, true));
-                    driver.sendStatus(new Task.Status(task.id(), Task.State.ERROR).message("" + buffer));
+
+                    try { driver.sendStatus(new Task.Status(task.id(), Task.State.ERROR).message("" + buffer)); }
+                    catch (DriverException de) { logger.error("", de); }
                 }
 
                 driver.stop();

@@ -30,6 +30,10 @@ public class SchedulerCli {
         parser.accepts("framework-role", "Framework role. Default- " + config.frameworkRole + ".").withRequiredArg().ofType(String.class);
         parser.accepts("framework-timeout", "Framework failover timeout. Default - " + config.frameworkTimeout + ".").withRequiredArg().ofType(String.class);
 
+        parser.accepts("jar", "hdfs-mesos jar mask (hdfs-mesos-.*jar). Default - " + config.jarMask + ".").withRequiredArg().ofType(String.class);
+        parser.accepts("hadoop", "Hadoop archive mask (hadoop-.*gz). Default - " + config.hadoopMask + ".").withRequiredArg().ofType(String.class);
+        parser.accepts("jre", "JRE archive mask (jre*.zip). Default - none.").withRequiredArg().ofType(String.class);
+
         if (help) {
             printLine("Generic Options");
 
@@ -96,6 +100,16 @@ public class SchedulerCli {
             try { new Period(frameworkTimeout); }
             catch (IllegalArgumentException e) { throw new Error("invalid framework-timeout"); }
 
+
+        String jar = (String) options.valueOf("jar");
+        if (jar == null) jar = defaults.get("jar");
+
+        String hadoop = (String) options.valueOf("hadoop");
+        if (hadoop == null) hadoop = defaults.get("hadoop");
+
+        String jre = (String) options.valueOf("jre");
+        if (jre == null) jre = defaults.get("jre");
+
         config.api = api;
         if (storage != null) config.storage = storage;
 
@@ -108,6 +122,10 @@ public class SchedulerCli {
         if (frameworkName != null) config.frameworkName = frameworkName;
         if (frameworkRole != null) config.frameworkRole = frameworkRole;
         if (frameworkTimeout != null) config.frameworkTimeout = new Period(frameworkTimeout);
+
+        if (jar != null) config.jarMask = jar;
+        if (hadoop != null) config.hadoopMask = hadoop;
+        if (jre != null) config.jreMask = jre;
 
         Scheduler.$.run();
     }

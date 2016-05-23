@@ -317,8 +317,13 @@ public class Scheduler implements net.elodina.mesos.api.Scheduler {
         public String api;
         public String storage = "file:hdfs-mesos.json";
 
+        public String jarMask = "hdfs-mesos-.*jar";
+        public String hadoopMask = "hadoop-.*gz";
+        public String jreMask;
+
         public File jar;
         public File hadoop;
+        public File jre;
 
         public int apiPort() {
             try {
@@ -342,14 +347,17 @@ public class Scheduler implements net.elodina.mesos.api.Scheduler {
         public boolean driverV1() { return driver.equals("v1"); }
 
         void resolveDeps() {
-            String hadoopMask = "hadoop-.*gz";
             hadoop = IO.findFile(new File("."), hadoopMask);
-            if (hadoop == null) throw new IllegalStateException(hadoopMask + " not found in current dir");
+            if (hadoop == null) throw new Cli.Error(hadoopMask + " not found in current dir");
             checkHadoopVersion();
 
-            String jarMask = "hdfs-mesos-.*jar";
             jar = IO.findFile(new File("."), jarMask);
-            if (jar == null) throw new IllegalStateException(jarMask + " not found in current dir");
+            if (jar == null) throw new Cli.Error(jarMask + " not found in current dir");
+
+            if (jreMask != null) {
+                jre = IO.findFile(new File("."), jreMask);
+                if (jre == null) throw new Cli.Error(jreMask + " not found in current dir");
+            }
         }
 
         private void checkHadoopVersion() {
@@ -358,20 +366,20 @@ public class Scheduler implements net.elodina.mesos.api.Scheduler {
             int hyphenIdx = name.indexOf("-");
             int extIdx = name.indexOf(".tar.gz");
 
-            if (hyphenIdx == -1 || extIdx == -1) throw new IllegalStateException("Can't extract version from " + name);
+            if (hyphenIdx == -1 || extIdx == -1) throw new Cli.Error("Can't extract version from " + name);
             Version version = new Version(name.substring(hyphenIdx + 1, extIdx));
 
             boolean supported1x = version.compareTo(new Version("1.2")) >= 0 && version.compareTo(new Version("1.3")) < 0;
             boolean supported2x = version.compareTo(new Version("2.7")) >= 0 && version.compareTo(new Version("2.8")) < 0;
             if (!supported1x && !supported2x)
-                throw new IllegalStateException("Supported hadoop versions are 1.2.x and 2.7.x, current is " + version);
+                throw new Cli.Error("Supported hadoop versions are 1.2.x and 2.7.x, current is " + version);
         }
 
         public String toString() {
             String s = "";
 
             s += "api: " + api;
-            s += "\nfiles: jar:" + jar + ", hadoop:" + hadoop;
+            s += "\nfiles: jar:" + jar + ", hadoop:" + hadoop + (jre != null ? ", jre:" + jre : "");
 
             s += "\nmesos: driver:" + driver + ", master:" + master + ", user:" + (user == null ? "<default>" : user);
             s += ", principal:" + (principal == null ? "<none>" : principal) + ", secret:" + (secret == null ? "<none>" : "******");

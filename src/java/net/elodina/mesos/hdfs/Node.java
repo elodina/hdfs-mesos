@@ -201,10 +201,14 @@ public class Node {
 
         Command command = new Command()
             .addUri(new Command.URI(config.api + "/jar/" + config.jar.getName(), false).cache(false))
-            .addUri(new Command.URI(config.api + "/hadoop/" + config.hadoop.getName()))
-            .value(cmd);
+            .addUri(new Command.URI(config.api + "/hadoop/" + config.hadoop.getName()));
 
-        if (config.jre != null) command.addUri(new Command.URI(config.api + "/jre/" + config.jre.getName()));
+        if (config.jre != null) {
+            command.addUri(new Command.URI(config.api + "/jre/" + config.jre.getName()));
+            cmd = "jre/bin/" + cmd;
+        }
+
+        command.value(cmd);
 
         return new Task.Executor()
             .id(runtime.executorId)

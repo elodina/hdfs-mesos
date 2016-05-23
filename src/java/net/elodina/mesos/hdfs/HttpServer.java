@@ -83,11 +83,13 @@ public class HttpServer {
 
         private void handle(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
             String uri = request.getRequestURI();
+            Scheduler.Config config = Scheduler.$.config;
 
             if (uri.equals("/health")) handleHealth(response);
             else if (uri.startsWith("/api/node")) handleNodeApi(request, response);
-            else if (uri.startsWith("/jar/")) downloadFile(Scheduler.$.config.jar, response);
-            else if (uri.startsWith("/hadoop/")) downloadFile(Scheduler.$.config.hadoop, response);
+            else if (uri.startsWith("/jar/")) downloadFile(config.jar, response);
+            else if (uri.startsWith("/hadoop/")) downloadFile(config.hadoop, response);
+            else if (config.jre != null && uri.startsWith("/jre/")) downloadFile(config.jre, response);
             else throw new HttpError(404, "not found");
         }
 

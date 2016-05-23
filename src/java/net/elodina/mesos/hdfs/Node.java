@@ -204,6 +204,8 @@ public class Node {
             .addUri(new Command.URI(config.api + "/hadoop/" + config.hadoop.getName()))
             .value(cmd);
 
+        if (config.jre != null) command.addUri(new Command.URI(config.api + "/jre/" + config.jre.getName()));
+
         return new Task.Executor()
             .id(runtime.executorId)
             .name("hdfs-" + id)

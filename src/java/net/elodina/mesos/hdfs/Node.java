@@ -2,10 +2,11 @@ package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.api.*;
 import net.elodina.mesos.util.*;
-import net.elodina.mesos.util.Base64;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Node {
@@ -25,6 +26,7 @@ public class Node {
 
     public String externalFsUri;
 
+    public Stickiness stickiness = new Stickiness();
     public Runtime runtime;
     public Reservation reservation;
 
@@ -35,9 +37,13 @@ public class Node {
 
     public boolean isExternal() { return externalFsUri != null; }
 
-    public String matches(Offer offer) { return matches(offer, Collections.<String, Collection<String>>emptyMap()); }
+    public String matches(Offer offer) { return matches(offer, Collections.<String, Collection<String>>emptyMap(), new Date()); }
 
-    public String matches(Offer offer, Map<String, Collection<String>> otherAttributes) {
+    public String matches(Offer offer, Map<String, Collection<String>> otherAttributes) { return matches(offer, otherAttributes, new Date()); }
+
+    public String matches(Offer offer, Date now) { return matches(offer, Collections.<String, Collection<String>>emptyMap(), now); }
+
+    public String matches(Offer offer, Map<String, Collection<String>> otherAttributes, Date now) {
         Reservation reservation = reserve(offer);
 
         // resources
@@ -65,6 +71,10 @@ public class Node {
             if (!offerAttributes.containsKey(name)) return "no " + name + " attribute";
             if (!constraint.matches(offerAttributes.get(name), otherAttributes.get(name))) return name + " doesn't match " + constraint;
         }
+
+        // stickiness
+        if (!stickiness.allowsHostname(offer.hostname(), now))
+            return "hostname != stickiness hostname";
 
         return null;
     }
@@ -172,6 +182,15 @@ public class Node {
         return "hdfs://" + host + ":" + port;
     }
 
+    public void registerStart(String hostname) {
+        stickiness.registerStart(hostname);
+    }
+
+    public void registerStop() { registerStop(new Date(), false); }
+    public void registerStop(Date now, boolean failed) {
+        if (!failed) stickiness.registerStop(now);
+    }
+
     public Task newTask() {
         if (runtime == null) throw new IllegalStateException("runtime == null");
         if (reservation == null) throw new IllegalStateException("reservation == null");
@@ -237,6 +256,7 @@ public class Node {
 
         if (externalFsUri != null) json.put("externalFsUri", externalFsUri);
 
+        json.put("stickiness", stickiness.toJson());
         if (runtime != null) json.put("runtime", runtime.toJson());
         if (reservation != null) json.put("reservation", reservation.toJson());
 
@@ -274,6 +294,7 @@ public class Node {
 
         if (json.containsKey("externalFsUri")) externalFsUri = (String) json.get("externalFsUri");
 
+        stickiness = new Stickiness((JSONObject) json.get("stickiness"));
         if (json.containsKey("runtime")) runtime = new Runtime((JSONObject) json.get("runtime"));
         if (json.containsKey("reservation")) reservation = new Reservation((JSONObject) json.get("reservation"));
     }
@@ -427,5 +448,66 @@ public class Node {
 
             return json;
         }
+    }
+
+    public static class Stickiness {
+        private Period period = new Period("30m");
+        private volatile String hostname;
+        private volatile Date stopTime;
+
+        public Stickiness() {}
+        public Stickiness(JSONObject json) { fromJson(json); }
+
+        public Period period() { return period; }
+        public String hostname() { return hostname; }
+        public Date stopTime() { return stopTime; }
+
+        public Date expires() { return stopTime != null ? new Date(stopTime.getTime() + period.ms()) : null; }
+
+        public void registerStart(String hostname) {
+            this.hostname = hostname;
+            stopTime = null;
+        }
+
+        public void registerStop() { registerStop(new Date()); }
+        public void registerStop(Date now) {
+            this.stopTime = now;
+        }
+
+        public boolean allowsHostname(String hostname) { return allowsHostname(hostname, new Date()); }
+
+        @SuppressWarnings("SimplifiableIfStatement")
+        public boolean allowsHostname(String hostname, Date now) {
+            if (this.hostname == null) return true;
+            if (stopTime == null || now.getTime() - stopTime.getTime() >= period.ms()) return true;
+            return this.hostname.equals(hostname);
+        }
+
+        public void fromJson(JSONObject json) {
+            period = new Period((String) json.get("period"));
+
+            try { if (json.containsKey("stopTime")) stopTime = dateTimeFormat().parse((String) json.get("stopTime")); }
+            catch (ParseException e) { throw new IllegalStateException(e); }
+
+            if (json.containsKey("hostname")) hostname = (String) json.get("hostname");
+        }
+
+        @SuppressWarnings("unchecked")
+        public JSONObject toJson() {
+            JSONObject json = new JSONObject();
+
+            json.put("period", "" + period);
+            if (stopTime != null) json.put("stopTime", dateTimeFormat().format(stopTime));
+            if (hostname != null) json.put("hostname", hostname);
+
+            return json;
+        }
+
+        private static SimpleDateFormat dateTimeFormat() {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            format.setTimeZone(TimeZone.getTimeZone("UTC-0"));
+            return format;
+        }
+
     }
 }

@@ -150,6 +150,7 @@ public class Scheduler implements net.elodina.mesos.api.Scheduler {
             logger.info("Finished reconciling of node " + node.id + ", task " + shortId(node.runtime.taskId));
 
         node.state = Node.State.RUNNING;
+        node.registerStart(node.runtime.hostname);
     }
 
     void onTaskStopped(Node node, Task.Status status) {
@@ -161,6 +162,10 @@ public class Scheduler implements net.elodina.mesos.api.Scheduler {
         }
 
         boolean stopping = node.state == Node.State.STOPPING;
+
+        boolean failed = !stopping && status.state() != Task.State.FINISHED && status.state() != Task.State.KILLED;
+        node.registerStop(new Date(), failed);
+
         node.state = stopping ? Node.State.IDLE : Node.State.STARTING;
         node.runtime = null;
         node.reservation = null;

@@ -8,10 +8,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static net.elodina.mesos.hdfs.Cli.Error;
 import static net.elodina.mesos.hdfs.Cli.*;
@@ -263,6 +261,7 @@ public class NodeCli {
         if (!node.coreSiteOpts.isEmpty()) printLine("core-site-opts: " + Strings.formatMap(node.coreSiteOpts), indent);
         if (!node.hdfsSiteOpts.isEmpty()) printLine("hdfs-site-opts: " + Strings.formatMap(node.hdfsSiteOpts), indent);
 
+        printLine("stickiness: " + nodeStickiness(node.stickiness), indent);
         if (node.reservation != null) printLine("reservation: " + nodeReservation(node.reservation), indent);
         if (node.runtime != null) printNodeRuntime(node.runtime, indent);
     }
@@ -284,6 +283,15 @@ public class NodeCli {
         printLine("remove     - remove node", 1);
     }
 
+    private static String nodeStickiness(Node.Stickiness stickiness) {
+        String s = "period:" + stickiness.period();
+
+        if (stickiness.hostname() != null) s += ", hostname:" + stickiness.hostname();
+        if (stickiness.stopTime() != null) s += ", expires:" + dateTime(stickiness.expires());
+
+        return s;
+    }
+
     private static String nodeResources(Node node) {
         String s = "";
 
@@ -302,4 +310,9 @@ public class NodeCli {
 
         return s;
     }
+
+    public static String dateTime(Date date) {
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ssX").format(date);
+    }
+
 }

@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.util.*;
 
+import static net.elodina.mesos.hdfs.Node.Stickiness;
 import static org.junit.Assert.*;
 
 public class NodeTest extends HdfsMesosTestCase {
@@ -89,8 +90,29 @@ public class NodeTest extends HdfsMesosTestCase {
         // groupBy
         node.constraints = o.constraints("rack=groupBy");
         assertEquals(null, node.matches(o.offer("rack=1")));
-        assertEquals(null, node.matches(o.offer("rack=1"), o.otherAttributes("rack=1")));
-        assertEquals("rack doesn't match groupBy", node.matches(o.offer("rack=2"), o.otherAttributes("rack=1")));
+        assertEquals(null, node.matches(o.offer("rack=1"), o.otherAttributes("rack=1"), new Date()));
+        assertEquals("rack doesn't match groupBy", node.matches(o.offer("rack=2"), o.otherAttributes("rack=1"), new Date()));
+    }
+
+    @Test
+    public void matches_stickiness() {
+        Node node = Nodes.addNode(new Node("nn"));
+        String host0 = "host0";
+        String host1 = "host1";
+        String resources = "cpus:" + node.cpus + ";mem:" + node.mem + ";ports:0..10";
+
+        Offer offer0 = new Offer("hostname:" + host0 + ", resources:[" + resources + "]");
+        Offer offer1 = new Offer("hostname:" + host1 + ", resources:[" + resources + "]");
+
+        assertEquals(null, node.matches(offer0, new Date(0)));
+        assertEquals(null, node.matches(offer1, new Date(0)));
+
+        node.registerStart(host0);
+        node.registerStop(new Date(0), false);
+
+        assertEquals(null, node.matches(offer0, new Date(0)));
+        assertEquals("hostname != stickiness hostname", node.matches(offer1, new Date(0)));
+        assertEquals(null, node.matches(offer1, new Date(node.stickiness.period().ms())));
     }
 
     @Test
@@ -244,6 +266,7 @@ public class NodeTest extends HdfsMesosTestCase {
         node.externalFsUri = "external-fs-uri";
 
         node.initRuntime(new Offer());
+        node.stickiness.registerStart("hostname");
 
         Node read = new Node(node.toJson());
         assertEquals(node.id, read.id);
@@ -262,6 +285,7 @@ public class NodeTest extends HdfsMesosTestCase {
 
         assertEquals(node.externalFsUri, read.externalFsUri);
 
+        assertEquals("hostname", read.stickiness.hostname());
         assertNotNull(read.runtime);
         assertNotNull(read.reservation);
     }
@@ -308,5 +332,52 @@ public class NodeTest extends HdfsMesosTestCase {
     public void Reservation_toResources() {
         assertEquals(Resource.parse(""), new Node.Reservation().toResources());
         assertEquals(Resource.parse("cpus:0.5;mem:500;ports:1000..1000"), new Node.Reservation(0.5, 500, Collections.singletonMap("ipc", 1000)).toResources());
+    }
+
+    // Stickiness
+    @Test
+    public void Stickiness_allowsHostname() {
+        Stickiness stickiness = new Stickiness();
+        assertTrue(stickiness.allowsHostname("host0", new Date(0)));
+        assertTrue(stickiness.allowsHostname("host1", new Date(0)));
+
+        stickiness.registerStart("host0");
+        stickiness.registerStop(new Date(0));
+        assertTrue(stickiness.allowsHostname("host0", new Date(0)));
+        assertFalse(stickiness.allowsHostname("host1", new Date(0)));
+        assertTrue(stickiness.allowsHostname("host1", new Date(stickiness.period().ms())));
+    }
+
+    @Test
+    public void Stickiness_registerStart_registerStop() {
+        Stickiness stickiness = new Stickiness();
+        assertNull(stickiness.hostname());
+        assertNull(stickiness.stopTime());
+
+        stickiness.registerStart("host");
+        assertEquals("host", stickiness.hostname());
+        assertNull(stickiness.stopTime());
+
+        stickiness.registerStop(new Date(0));
+        assertEquals("host", stickiness.hostname());
+        assertEquals(new Date(0), stickiness.stopTime());
+
+        stickiness.registerStart("host1");
+        assertEquals("host1", stickiness.hostname());
+        assertNull(stickiness.stopTime());
+    }
+
+    @Test
+    public void Stickiness_toJson_fromJson() {
+        Stickiness stickiness = new Stickiness();
+        stickiness.registerStart("localhost");
+        stickiness.registerStop(new Date(0));
+
+        Stickiness read = new Stickiness();
+        read.fromJson(stickiness.toJson());
+
+        assertEquals(stickiness.period(), read.period());
+        assertEquals(stickiness.hostname(), read.hostname());
+        assertEquals(stickiness.stopTime(), read.stopTime());
     }
 }

@@ -81,6 +81,11 @@ public class Executor implements net.elodina.mesos.api.Executor {
                 }
 
                 driver.stop();
+
+                if (driverV1()) {
+                    logger.info("Exiting process");
+                    System.exit(0); // exiting cause there is no reliable way to interrupt blocked socket read
+                }
             }
         }.start();
     }

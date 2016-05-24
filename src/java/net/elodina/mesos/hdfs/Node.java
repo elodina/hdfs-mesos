@@ -508,6 +508,5 @@ public class Node {
             format.setTimeZone(TimeZone.getTimeZone("UTC-0"));
             return format;
         }
-
     }
 }

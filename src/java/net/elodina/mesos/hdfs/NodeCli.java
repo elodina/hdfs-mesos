@@ -314,5 +314,4 @@ public class NodeCli {
     public static String dateTime(Date date) {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ssX").format(date);
     }
-
 }

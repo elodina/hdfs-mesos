@@ -1,7 +1,7 @@
 apply plugin: 'idea'
 apply plugin: 'java'
 
-version = '0.0.2.6'
+version = '0.0.3.0'
 
 jar.archiveName = "hdfs-mesos-${version}.jar"
 buildDir = 'out/gradle'
@@ -23,7 +23,7 @@ sourceSets {
 
 dependencies {
     compile name: "mesos-0.28.1-patched"
-    compile name: "util-mesos-0.0.2.0"
+    compile name: "util-mesos-0.0.3.0"
     compile "com.google.protobuf:protobuf-java:2.5.0"
     compile 'com.googlecode.protobuf-java-format:protobuf-java-format:1.4'
     compile "org.eclipse.jetty:jetty-http:9.0.4.v20130625"

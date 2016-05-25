@@ -556,9 +556,9 @@ public class Node {
         public void fromJson(JSONObject json) {
             delay = new Period((String) json.get("delay"));
             maxDelay = new Period((String) json.get("maxDelay"));
-            if (json.containsKey("maxTries")) maxTries = (Integer) json.get("maxTries");
+            if (json.containsKey("maxTries")) maxTries = ((Number) json.get("maxTries")).intValue();
 
-            if (json.containsKey("failures")) failures = (int) json.get("failures");
+            if (json.containsKey("failures")) failures = ((Number) json.get("failures")).intValue();
             try { if (json.containsKey("failureTime")) failureTime = dateTimeFormat().parse((String) json.get("failureTime")); }
             catch (ParseException e) { throw new IllegalStateException(e); }
         }

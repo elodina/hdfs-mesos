@@ -97,6 +97,10 @@ public class NodeCli {
 
         parser.accepts("external-fs-uri", "FS URI of external namenode. If defined this node becomes external.").withRequiredArg().ofType(String.class);
 
+        parser.accepts("failover-delay", "failover delay (10s, 5m, 3h)").withRequiredArg().ofType(String.class);
+        parser.accepts("failover-max-delay", "max failover delay. See failoverDelay.").withRequiredArg().ofType(String.class);
+        parser.accepts("failover-max-tries", "max failover tries. Default - none").withRequiredArg().ofType(String.class);
+
         if (help) {
             printLine(Strings.capitalize(cmd) + " node \nUsage: node " + cmd + " <ids> [options]\n");
             try { parser.printHelpOn(out); }
@@ -134,6 +138,10 @@ public class NodeCli {
 
         String externalFsUri = (String) options.valueOf("external-fs-uri");
 
+        String failoverDelay = (String) options.valueOf("failover-delay");
+        String failoverMaxDelay = (String) options.valueOf("failover-max-delay");
+        String failoverMaxTries = (String) options.valueOf("failover-max-tries");
+
         Map<String, String> params = new HashMap<>();
         params.put("node", expr);
 
@@ -150,6 +158,10 @@ public class NodeCli {
         if (hdfsSiteOpts != null) params.put("hdfsSiteOpts", hdfsSiteOpts);
 
         if (externalFsUri != null) params.put("externalFsUri", externalFsUri);
+
+        if (failoverDelay != null) params.put("failoverDelay", failoverDelay);
+        if (failoverMaxDelay != null) params.put("failoverMaxDelay", failoverMaxDelay);
+        if (failoverMaxTries != null) params.put("failoverMaxTries", failoverMaxTries);
 
         JSONArray json;
         try { json = sendRequest("/node/" + cmd, params); }
@@ -250,7 +262,7 @@ public class NodeCli {
             return;
         }
 
-        printLine("state: " + node.state.name().toLowerCase(), indent);
+        printLine("state: " + nodeState(node), indent);
         printLine("resources: " + nodeResources(node), indent);
 
         if (!node.constraints.isEmpty()) printLine("constraints: " + Strings.formatMap(node.constraints), indent);
@@ -262,6 +274,7 @@ public class NodeCli {
         if (!node.hdfsSiteOpts.isEmpty()) printLine("hdfs-site-opts: " + Strings.formatMap(node.hdfsSiteOpts), indent);
 
         printLine("stickiness: " + nodeStickiness(node.stickiness), indent);
+        printLine("failover: " + nodeFailover(node.failover), indent);
         if (node.reservation != null) printLine("reservation: " + nodeReservation(node.reservation), indent);
         if (node.runtime != null) printNodeRuntime(node.runtime, indent);
     }
@@ -283,11 +296,41 @@ public class NodeCli {
         printLine("remove     - remove node", 1);
     }
 
+    private static String nodeState(Node node) {
+        if (node.state != Node.State.STARTING) return "" + node.state.name().toLowerCase();
+
+        if (node.failover.isWaitingDelay(new Date())) {
+            String s = "failed " + node.failover.failures;
+            if (node.failover.maxTries != null) s += "/" + node.failover.maxTries;
+            s += " " + dateTime(node.failover.failureTime);
+            s += ", next start " + dateTime(node.failover.delayExpires());
+            return s;
+        }
+
+        if (node.failover.failures > 0) {
+            String s = "starting " + (node.failover.failures + 1);
+            if (node.failover.maxTries != null) s += "/" + node.failover.maxTries;
+            s += ", failed " + dateTime(node.failover.failureTime);
+            return s;
+        }
+
+        return "" + Node.State.STARTING.name().toLowerCase();
+    }
+
     private static String nodeStickiness(Node.Stickiness stickiness) {
         String s = "period:" + stickiness.period;
 
         if (stickiness.hostname != null) s += ", hostname:" + stickiness.hostname;
         if (stickiness.stopTime != null) s += ", expires:" + dateTime(stickiness.expires());
+
+        return s;
+    }
+
+    private static String nodeFailover(Node.Failover failover) {
+        String s = "delay:" + failover.delay;
+
+        s += ", max-delay:" + failover.maxDelay;
+        if (failover.maxTries != null) s += ", max-tries:" + failover.maxTries;
 
         return s;
     }

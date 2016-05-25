@@ -189,6 +189,21 @@ public class HttpServer {
 
             String externalFsUri = request.getParameter("externalFsUri");
 
+            Period failoverDelay = null;
+            if (request.getParameter("failoverDelay") != null)
+                try { failoverDelay = new Period(request.getParameter("failoverDelay")); }
+                catch (IllegalArgumentException e) { throw new HttpError(400, "invalid failoverDelay"); }
+
+            Period failoverMaxDelay = null;
+            if (request.getParameter("failoverMaxDelay") != null)
+                try { failoverMaxDelay = new Period(request.getParameter("failoverMaxDelay")); }
+                catch (IllegalArgumentException e) { throw new HttpError(400, "invalid failoverMaxDelay"); }
+
+            String failoverMaxTries = request.getParameter("failoverMaxTries");
+            if (failoverMaxTries != null && !failoverMaxTries.equals("") && !Strings.isInteger(failoverMaxTries))
+                throw new HttpError(400, "invalid failoverMaxTries");
+
+
             List<Node> nodes = new ArrayList<>();
             for (String id : ids) {
                 Node node;
@@ -210,6 +225,10 @@ public class HttpServer {
 
                 if (externalFsUri != null && node.type == Node.Type.NAMENODE)
                     node.externalFsUri = externalFsUri.equals("") ? null : externalFsUri;
+
+                if (failoverDelay != null) node.failover.delay = failoverDelay;
+                if (failoverMaxDelay != null) node.failover.maxDelay = failoverMaxDelay;
+                if (failoverMaxTries != null) node.failover.maxTries = !failoverMaxTries.equals("") ? Integer.valueOf(failoverMaxTries) : null;
             }
             Nodes.save();
 

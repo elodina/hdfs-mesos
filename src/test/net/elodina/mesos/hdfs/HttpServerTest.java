@@ -179,6 +179,18 @@ public class HttpServerTest extends HdfsMesosTestCase {
         // hdfsSiteOpts
         try { request("/node/update?node=nn&hdfsSiteOpts=invalid"); fail(); }
         catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid hdfsSiteOpts")); }
+
+        // failoverDelay
+        try { request("/node/update?node=nn&failoverDelay=invalid"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid failoverDelay")); }
+
+        // failoverMaxDelay
+        try { request("/node/update?node=nn&failoverMaxDelay=invalid"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid failoverMaxDelay")); }
+
+        // failoverMaxTries
+        try { request("/node/update?node=nn&failoverMaxTries=invalid"); fail(); }
+        catch (IOException e) { assertTrue(e.getMessage(), e.getMessage().contains("invalid failoverMaxTries")); }
     }
 
     @Test

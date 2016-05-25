@@ -457,16 +457,12 @@ public class Node {
     }
 
     public static class Stickiness {
-        private Period period = new Period("30m");
-        private volatile String hostname;
-        private volatile Date stopTime;
+        public Period period = new Period("30m");
+        public volatile String hostname;
+        public volatile Date stopTime;
 
         public Stickiness() {}
         public Stickiness(JSONObject json) { fromJson(json); }
-
-        public Period period() { return period; }
-        public String hostname() { return hostname; }
-        public Date stopTime() { return stopTime; }
 
         public Date expires() { return stopTime != null ? new Date(stopTime.getTime() + period.ms()) : null; }
 

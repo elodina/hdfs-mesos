@@ -284,10 +284,10 @@ public class NodeCli {
     }
 
     private static String nodeStickiness(Node.Stickiness stickiness) {
-        String s = "period:" + stickiness.period();
+        String s = "period:" + stickiness.period;
 
-        if (stickiness.hostname() != null) s += ", hostname:" + stickiness.hostname();
-        if (stickiness.stopTime() != null) s += ", expires:" + dateTime(stickiness.expires());
+        if (stickiness.hostname != null) s += ", hostname:" + stickiness.hostname;
+        if (stickiness.stopTime != null) s += ", expires:" + dateTime(stickiness.expires());
 
         return s;
     }

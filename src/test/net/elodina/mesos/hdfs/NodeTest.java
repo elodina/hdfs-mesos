@@ -114,7 +114,7 @@ public class NodeTest extends HdfsMesosTestCase {
 
         assertEquals(null, node.matches(offer0, new Date(0)));
         assertEquals("hostname != stickiness hostname", node.matches(offer1, new Date(0)));
-        assertEquals(null, node.matches(offer1, new Date(node.stickiness.period().ms())));
+        assertEquals(null, node.matches(offer1, new Date(node.stickiness.period.ms())));
     }
 
     @Test
@@ -287,7 +287,7 @@ public class NodeTest extends HdfsMesosTestCase {
 
         assertEquals(node.externalFsUri, read.externalFsUri);
 
-        assertEquals("hostname", read.stickiness.hostname());
+        assertEquals("hostname", read.stickiness.hostname);
         assertNotNull(read.runtime);
         assertNotNull(read.reservation);
     }
@@ -347,26 +347,26 @@ public class NodeTest extends HdfsMesosTestCase {
         stickiness.registerStop(new Date(0));
         assertTrue(stickiness.allowsHostname("host0", new Date(0)));
         assertFalse(stickiness.allowsHostname("host1", new Date(0)));
-        assertTrue(stickiness.allowsHostname("host1", new Date(stickiness.period().ms())));
+        assertTrue(stickiness.allowsHostname("host1", new Date(stickiness.period.ms())));
     }
 
     @Test
     public void Stickiness_registerStart_registerStop() {
         Stickiness stickiness = new Stickiness();
-        assertNull(stickiness.hostname());
-        assertNull(stickiness.stopTime());
+        assertNull(stickiness.hostname);
+        assertNull(stickiness.stopTime);
 
         stickiness.registerStart("host");
-        assertEquals("host", stickiness.hostname());
-        assertNull(stickiness.stopTime());
+        assertEquals("host", stickiness.hostname);
+        assertNull(stickiness.stopTime);
 
         stickiness.registerStop(new Date(0));
-        assertEquals("host", stickiness.hostname());
-        assertEquals(new Date(0), stickiness.stopTime());
+        assertEquals("host", stickiness.hostname);
+        assertEquals(new Date(0), stickiness.stopTime);
 
         stickiness.registerStart("host1");
-        assertEquals("host1", stickiness.hostname());
-        assertNull(stickiness.stopTime());
+        assertEquals("host1", stickiness.hostname);
+        assertNull(stickiness.stopTime);
     }
 
     @Test
@@ -378,9 +378,9 @@ public class NodeTest extends HdfsMesosTestCase {
         Stickiness read = new Stickiness();
         read.fromJson(stickiness.toJson());
 
-        assertEquals(stickiness.period(), read.period());
-        assertEquals(stickiness.hostname(), read.hostname());
-        assertEquals(stickiness.stopTime(), read.stopTime());
+        assertEquals(stickiness.period, read.period);
+        assertEquals(stickiness.hostname, read.hostname);
+        assertEquals(stickiness.stopTime, read.stopTime);
     }
 
     // Failover

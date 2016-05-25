@@ -265,6 +265,7 @@ public class HttpServer {
             List<Node> nodes = Nodes.getNodes(ids);
 
             for (Node node : nodes) {
+                node.failover.resetFailures();
                 node.state = start ? Node.State.STARTING : Node.State.STOPPING;
                 if (!start && node.runtime != null) node.runtime.killSent = false;
 

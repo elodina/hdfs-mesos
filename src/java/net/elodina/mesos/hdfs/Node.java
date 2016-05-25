@@ -185,11 +185,16 @@ public class Node {
 
     public void registerStart(String hostname) {
         stickiness.registerStart(hostname);
+        failover.resetFailures();
     }
 
     public void registerStop() { registerStop(new Date(), false); }
+
     public void registerStop(Date now, boolean failed) {
-        if (!failed) stickiness.registerStop(now);
+        if (!failed || failover.failures == 0) stickiness.registerStop(now);
+
+        if (failed) failover.registerFailure(now);
+        else failover.resetFailures();
     }
 
     public Task newTask() {

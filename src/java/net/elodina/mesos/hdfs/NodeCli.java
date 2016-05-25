@@ -302,15 +302,15 @@ public class NodeCli {
         if (node.failover.isWaitingDelay(new Date())) {
             String s = "failed " + node.failover.failures;
             if (node.failover.maxTries != null) s += "/" + node.failover.maxTries;
-            s += " " + dateTime(node.failover.failureTime);
-            s += ", next start " + dateTime(node.failover.delayExpires());
+            s += " " + time(node.failover.failureTime);
+            s += ", next start " + time(node.failover.delayExpires());
             return s;
         }
 
         if (node.failover.failures > 0) {
             String s = "starting " + (node.failover.failures + 1);
             if (node.failover.maxTries != null) s += "/" + node.failover.maxTries;
-            s += ", failed " + dateTime(node.failover.failureTime);
+            s += ", failed " + time(node.failover.failureTime);
             return s;
         }
 
@@ -321,7 +321,7 @@ public class NodeCli {
         String s = "period:" + stickiness.period;
 
         if (stickiness.hostname != null) s += ", hostname:" + stickiness.hostname;
-        if (stickiness.stopTime != null) s += ", expires:" + dateTime(stickiness.expires());
+        if (stickiness.stopTime != null) s += ", expires:" + time(stickiness.expires());
 
         return s;
     }
@@ -356,5 +356,9 @@ public class NodeCli {
 
     public static String dateTime(Date date) {
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ssX").format(date);
+    }
+
+    public static String time(Date date) {
+        return new SimpleDateFormat("HH:mm:ssX").format(date);
     }
 }

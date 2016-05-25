@@ -13,6 +13,7 @@ import org.apache.log4j.*;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static net.elodina.mesos.api.Message.shortId;
@@ -96,7 +97,8 @@ public class Scheduler implements net.elodina.mesos.api.Scheduler {
 
         List<Node> nodes = new ArrayList<>();
         for (Node node : Nodes.getNodes(Node.State.STARTING))
-            if (node.runtime == null) nodes.add(node);
+            if (node.runtime == null && !node.failover.isWaitingDelay(new Date()))
+                nodes.add(node);
 
         if (nodes.isEmpty()) return "nothing to start";
 
@@ -166,9 +168,30 @@ public class Scheduler implements net.elodina.mesos.api.Scheduler {
         boolean failed = !stopping && status.state() != Task.State.FINISHED && status.state() != Task.State.KILLED;
         node.registerStop(new Date(), failed);
 
+        if (failed) {
+            if (node.failover.isMaxTriesExceeded()) stopping = true;
+            logger.info(failureMessage(node));
+        }
+
         node.state = stopping ? Node.State.IDLE : Node.State.STARTING;
         node.runtime = null;
         node.reservation = null;
+    }
+
+    private String failureMessage(Node node) {
+        String s = "Node " + node.id + " failed " + node.failover.failures;
+        if (node.failover.maxTries != null) s += "/" + node.failover.maxTries;
+
+        if (!node.failover.isMaxTriesExceeded()) {
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ssX");
+            s += ", waiting " + node.failover.currentDelay();
+            s += ", next start ~ " + timeFormat.format(node.failover.delayExpires());
+        } else {
+            s += ", failure limit exceeded";
+            s += ", stopping node";
+        }
+
+        return s;
     }
 
     private Node getNodeByTaskId(String taskId) {

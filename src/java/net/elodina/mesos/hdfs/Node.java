@@ -27,6 +27,7 @@ public class Node {
     public String externalFsUri;
 
     public Stickiness stickiness = new Stickiness();
+    public Failover failover = new Failover();
     public Runtime runtime;
     public Reservation reservation;
 
@@ -257,6 +258,7 @@ public class Node {
         if (externalFsUri != null) json.put("externalFsUri", externalFsUri);
 
         json.put("stickiness", stickiness.toJson());
+        json.put("failover", failover.toJson());
         if (runtime != null) json.put("runtime", runtime.toJson());
         if (reservation != null) json.put("reservation", reservation.toJson());
 
@@ -295,6 +297,7 @@ public class Node {
         if (json.containsKey("externalFsUri")) externalFsUri = (String) json.get("externalFsUri");
 
         stickiness = new Stickiness((JSONObject) json.get("stickiness"));
+        failover = new Failover((JSONObject) json.get("failover"));
         if (json.containsKey("runtime")) runtime = new Runtime((JSONObject) json.get("runtime"));
         if (json.containsKey("reservation")) reservation = new Reservation((JSONObject) json.get("reservation"));
     }

@@ -269,6 +269,7 @@ public class NodeTest extends HdfsMesosTestCase {
 
         node.initRuntime(new Offer());
         node.stickiness.registerStart("hostname");
+        node.failover.failures = 5;
 
         Node read = new Node(node.toJson());
         assertEquals(node.id, read.id);
@@ -287,7 +288,8 @@ public class NodeTest extends HdfsMesosTestCase {
 
         assertEquals(node.externalFsUri, read.externalFsUri);
 
-        assertEquals("hostname", read.stickiness.hostname);
+        assertEquals(node.stickiness.hostname, read.stickiness.hostname);
+        assertEquals(node.failover.failures, read.failover.failures);
         assertNotNull(read.runtime);
         assertNotNull(read.reservation);
     }
@@ -407,6 +409,9 @@ public class NodeTest extends HdfsMesosTestCase {
         assertEquals(new Period("5s"), failover.currentDelay());
 
         failover.failures = 33;
+        assertEquals(new Period("5s"), failover.currentDelay());
+
+        failover.failures = 100;
         assertEquals(new Period("5s"), failover.currentDelay());
 
         // multiplier boundary

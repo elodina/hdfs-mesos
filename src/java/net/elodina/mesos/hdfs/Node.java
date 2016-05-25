@@ -306,6 +306,12 @@ public class Node {
         return nodes;
     }
 
+    private static SimpleDateFormat dateTimeFormat() {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        format.setTimeZone(TimeZone.getTimeZone("UTC-0"));
+        return format;
+    }
+
     public int hashCode() { return id.hashCode(); }
 
     public boolean equals(Object obj) { return obj instanceof Node && ((Node) obj).id.equals(id); }
@@ -502,11 +508,74 @@ public class Node {
 
             return json;
         }
+    }
 
-        private static SimpleDateFormat dateTimeFormat() {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-            format.setTimeZone(TimeZone.getTimeZone("UTC-0"));
-            return format;
+    public static class Failover {
+        public Period delay = new Period("3m");
+        public Period maxDelay = new Period("30m");
+        public Integer maxTries;
+
+        public volatile int failures;
+        public volatile Date failureTime;
+
+        public Failover() {}
+        public Failover(Period delay, Period maxDelay) { this.delay = delay; this.maxDelay = maxDelay; }
+        public Failover(JSONObject json) { fromJson(json); }
+
+        public Period currentDelay() {
+            if (failures == 0) return new Period("0");
+
+            int multiplier = 1 << Math.min(30, failures - 1);
+            long d = delay.ms() * multiplier;
+
+            return d > maxDelay.ms() ? maxDelay : new Period(delay.value() * multiplier + delay.unit());
+        }
+
+        public Date delayExpires() {
+            if (failures == 0) return new Date(0);
+            return new Date(failureTime.getTime() + currentDelay().ms());
+        }
+
+        public boolean isWaitingDelay(Date now) { return delayExpires().getTime() > now.getTime(); }
+
+        @SuppressWarnings("SimplifiableIfStatement")
+        public boolean isMaxTriesExceeded() {
+            if (maxTries == null) return false;
+            return failures >= maxTries;
+        }
+
+        public void registerFailure(Date now) {
+            failures += 1;
+            failureTime = now;
+        }
+
+        public void resetFailures() {
+            failures = 0;
+            failureTime = null;
+        }
+
+        public void fromJson(JSONObject json) {
+            delay = new Period((String) json.get("delay"));
+            maxDelay = new Period((String) json.get("maxDelay"));
+            if (json.containsKey("maxTries")) maxTries = (Integer) json.get("maxTries");
+
+            if (json.containsKey("failures")) failures = (int) json.get("failures");
+            try { if (json.containsKey("failureTime")) failureTime = dateTimeFormat().parse((String) json.get("failureTime")); }
+            catch (ParseException e) { throw new IllegalStateException(e); }
+        }
+
+        @SuppressWarnings("unchecked")
+        public JSONObject toJson() {
+            JSONObject json = new JSONObject();
+
+            json.put("delay", "" + delay);
+            json.put("maxDelay", "" + maxDelay);
+            if (maxTries != null) json.put("maxTries", maxTries);
+
+            if (failures != 0) json.put("failures", failures);
+            if (failureTime != null) json.put("failureTime", dateTimeFormat().format(failureTime));
+
+            return json;
         }
     }
 }

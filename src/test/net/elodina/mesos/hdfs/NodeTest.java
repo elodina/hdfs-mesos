@@ -2,12 +2,14 @@ package net.elodina.mesos.hdfs;
 
 import net.elodina.mesos.api.*;
 import net.elodina.mesos.util.Constraint;
+import net.elodina.mesos.util.Period;
 import net.elodina.mesos.util.Range;
 import net.elodina.mesos.util.Strings;
 import org.junit.Test;
 
 import java.util.*;
 
+import static net.elodina.mesos.hdfs.Node.Failover;
 import static net.elodina.mesos.hdfs.Node.Stickiness;
 import static org.junit.Assert.*;
 
@@ -379,5 +381,120 @@ public class NodeTest extends HdfsMesosTestCase {
         assertEquals(stickiness.period(), read.period());
         assertEquals(stickiness.hostname(), read.hostname());
         assertEquals(stickiness.stopTime(), read.stopTime());
+    }
+
+    // Failover
+    @Test
+    public void Failover_currentDelay() {
+        Failover failover = new Failover(new Period("1s"), new Period("5s"));
+
+        failover.failures = 0;
+        assertEquals(new Period("0s"), failover.currentDelay());
+
+        failover.failures = 1;
+        assertEquals(new Period("1s"), failover.currentDelay());
+
+        failover.failures = 2;
+        assertEquals(new Period("2s"), failover.currentDelay());
+
+        failover.failures = 3;
+        assertEquals(new Period("4s"), failover.currentDelay());
+
+        failover.failures = 4;
+        assertEquals(new Period("5s"), failover.currentDelay());
+
+        failover.failures = 32;
+        assertEquals(new Period("5s"), failover.currentDelay());
+
+        failover.failures = 33;
+        assertEquals(new Period("5s"), failover.currentDelay());
+
+        // multiplier boundary
+        failover.maxDelay = new Period(Integer.MAX_VALUE + "s");
+
+        failover.failures = 30;
+        assertEquals(new Period((1 << 29) + "s"), failover.currentDelay());
+
+        failover.failures = 31;
+        assertEquals(new Period((1 << 30) + "s"), failover.currentDelay());
+
+        failover.failures = 32;
+        assertEquals(new Period((1 << 30) + "s"), failover.currentDelay());
+
+        failover.failures = 100;
+        assertEquals(new Period((1 << 30) + "s"), failover.currentDelay());
+    }
+
+    @Test
+    public void Failover_delayExpires() {
+        Failover failover = new Failover(new Period("1s"), new Period("5s"));
+        assertEquals(new Date(0), failover.delayExpires());
+
+        failover.registerFailure(new Date(0));
+        assertEquals(new Date(1000), failover.delayExpires());
+
+        failover.failureTime = new Date(1000);
+        assertEquals(new Date(2000), failover.delayExpires());
+    }
+
+    @Test
+    public void Failover_isWaitingDelay() {
+        Failover failover = new Failover(new Period("1s"), new Period("5s"));
+        assertFalse(failover.isWaitingDelay(new Date(0)));
+
+        failover.registerFailure(new Date(0));
+
+        assertTrue(failover.isWaitingDelay(new Date(0)));
+        assertTrue(failover.isWaitingDelay(new Date(500)));
+        assertTrue(failover.isWaitingDelay(new Date(999)));
+        assertFalse(failover.isWaitingDelay(new Date(1000)));
+    }
+
+    @Test
+    public void Failover_isMaxTriesExceeded() {
+        Failover failover = new Failover();
+
+        failover.failures = 100;
+        assertFalse(failover.isMaxTriesExceeded());
+
+        failover.maxTries = 50;
+        assertTrue(failover.isMaxTriesExceeded());
+    }
+
+    @Test
+    public void Failover_registerFailure_resetFailures() {
+        Failover failover = new Failover();
+        assertEquals(0, failover.failures);
+        assertNull(failover.failureTime);
+
+        failover.registerFailure(new Date(1));
+        assertEquals(1, failover.failures);
+        assertEquals(new Date(1), failover.failureTime);
+
+        failover.registerFailure(new Date(2));
+        assertEquals(2, failover.failures);
+        assertEquals(new Date(2), failover.failureTime);
+
+        failover.resetFailures();
+        assertEquals(0, failover.failures);
+        assertNull(failover.failureTime);
+
+        failover.registerFailure(new Date(0));
+        assertEquals(1, failover.failures);
+    }
+
+    @Test
+    public void Failover_toJson_fromJson() {
+        Failover failover = new Failover(new Period("1s"), new Period("5s"));
+        failover.maxTries = 10;
+        failover.registerFailure(new Date(0));
+
+        Failover read = new Failover(failover.toJson());
+        assertEquals(failover.delay, read.delay);
+        assertEquals(failover.maxDelay, read.maxDelay);
+        assertEquals(failover.maxTries, read.maxTries);
+
+        assertEquals(failover.failures, read.failures);
+        assertEquals(failover.failureTime, read.failureTime);
     }
 }

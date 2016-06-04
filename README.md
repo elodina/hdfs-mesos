@@ -15,7 +15,7 @@ This project allows running HDFS on Mesos.
 
 You should be familiar with HDFS and Mesos basics:
 - http://mesos.apache.org/documentation/latest/
-- https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html
+- https://hadoop.apache.org/docs/r2.7.2/hdfs_design.html
 
 Project requires:
 - Mesos 0.23.0+
@@ -63,7 +63,7 @@ Download jar:
 
 **2.** Download hadoop tarball:
 ```
-# wget https://archive.apache.org/dist/hadoop/core/hadoop-1.2.1/hadoop-1.2.1.tar.gz
+# wget https://archive.apache.org/dist/hadoop/core/hadoop-2.7.2/hadoop-2.7.2.tar.gz
 ```
 
 **3.** Start scheduler:
